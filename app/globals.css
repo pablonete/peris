@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    /* Aged parchment / ledger paper palette */
+    --background: 39 35% 93%;
+    --foreground: 24 45% 15%;
+    --card: 40 30% 96%;
+    --card-foreground: 24 45% 15%;
+    --popover: 40 30% 96%;
+    --popover-foreground: 24 45% 15%;
+    --primary: 24 45% 20%;
+    --primary-foreground: 39 35% 93%;
+    --secondary: 36 20% 88%;
+    --secondary-foreground: 24 35% 25%;
+    --muted: 36 18% 85%;
+    --muted-foreground: 24 20% 45%;
+    --accent: 30 30% 40%;
+    --accent-foreground: 39 35% 93%;
+    --destructive: 0 55% 35%;
+    --destructive-foreground: 39 35% 93%;
+    --border: 30 20% 75%;
+    --input: 30 20% 78%;
+    --ring: 24 45% 20%;
+    --chart-1: 24 45% 35%;
+    --chart-2: 150 30% 35%;
+    --chart-3: 200 25% 30%;
+    --chart-4: 40 50% 50%;
+    --chart-5: 15 60% 45%;
+    --radius: 0.25rem;
+    --sidebar-background: 30 25% 22%;
+    --sidebar-foreground: 36 25% 82%;
+    --sidebar-primary: 36 30% 75%;
+    --sidebar-primary-foreground: 30 25% 15%;
+    --sidebar-accent: 30 20% 28%;
+    --sidebar-accent-foreground: 36 30% 90%;
+    --sidebar-border: 30 15% 32%;
+    --sidebar-ring: 36 30% 60%;
+    /* Ledger-specific tokens */
+    --ledger-line: 30 15% 80%;
+    --ledger-red: 0 60% 38%;
+    --ledger-green: 140 35% 30%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
