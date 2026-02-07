@@ -18,7 +18,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ledger Book",
+  title: "Peris",
   description: "Personal accounting ledger",
 };
 

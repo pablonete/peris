@@ -1,6 +1,11 @@
 "use client";
 
-import { quarters, formatCurrency, formatDate } from "@/lib/sample-data";
+import {
+  quarters,
+  quarterIds,
+  formatCurrency,
+  formatDate,
+} from "@/lib/sample-data";
 import {
   Table,
   TableBody,
@@ -15,12 +20,20 @@ import { useLanguage } from "@/lib/i18n-context";
 
 interface CashflowViewProps {
   quarterId: string;
+  onNavigateToQuarter?: (quarterId: string) => void;
 }
 
-export function CashflowView({ quarterId }: CashflowViewProps) {
+export function CashflowView({
+  quarterId,
+  onNavigateToQuarter,
+}: CashflowViewProps) {
   const { t } = useLanguage();
   const data = quarters[quarterId];
   if (!data) return null;
+
+  const currentQuarterIndex = quarterIds.indexOf(quarterId);
+  const previousQuarterId =
+    currentQuarterIndex > 0 ? quarterIds[currentQuarterIndex - 1] : null;
 
   const totalIncome = data.cashflow.reduce((s, e) => s + (e.income ?? 0), 0);
   const totalExpense = data.cashflow.reduce((s, e) => s + (e.expense ?? 0), 0);
@@ -139,7 +152,18 @@ export function CashflowView({ quarterId }: CashflowViewProps) {
                     )}
                   </TableCell>
                   <TableCell className="font-mono text-sm font-semibold text-right">
-                    {formatCurrency(entry.balance)}
+                    {isCarryOver && previousQuarterId && onNavigateToQuarter ? (
+                      <button
+                        type="button"
+                        onClick={() => onNavigateToQuarter(previousQuarterId)}
+                        className="underline decoration-dotted underline-offset-2 transition-colors hover:text-foreground/70"
+                        aria-label={`View cashflow for ${previousQuarterId}`}
+                      >
+                        {formatCurrency(entry.balance)}
+                      </button>
+                    ) : (
+                      formatCurrency(entry.balance)
+                    )}
                   </TableCell>
                 </TableRow>
               );

@@ -38,7 +38,7 @@ This is Peris - a minimalist ledger book application for personal accounting and
 
 ### Git Workflow
 
-- Create feature branches: `feat/feature-name`
+- Create feature branches prefixed with the author, e.g. `pablonete/feature-description`
 - Link to GitHub issues in PR descriptions
 - Keep commits focused and atomic
 - Update documentation before merging
