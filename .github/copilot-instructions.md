@@ -39,6 +39,7 @@ This is Peris - a minimalist ledger book application for personal accounting and
 
 ### Git Workflow
 
+- **Do not commit changes unless explicitly asked** - Always wait for user confirmation before running `git commit`
 - Create feature branches prefixed with the author, e.g. `pablonete/feature-description`
 - Link to GitHub issues in PR descriptions
 - Keep commits focused and atomic

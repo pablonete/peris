@@ -22,7 +22,10 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
   const data = quarters[quarterId]
   if (!data) return null
 
-  const totalSubtotal = data.expenses.reduce((s, e) => s + e.subtotal, 0)
+  const totalSubtotal = data.expenses.reduce(
+    (s, e) => s + e.vat.reduce((v, item) => v + item.subtotal, 0),
+    0
+  )
   const totalVat = data.expenses.reduce(
     (s, e) => s + e.vat.reduce((v, item) => v + item.amount, 0),
     0
@@ -122,9 +125,17 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                   {exp.concept}
                 </TableCell>
                 <TableCell className="font-mono text-xs text-right">
-                  {formatCurrency(exp.subtotal)}
+                  {exp.vat.length > 0 ? (
+                    <div className="flex flex-col gap-1">
+                      {exp.vat.map((vat, idx) => (
+                        <div key={idx}>{formatCurrency(vat.subtotal)}</div>
+                      ))}
+                    </div>
+                  ) : (
+                    formatCurrency(exp.total)
+                  )}
                 </TableCell>
-                <TableCell className="font-mono text-xs text-right text-muted-foreground">
+                <TableCell className="font-mono text-xs text-right">
                   {exp.vat.length > 0 ? (
                     <div className="flex flex-col gap-1">
                       {exp.vat.map((vat, idx) => (
@@ -132,10 +143,10 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                           key={idx}
                           className="flex items-baseline justify-end gap-1"
                         >
-                          <span>{formatCurrency(vat.amount)}</span>
                           <span className="text-[9px] text-muted-foreground/60">
                             {vat.rate}%
                           </span>
+                          <span>{formatCurrency(vat.amount)}</span>
                         </div>
                       ))}
                     </div>
