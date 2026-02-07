@@ -1,56 +1,11 @@
-// ── Types ──────────────────────────────────────────────────
-
-export interface VatItem {
-  subtotal: number
-  rate: number
-  amount: number
-}
-
-export interface Invoice {
-  id: string
-  date: string
-  number: string
-  client: string
-  concept: string
-  subtotal: number
-  vat: number
-  total: number
-  paymentDate?: string
-}
-
-export interface Expense {
-  id: string
-  date: string
-  number?: string
-  vendor: string
-  concept: string
-  vat: VatItem[] // array of VAT items (typically one)
-  taxRetention?: number // Tax withholding (15% typical)
-  total: number
-  paymentDate?: string
-}
-
-export interface CashflowEntry {
-  id: string
-  date: string
-  concept: string
-  reference?: string
-  income?: number
-  expense?: number
-  balance: number
-}
-
-export interface QuarterData {
-  invoices: Invoice[]
-  expenses: Expense[]
-  cashflow: CashflowEntry[]
-  carryOver: number
-}
+import type { QuarterData } from "./types"
 
 // ── Sample Data ────────────────────────────────────────────
 
 export const quarters: Record<string, QuarterData> = {
   "2025.4Q": {
+    name: "2025.4Q",
+    companyName: "Nómada Digital S.L.",
     carryOver: 12450.3,
     invoices: [
       {
@@ -237,13 +192,14 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-001",
         date: "2025-10-01",
         concept: "Carry over",
+        bankSequence: 123,
         balance: 12450.3,
       },
       {
         id: "cf-002",
         date: "2025-10-05",
         concept: "GitHub subscription",
-        reference: "exp-002",
+        bankSequence: 124,
         expense: 19.0,
         balance: 12431.3,
       },
@@ -251,7 +207,7 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-003",
         date: "2025-10-08",
         concept: "Hetzner hosting",
-        reference: "exp-001",
+        bankSequence: 125,
         expense: 108.54,
         balance: 12322.76,
       },
@@ -259,7 +215,7 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-004",
         date: "2025-10-12",
         concept: "Acme Solutions - inv 042",
-        reference: "inv-001",
+        bankSequence: 126,
         income: 3872.0,
         balance: 16194.76,
       },
@@ -267,7 +223,7 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-005",
         date: "2025-10-15",
         concept: "WeWork coworking Oct",
-        reference: "exp-003",
+        bankSequence: 127,
         expense: 302.5,
         balance: 15892.26,
       },
@@ -275,7 +231,7 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-006",
         date: "2025-10-25",
         concept: "Nordica Digital - inv 043",
-        reference: "inv-002",
+        bankSequence: 128,
         income: 2800.0,
         balance: 18692.26,
       },
@@ -283,7 +239,7 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-007",
         date: "2025-11-03",
         concept: "Seguridad Social Q4",
-        reference: "exp-004",
+        bankSequence: 129,
         expense: 960.0,
         balance: 17732.26,
       },
@@ -291,7 +247,7 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-008",
         date: "2025-11-10",
         concept: "Acme Solutions - inv 044",
-        reference: "inv-003",
+        bankSequence: 130,
         income: 3872.0,
         balance: 21604.26,
       },
@@ -299,7 +255,7 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-009",
         date: "2025-11-15",
         concept: "WeWork coworking Nov",
-        reference: "exp-005",
+        bankSequence: 131,
         expense: 302.5,
         balance: 21301.76,
       },
@@ -307,7 +263,7 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-010",
         date: "2025-12-01",
         concept: "Figma annual plan",
-        reference: "exp-006",
+        bankSequence: 132,
         expense: 144.0,
         balance: 21157.76,
       },
@@ -315,7 +271,7 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-011",
         date: "2025-12-05",
         concept: "Acme Solutions - inv 046",
-        reference: "inv-005",
+        bankSequence: 133,
         income: 3872.0,
         balance: 25029.76,
       },
@@ -323,7 +279,7 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-012",
         date: "2025-12-10",
         concept: "VAT payment Q3",
-        reference: "exp-007",
+        bankSequence: 134,
         expense: 1842.0,
         balance: 23187.76,
       },
@@ -331,13 +287,15 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-013",
         date: "2025-12-15",
         concept: "WeWork coworking Dec",
-        reference: "exp-008",
+        bankSequence: 135,
         expense: 302.5,
         balance: 22885.26,
       },
     ],
   },
   "2026.1Q": {
+    name: "2026.1Q",
+    companyName: "Nómada Digital S.L.",
     carryOver: 22885.26,
     invoices: [
       {
@@ -479,13 +437,14 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-101",
         date: "2026-01-01",
         concept: "Carry over",
+        bankSequence: 136,
         balance: 22885.26,
       },
       {
         id: "cf-102",
         date: "2026-01-05",
         concept: "GitHub subscription",
-        reference: "exp-102",
+        bankSequence: 137,
         expense: 19.0,
         balance: 22866.26,
       },
@@ -493,7 +452,7 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-103",
         date: "2026-01-08",
         concept: "Hetzner hosting",
-        reference: "exp-101",
+        bankSequence: 138,
         expense: 108.54,
         balance: 22757.72,
       },
@@ -501,7 +460,7 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-104",
         date: "2026-01-12",
         concept: "Acme Solutions - inv 001",
-        reference: "inv-101",
+        bankSequence: 139,
         income: 3872.0,
         balance: 26629.72,
       },
@@ -509,7 +468,7 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-105",
         date: "2026-01-15",
         concept: "WeWork coworking Jan",
-        reference: "exp-103",
+        bankSequence: 140,
         expense: 302.5,
         balance: 26327.22,
       },
@@ -517,7 +476,7 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-106",
         date: "2026-01-28",
         concept: "La Bodega Digital - inv 002",
-        reference: "inv-102",
+        bankSequence: 141,
         income: 1452.0,
         balance: 27779.22,
       },
@@ -525,7 +484,7 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-107",
         date: "2026-02-03",
         concept: "Seguridad Social Q1",
-        reference: "exp-104",
+        bankSequence: 142,
         expense: 960.0,
         balance: 26819.22,
       },
@@ -533,7 +492,7 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-108",
         date: "2026-02-10",
         concept: "Acme Solutions - inv 003",
-        reference: "inv-103",
+        bankSequence: 143,
         income: 3872.0,
         balance: 30691.22,
       },
@@ -541,7 +500,7 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-109",
         date: "2026-02-15",
         concept: "WeWork coworking Feb",
-        reference: "exp-105",
+        bankSequence: 144,
         expense: 302.5,
         balance: 30388.72,
       },
@@ -549,7 +508,7 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-110",
         date: "2026-03-15",
         concept: "WeWork coworking Mar",
-        reference: "exp-106",
+        bankSequence: 145,
         expense: 302.5,
         balance: 30086.22,
       },

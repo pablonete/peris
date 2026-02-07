@@ -50,7 +50,8 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
           {t("expenses.expenses")}
         </h2>
         <p className="font-mono text-xs text-muted-foreground">
-          {quarterId} &middot; {data.expenses.length} {t("expenses.entries")}
+          {data.name} &middot; {data.companyName} &middot;{" "}
+          {data.expenses.length} {t("expenses.entries")}
         </p>
       </div>
 

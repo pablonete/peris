@@ -49,7 +49,8 @@ export function CashflowView({
           {t("cashflow.cashflow")}
         </h2>
         <p className="font-mono text-xs text-muted-foreground">
-          {quarterId} &middot; Bank Unicaja
+          {data.name} &middot; {data.companyName} &middot;{" "}
+          {data.cashflow.length} {t("cashflow.movements")}
         </p>
       </div>
 
@@ -99,9 +100,6 @@ export function CashflowView({
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
                 Concept
               </TableHead>
-              <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
-                Ref.
-              </TableHead>
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-right">
                 {t("cashflow.invoiced")}
               </TableHead>
@@ -125,7 +123,12 @@ export function CashflowView({
                   )}
                 >
                   <TableCell className="font-mono text-xs">
-                    {formatDate(entry.date)}
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-mono text-[10px] text-muted-foreground/60">
+                        {String(entry.bankSequence).padStart(4, "0")}
+                      </span>
+                      <span>{formatDate(entry.date)}</span>
+                    </div>
                   </TableCell>
                   <TableCell className={cn("text-sm", isCarryOver && "italic")}>
                     {isCarryOver ? (
@@ -156,9 +159,6 @@ export function CashflowView({
                       entry.concept
                     )}
                   </TableCell>
-                  <TableCell className="font-mono text-[10px] text-muted-foreground">
-                    {entry.reference ?? ""}
-                  </TableCell>
                   <TableCell className="font-mono text-xs text-right">
                     {entry.income != null ? (
                       <span className="text-[hsl(var(--ledger-green))] font-semibold">
@@ -186,7 +186,7 @@ export function CashflowView({
           </TableBody>
           <TableFooter>
             <TableRow className="border-t-2 border-foreground/20 bg-secondary/30 hover:bg-secondary/30">
-              <TableCell colSpan={3} className="font-semibold text-sm">
+              <TableCell colSpan={2} className="font-semibold text-sm">
                 Period totals
               </TableCell>
               <TableCell className="font-mono text-xs font-semibold text-right text-[hsl(var(--ledger-green))]">
