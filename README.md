@@ -53,9 +53,8 @@ pnpm dev
 
 ### Navigation
 
-- Use the **sidebar** to select quarters and navigate between different views
-- Click on **quarter names** (e.g., "2024.Q1") to expand and view options
-- Choose between **Invoices**, **Expenses**, or **Cashflow** views
+- Use the **sidebar** to switch between quarters and views
+- Click on **quarter names** to expand and view available reports
 
 ### Language Toggle
 
@@ -83,16 +82,29 @@ pnpm lint     # Run ESLint
 
 ```
 peris/
-├── app/              # Next.js App Router pages
-├── components/       # React components
-│   ├── ui/          # Reusable UI components (Radix-based)
-│   ├── *-view.tsx   # Main view components
+├── app/
+│   ├── (main)/          # Route group for main application
+│   │   ├── page.tsx     # Welcome page
+│   │   ├── layout.tsx   # Main layout with sidebar
+│   │   └── [quarter]/   # Dynamic quarter segment
+│   │       ├── invoices/page.tsx
+│   │       ├── expenses/page.tsx
+│   │       └── cashflow/
+│   │           ├── page.tsx
+│   │           └── cashflow-client.tsx
+│   ├── layout.tsx       # Root layout with providers
+│   ├── providers.tsx
+│   └── globals.css
+├── components/
+│   ├── ui/              # Reusable UI components (Radix-based)
+│   ├── *-view.tsx       # Main view components
 │   └── ledger-sidebar.tsx
-├── lib/             # Utilities and data
+├── lib/
 │   ├── i18n-context.tsx   # Internationalization
 │   ├── translations.ts    # Language dictionaries
+│   ├── types.ts           # TypeScript type definitions
 │   └── sample-data.ts     # Demo financial data
-└── public/          # Static assets
+└── public/              # Static assets
 ```
 
 ## Deployment
