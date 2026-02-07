@@ -15,28 +15,28 @@ export interface Invoice {
   subtotal: number
   vat: number
   total: number
-  paymentDate: string | null
+  paymentDate?: string
 }
 
 export interface Expense {
   id: string
   date: string
-  number: string | null
+  number?: string
   vendor: string
   concept: string
   vat: VatItem[] // array of VAT items (typically one)
-  taxRetention: number | null // Tax withholding (15% typical)
+  taxRetention?: number // Tax withholding (15% typical)
   total: number
-  paymentDate: string | null
+  paymentDate?: string
 }
 
 export interface CashflowEntry {
   id: string
   date: string
   concept: string
-  reference: string | null
-  income: number | null
-  expense: number | null
+  reference?: string
+  income?: number
+  expense?: number
   balance: number
 }
 
@@ -95,7 +95,6 @@ export const quarters: Record<string, QuarterData> = {
         subtotal: 4500.0,
         vat: 945.0,
         total: 5445.0,
-        paymentDate: null,
       },
       {
         id: "inv-005",
@@ -117,7 +116,6 @@ export const quarters: Record<string, QuarterData> = {
         subtotal: 5800.0,
         vat: 1218.0,
         total: 7018.0,
-        paymentDate: null,
       },
     ],
     expenses: [
@@ -128,18 +126,15 @@ export const quarters: Record<string, QuarterData> = {
         vendor: "Hetzner Online GmbH",
         concept: "Cloud server hosting (Oct-Dec)",
         vat: [{ subtotal: 89.7, rate: 19, amount: 17.04 }],
-        taxRetention: null,
         total: 106.74,
         paymentDate: "2025-10-15",
       },
       {
         id: "exp-002",
         date: "2025-10-05",
-        number: null,
         vendor: "GitHub Inc.",
         concept: "Team plan subscription",
         vat: [],
-        taxRetention: null,
         total: 19.0,
         paymentDate: "2025-10-08",
       },
@@ -150,7 +145,6 @@ export const quarters: Record<string, QuarterData> = {
         vendor: "WeWork Spain S.L.",
         concept: "Coworking space - October",
         vat: [{ subtotal: 250.0, rate: 21, amount: 52.5 }],
-        taxRetention: null,
         total: 302.5,
         paymentDate: "2025-10-20",
       },
@@ -168,11 +162,9 @@ export const quarters: Record<string, QuarterData> = {
       {
         id: "exp-005",
         date: "2025-11-03",
-        number: null,
         vendor: "Seguridad Social",
         concept: "Self-employment contribution Q4",
         vat: [],
-        taxRetention: null,
         total: 960.0,
         paymentDate: "2025-11-10",
       },
@@ -183,7 +175,6 @@ export const quarters: Record<string, QuarterData> = {
         vendor: "WeWork Spain S.L.",
         concept: "Coworking space - November",
         vat: [{ subtotal: 250.0, rate: 21, amount: 52.5 }],
-        taxRetention: null,
         total: 302.5,
         paymentDate: "2025-11-22",
       },
@@ -194,18 +185,15 @@ export const quarters: Record<string, QuarterData> = {
         vendor: "Figma Inc.",
         concept: "Professional plan (annual)",
         vat: [],
-        taxRetention: null,
         total: 144.0,
         paymentDate: "2025-12-05",
       },
       {
         id: "exp-008",
         date: "2025-12-10",
-        number: null,
         vendor: "Agencia Tributaria",
         concept: "VAT payment Q3 (modelo 303)",
         vat: [],
-        taxRetention: null,
         total: 1842.0,
         paymentDate: "2025-12-15",
       },
@@ -216,9 +204,7 @@ export const quarters: Record<string, QuarterData> = {
         vendor: "WeWork Spain S.L.",
         concept: "Coworking space - December",
         vat: [{ subtotal: 250.0, rate: 21, amount: 52.5 }],
-        taxRetention: null,
         total: 302.5,
-        paymentDate: null,
       },
       {
         id: "exp-010",
@@ -230,7 +216,6 @@ export const quarters: Record<string, QuarterData> = {
           { subtotal: 1000.0, rate: 10, amount: 100.0 },
           { subtotal: 900.0, rate: 21, amount: 189.0 },
         ],
-        taxRetention: null,
         total: 2189.0,
         paymentDate: "2026-01-10",
       },
@@ -244,9 +229,7 @@ export const quarters: Record<string, QuarterData> = {
           { subtotal: 1500.0, rate: 0, amount: 0.0 },
           { subtotal: 1000.0, rate: 21, amount: 210.0 },
         ],
-        taxRetention: null,
         total: 2710.0,
-        paymentDate: null,
       },
     ],
     cashflow: [
@@ -254,9 +237,6 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-001",
         date: "2025-10-01",
         concept: "Carry over",
-        reference: null,
-        income: null,
-        expense: null,
         balance: 12450.3,
       },
       {
@@ -264,7 +244,6 @@ export const quarters: Record<string, QuarterData> = {
         date: "2025-10-05",
         concept: "GitHub subscription",
         reference: "exp-002",
-        income: null,
         expense: 19.0,
         balance: 12431.3,
       },
@@ -273,7 +252,6 @@ export const quarters: Record<string, QuarterData> = {
         date: "2025-10-08",
         concept: "Hetzner hosting",
         reference: "exp-001",
-        income: null,
         expense: 108.54,
         balance: 12322.76,
       },
@@ -283,7 +261,6 @@ export const quarters: Record<string, QuarterData> = {
         concept: "Acme Solutions - inv 042",
         reference: "inv-001",
         income: 3872.0,
-        expense: null,
         balance: 16194.76,
       },
       {
@@ -291,7 +268,6 @@ export const quarters: Record<string, QuarterData> = {
         date: "2025-10-15",
         concept: "WeWork coworking Oct",
         reference: "exp-003",
-        income: null,
         expense: 302.5,
         balance: 15892.26,
       },
@@ -301,7 +277,6 @@ export const quarters: Record<string, QuarterData> = {
         concept: "Nordica Digital - inv 043",
         reference: "inv-002",
         income: 2800.0,
-        expense: null,
         balance: 18692.26,
       },
       {
@@ -309,7 +284,6 @@ export const quarters: Record<string, QuarterData> = {
         date: "2025-11-03",
         concept: "Seguridad Social Q4",
         reference: "exp-004",
-        income: null,
         expense: 960.0,
         balance: 17732.26,
       },
@@ -319,7 +293,6 @@ export const quarters: Record<string, QuarterData> = {
         concept: "Acme Solutions - inv 044",
         reference: "inv-003",
         income: 3872.0,
-        expense: null,
         balance: 21604.26,
       },
       {
@@ -327,7 +300,6 @@ export const quarters: Record<string, QuarterData> = {
         date: "2025-11-15",
         concept: "WeWork coworking Nov",
         reference: "exp-005",
-        income: null,
         expense: 302.5,
         balance: 21301.76,
       },
@@ -336,7 +308,6 @@ export const quarters: Record<string, QuarterData> = {
         date: "2025-12-01",
         concept: "Figma annual plan",
         reference: "exp-006",
-        income: null,
         expense: 144.0,
         balance: 21157.76,
       },
@@ -346,7 +317,6 @@ export const quarters: Record<string, QuarterData> = {
         concept: "Acme Solutions - inv 046",
         reference: "inv-005",
         income: 3872.0,
-        expense: null,
         balance: 25029.76,
       },
       {
@@ -354,7 +324,6 @@ export const quarters: Record<string, QuarterData> = {
         date: "2025-12-10",
         concept: "VAT payment Q3",
         reference: "exp-007",
-        income: null,
         expense: 1842.0,
         balance: 23187.76,
       },
@@ -363,7 +332,6 @@ export const quarters: Record<string, QuarterData> = {
         date: "2025-12-15",
         concept: "WeWork coworking Dec",
         reference: "exp-008",
-        income: null,
         expense: 302.5,
         balance: 22885.26,
       },
@@ -414,7 +382,6 @@ export const quarters: Record<string, QuarterData> = {
         subtotal: 6200.0,
         vat: 1302.0,
         total: 7502.0,
-        paymentDate: null,
       },
       {
         id: "inv-105",
@@ -425,7 +392,6 @@ export const quarters: Record<string, QuarterData> = {
         subtotal: 3200.0,
         vat: 672.0,
         total: 3872.0,
-        paymentDate: null,
       },
     ],
     expenses: [
@@ -436,18 +402,15 @@ export const quarters: Record<string, QuarterData> = {
         vendor: "Hetzner Online GmbH",
         concept: "Cloud server hosting (Jan-Mar)",
         vat: [{ subtotal: 89.7, rate: 19, amount: 17.04 }],
-        taxRetention: null,
         total: 106.74,
         paymentDate: "2026-01-10",
       },
       {
         id: "exp-102",
         date: "2026-01-05",
-        number: null,
         vendor: "GitHub Inc.",
         concept: "Team plan subscription",
         vat: [],
-        taxRetention: null,
         total: 19.0,
         paymentDate: "2026-01-08",
       },
@@ -458,7 +421,6 @@ export const quarters: Record<string, QuarterData> = {
         vendor: "WeWork Spain S.L.",
         concept: "Coworking space - January",
         vat: [{ subtotal: 250.0, rate: 21, amount: 52.5 }],
-        taxRetention: null,
         total: 302.5,
         paymentDate: "2026-01-22",
       },
@@ -476,11 +438,9 @@ export const quarters: Record<string, QuarterData> = {
       {
         id: "exp-105",
         date: "2026-02-03",
-        number: null,
         vendor: "Seguridad Social",
         concept: "Self-employment contribution Q1",
         vat: [],
-        taxRetention: null,
         total: 960.0,
         paymentDate: "2026-02-12",
       },
@@ -491,7 +451,6 @@ export const quarters: Record<string, QuarterData> = {
         vendor: "WeWork Spain S.L.",
         concept: "Coworking space - February",
         vat: [{ subtotal: 250.0, rate: 21, amount: 52.5 }],
-        taxRetention: null,
         total: 302.5,
         paymentDate: "2026-02-22",
       },
@@ -502,9 +461,7 @@ export const quarters: Record<string, QuarterData> = {
         vendor: "Photography & Media Inc.",
         concept: "Product photography shoot",
         vat: [{ subtotal: 1200.0, rate: 10, amount: 120.0 }],
-        taxRetention: null,
         total: 1320.0,
-        paymentDate: null,
       },
       {
         id: "exp-108",
@@ -513,7 +470,6 @@ export const quarters: Record<string, QuarterData> = {
         vendor: "WeWork Spain S.L.",
         concept: "Coworking space - March",
         vat: [{ subtotal: 250.0, rate: 21, amount: 52.5 }],
-        taxRetention: null,
         total: 302.5,
         paymentDate: "2026-03-22",
       },
@@ -523,9 +479,6 @@ export const quarters: Record<string, QuarterData> = {
         id: "cf-101",
         date: "2026-01-01",
         concept: "Carry over",
-        reference: null,
-        income: null,
-        expense: null,
         balance: 22885.26,
       },
       {
@@ -533,7 +486,6 @@ export const quarters: Record<string, QuarterData> = {
         date: "2026-01-05",
         concept: "GitHub subscription",
         reference: "exp-102",
-        income: null,
         expense: 19.0,
         balance: 22866.26,
       },
@@ -542,7 +494,6 @@ export const quarters: Record<string, QuarterData> = {
         date: "2026-01-08",
         concept: "Hetzner hosting",
         reference: "exp-101",
-        income: null,
         expense: 108.54,
         balance: 22757.72,
       },
@@ -552,7 +503,6 @@ export const quarters: Record<string, QuarterData> = {
         concept: "Acme Solutions - inv 001",
         reference: "inv-101",
         income: 3872.0,
-        expense: null,
         balance: 26629.72,
       },
       {
@@ -560,7 +510,6 @@ export const quarters: Record<string, QuarterData> = {
         date: "2026-01-15",
         concept: "WeWork coworking Jan",
         reference: "exp-103",
-        income: null,
         expense: 302.5,
         balance: 26327.22,
       },
@@ -570,7 +519,6 @@ export const quarters: Record<string, QuarterData> = {
         concept: "La Bodega Digital - inv 002",
         reference: "inv-102",
         income: 1452.0,
-        expense: null,
         balance: 27779.22,
       },
       {
@@ -578,7 +526,6 @@ export const quarters: Record<string, QuarterData> = {
         date: "2026-02-03",
         concept: "Seguridad Social Q1",
         reference: "exp-104",
-        income: null,
         expense: 960.0,
         balance: 26819.22,
       },
@@ -588,7 +535,6 @@ export const quarters: Record<string, QuarterData> = {
         concept: "Acme Solutions - inv 003",
         reference: "inv-103",
         income: 3872.0,
-        expense: null,
         balance: 30691.22,
       },
       {
@@ -596,7 +542,6 @@ export const quarters: Record<string, QuarterData> = {
         date: "2026-02-15",
         concept: "WeWork coworking Feb",
         reference: "exp-105",
-        income: null,
         expense: 302.5,
         balance: 30388.72,
       },
@@ -605,7 +550,6 @@ export const quarters: Record<string, QuarterData> = {
         date: "2026-03-15",
         concept: "WeWork coworking Mar",
         reference: "exp-106",
-        income: null,
         expense: 302.5,
         balance: 30086.22,
       },

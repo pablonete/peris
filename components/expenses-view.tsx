@@ -158,7 +158,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                   )}
                 </TableCell>
                 <TableCell className="font-mono text-xs text-right">
-                  {exp.taxRetention !== null
+                  {exp.taxRetention
                     ? formatCurrency(exp.taxRetention)
                     : "\u2014"}
                 </TableCell>
