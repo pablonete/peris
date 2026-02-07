@@ -6,7 +6,7 @@ A minimalist ledger book application for financial tracking based on GitHub repo
 
 - 📊 **Quarterly Organization** - Track finances by quarters (Q1-Q4)
 - 💰 **Invoice Management** - Record and monitor sent invoices with payment dates
-- 🧾 **Expense Tracking** - Log business expenses with VAT calculations
+- 🧾 **Expense Tracking** - Log business expenses with VAT (multiple), IRPF (15%) and payment dates
 - 💵 **Cashflow View** - Monitor bank balance and transaction flow over time
 - 🌍 **Bilingual Support** - Switch between Spanish (ES) and English (EN)
 
@@ -65,7 +65,7 @@ Switch between Spanish and English using the **ES | EN** toggle at the bottom of
 
 - **Welcome** - Overview of all quarters with key financial metrics
 - **Invoices** - Detailed list of sent invoices with totals and payment dates
-- **Expenses** - Business expenses with VAT breakdown
+- **Expenses** - Business expenses with VAT rates (multiple), IRPF tax withholding, payment dates, and paid/pending status summary
 - **Cashflow** - Month-by-month bank balance and transactions
 
 ## Development
