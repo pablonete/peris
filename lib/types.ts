@@ -64,8 +64,8 @@ export interface CashflowEntry {
   /** Transaction date in ISO format (YYYY-MM-DD) */
   date: string
   concept: string
-  /** Reference to the related invoice or expense ID */
-  reference?: string
+  /** Sequential bank movement number within the quarter */
+  bankSequence: number
   /** Income amount if this is an income transaction */
   income?: number
   /** Expense amount if this is an expense transaction */
