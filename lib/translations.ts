@@ -38,6 +38,9 @@ export const translations = {
       category: "Categoría",
       amount: "Monto",
       description: "Descripción",
+      entries: "registros",
+      paid: "Pagado",
+      pending: "Pendiente",
     },
     cashflow: {
       cashflow: "Flujo de caja",
@@ -95,6 +98,9 @@ export const translations = {
       category: "Category",
       amount: "Amount",
       description: "Description",
+      entries: "entries",
+      paid: "Paid",
+      pending: "Pending",
     },
     cashflow: {
       cashflow: "Cashflow",

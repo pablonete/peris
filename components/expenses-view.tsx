@@ -22,14 +22,24 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
   const data = quarters[quarterId]
   if (!data) return null
 
-  const totalSubtotal = data.expenses.reduce((s, e) => s + e.subtotal, 0)
-  const totalVat = data.expenses.reduce((s, e) => s + e.vat, 0)
+  const totalSubtotal = data.expenses.reduce(
+    (s, e) => s + e.vat.reduce((v, item) => v + item.subtotal, 0),
+    0
+  )
+  const totalVat = data.expenses.reduce(
+    (s, e) => s + e.vat.reduce((v, item) => v + item.amount, 0),
+    0
+  )
+  const totalTaxRetention = data.expenses.reduce(
+    (s, e) => s + (e.taxRetention || 0),
+    0
+  )
   const totalAmount = data.expenses.reduce((s, e) => s + e.total, 0)
-  const deductibleTotal = data.expenses
-    .filter((e) => e.deductible)
+  const paidExpenses = data.expenses
+    .filter((e) => e.paymentDate !== null)
     .reduce((s, e) => s + e.total, 0)
-  const nonDeductibleTotal = data.expenses
-    .filter((e) => !e.deductible)
+  const pendingExpenses = data.expenses
+    .filter((e) => e.paymentDate === null)
     .reduce((s, e) => s + e.total, 0)
 
   return (
@@ -40,7 +50,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
           {t("expenses.expenses")}
         </h2>
         <p className="font-mono text-xs text-muted-foreground">
-          {quarterId} &middot; {data.expenses.length} entries
+          {quarterId} &middot; {data.expenses.length} {t("expenses.entries")}
         </p>
       </div>
 
@@ -48,8 +58,8 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {[
           { label: t("expenses.totalExpenses"), value: totalAmount },
-          { label: "Deductible", value: deductibleTotal },
-          { label: "Non-deductible", value: nonDeductibleTotal },
+          { label: t("expenses.paid"), value: paidExpenses },
+          { label: t("expenses.pending"), value: pendingExpenses },
         ].map((card) => (
           <div
             key={card.label}
@@ -89,10 +99,13 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                 VAT
               </TableHead>
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-right">
+                IRPF
+              </TableHead>
+              <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-right">
                 Total
               </TableHead>
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-center">
-                Deduct.
+                Payment
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -115,24 +128,53 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                   {exp.concept}
                 </TableCell>
                 <TableCell className="font-mono text-xs text-right">
-                  {formatCurrency(exp.subtotal)}
+                  {exp.vat.length > 0 ? (
+                    <div className="flex flex-col gap-1">
+                      {exp.vat.map((vat, idx) => (
+                        <div key={idx}>{formatCurrency(vat.subtotal)}</div>
+                      ))}
+                    </div>
+                  ) : (
+                    formatCurrency(exp.total)
+                  )}
                 </TableCell>
-                <TableCell className="font-mono text-xs text-right text-muted-foreground">
-                  {exp.vat > 0 ? formatCurrency(exp.vat) : "\u2014"}
+                <TableCell className="font-mono text-xs text-right">
+                  {exp.vat.length > 0 ? (
+                    <div className="flex flex-col gap-1">
+                      {exp.vat.map((vat, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-baseline justify-end gap-1"
+                        >
+                          <span className="text-[9px] text-muted-foreground/60">
+                            {vat.rate}%
+                          </span>
+                          <span>{formatCurrency(vat.amount)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    "\u2014"
+                  )}
+                </TableCell>
+                <TableCell className="font-mono text-xs text-right">
+                  {exp.taxRetention
+                    ? formatCurrency(exp.taxRetention)
+                    : "\u2014"}
                 </TableCell>
                 <TableCell className="font-mono text-sm font-semibold text-right text-[hsl(var(--ledger-red))]">
                   {formatCurrency(exp.total)}
                 </TableCell>
                 <TableCell className="text-center">
-                  <Badge
-                    className={
-                      exp.deductible
-                        ? "rounded-sm font-mono text-[10px] uppercase tracking-wider bg-[hsl(var(--ledger-green))] text-[hsl(var(--card))]"
-                        : "rounded-sm font-mono text-[10px] uppercase tracking-wider bg-muted text-muted-foreground"
-                    }
-                  >
-                    {exp.deductible ? "Yes" : "No"}
-                  </Badge>
+                  {exp.paymentDate ? (
+                    <Badge className="rounded-sm font-mono text-[10px] uppercase tracking-wider bg-[hsl(var(--ledger-green))] text-[hsl(var(--card))]">
+                      {formatDate(exp.paymentDate)}
+                    </Badge>
+                  ) : (
+                    <Badge className="rounded-sm font-mono text-[10px] uppercase tracking-wider bg-muted text-muted-foreground">
+                      {t("expenses.pending")}
+                    </Badge>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
@@ -147,6 +189,9 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
               </TableCell>
               <TableCell className="font-mono text-xs font-semibold text-right">
                 {formatCurrency(totalVat)}
+              </TableCell>
+              <TableCell className="font-mono text-xs font-semibold text-right">
+                {formatCurrency(totalTaxRetention)}
               </TableCell>
               <TableCell className="font-mono text-sm font-bold text-right text-[hsl(var(--ledger-red))]">
                 {formatCurrency(totalAmount)}
