@@ -1,30 +1,37 @@
-"use client"
+"use client";
 
-import { quarterIds, getQuarterSummary, formatCurrency } from "@/lib/sample-data"
-import type { ViewType } from "@/components/ledger-sidebar"
+import {
+  quarterIds,
+  getQuarterSummary,
+  formatCurrency,
+} from "@/lib/sample-data";
+import type { ViewType } from "@/components/ledger-sidebar";
+import { useLanguage } from "@/lib/i18n-context";
 
 interface WelcomeViewProps {
-  onNavigate: (quarter: string, view: ViewType) => void
+  onNavigate: (quarter: string, view: ViewType) => void;
 }
 
 export function WelcomeView({ onNavigate }: WelcomeViewProps) {
+  const { t } = useLanguage();
+
   return (
     <div>
       {/* Header */}
       <div className="mb-8 border-b-2 border-foreground/20 pb-4">
         <h2 className="text-3xl font-bold tracking-wide text-foreground">
-          Ledger Book
+          {t("welcome.ledgerBook")}
         </h2>
         <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
-          Select a quarter from the sidebar, or browse the overview below.
+          {t("welcome.selectQuarter")}
         </p>
       </div>
 
       {/* Quarter overview cards */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {quarterIds.map((qId) => {
-          const summary = getQuarterSummary(qId)
-          if (!summary) return null
+          const summary = getQuarterSummary(qId);
+          if (!summary) return null;
           return (
             <div
               key={qId}
@@ -36,7 +43,7 @@ export function WelcomeView({ onNavigate }: WelcomeViewProps) {
                   {qId}
                 </h3>
                 <span className="font-mono text-xs text-muted-foreground">
-                  Net: {formatCurrency(summary.net)}
+                  {t("welcome.net")}: {formatCurrency(summary.net)}
                 </span>
               </div>
 
@@ -44,7 +51,7 @@ export function WelcomeView({ onNavigate }: WelcomeViewProps) {
               <div className="mb-5 grid grid-cols-2 gap-4">
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                    Invoiced
+                    {t("welcome.invoiced")}
                   </p>
                   <p className="font-mono text-base font-semibold text-foreground">
                     {formatCurrency(summary.totalInvoiced)}
@@ -52,7 +59,7 @@ export function WelcomeView({ onNavigate }: WelcomeViewProps) {
                 </div>
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                    Expenses
+                    {t("welcome.expenses")}
                   </p>
                   <p className="font-mono text-base font-semibold text-[hsl(var(--ledger-red))]">
                     {formatCurrency(summary.totalExpenses)}
@@ -60,7 +67,7 @@ export function WelcomeView({ onNavigate }: WelcomeViewProps) {
                 </div>
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                    Opening
+                    {t("welcome.opening")}
                   </p>
                   <p className="font-mono text-sm text-foreground">
                     {formatCurrency(summary.carryOver)}
@@ -68,7 +75,7 @@ export function WelcomeView({ onNavigate }: WelcomeViewProps) {
                 </div>
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                    Closing
+                    {t("welcome.closing")}
                   </p>
                   <p className="font-mono text-sm font-semibold text-foreground">
                     {formatCurrency(summary.closingBalance)}
@@ -85,14 +92,14 @@ export function WelcomeView({ onNavigate }: WelcomeViewProps) {
                     onClick={() => onNavigate(qId, view)}
                     className="rounded-sm border border-border bg-secondary/60 px-3 py-1.5 font-mono text-xs capitalize text-secondary-foreground transition-colors hover:bg-secondary"
                   >
-                    {view}
+                    {t(`sidebar.${view}`)}
                   </button>
                 ))}
               </div>
             </div>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }

@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { quarters, formatCurrency, formatDate } from "@/lib/sample-data"
+import { quarters, formatCurrency, formatDate } from "@/lib/sample-data";
 import {
   Table,
   TableBody,
@@ -9,28 +9,31 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n-context";
 
 interface CashflowViewProps {
-  quarterId: string
+  quarterId: string;
 }
 
 export function CashflowView({ quarterId }: CashflowViewProps) {
-  const data = quarters[quarterId]
-  if (!data) return null
+  const { t } = useLanguage();
+  const data = quarters[quarterId];
+  if (!data) return null;
 
-  const totalIncome = data.cashflow.reduce((s, e) => s + (e.income ?? 0), 0)
-  const totalExpense = data.cashflow.reduce((s, e) => s + (e.expense ?? 0), 0)
-  const openingBalance = data.carryOver
-  const closingBalance = data.cashflow[data.cashflow.length - 1]?.balance ?? openingBalance
+  const totalIncome = data.cashflow.reduce((s, e) => s + (e.income ?? 0), 0);
+  const totalExpense = data.cashflow.reduce((s, e) => s + (e.expense ?? 0), 0);
+  const openingBalance = data.carryOver;
+  const closingBalance =
+    data.cashflow[data.cashflow.length - 1]?.balance ?? openingBalance;
 
   return (
     <div>
       {/* Page heading */}
       <div className="mb-6 border-b-2 border-foreground/20 pb-4">
         <h2 className="text-2xl font-bold tracking-wide text-foreground">
-          Cashflow
+          {t("cashflow.cashflow")}
         </h2>
         <p className="font-mono text-xs text-muted-foreground">
           {quarterId} &middot; Bank Unicaja
@@ -40,10 +43,18 @@ export function CashflowView({ quarterId }: CashflowViewProps) {
       {/* Summary cards */}
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-4">
         {[
-          { label: "Opening balance", value: openingBalance, color: "" },
-          { label: "Total income", value: totalIncome, color: "text-[hsl(var(--ledger-green))]" },
-          { label: "Total outflow", value: totalExpense, color: "text-[hsl(var(--ledger-red))]" },
-          { label: "Closing balance", value: closingBalance, color: "" },
+          { label: t("cashflow.opening"), value: openingBalance, color: "" },
+          {
+            label: "Total income",
+            value: totalIncome,
+            color: "text-[hsl(var(--ledger-green))]",
+          },
+          {
+            label: "Total outflow",
+            value: totalExpense,
+            color: "text-[hsl(var(--ledger-red))]",
+          },
+          { label: t("cashflow.closing"), value: closingBalance, color: "" },
         ].map((card) => (
           <div
             key={card.label}
@@ -55,7 +66,7 @@ export function CashflowView({ quarterId }: CashflowViewProps) {
             <p
               className={cn(
                 "mt-1 font-mono text-xl font-semibold",
-                card.color || "text-foreground"
+                card.color || "text-foreground",
               )}
             >
               {formatCurrency(card.value)}
@@ -70,7 +81,7 @@ export function CashflowView({ quarterId }: CashflowViewProps) {
           <TableHeader>
             <TableRow className="border-b-2 border-foreground/15 hover:bg-transparent">
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
-                Date
+                {t("cashflow.month")}
               </TableHead>
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
                 Concept
@@ -79,10 +90,10 @@ export function CashflowView({ quarterId }: CashflowViewProps) {
                 Ref.
               </TableHead>
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-right">
-                Income
+                {t("cashflow.invoiced")}
               </TableHead>
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-right">
-                Expense
+                {t("cashflow.expenses")}
               </TableHead>
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-right">
                 Balance
@@ -91,13 +102,13 @@ export function CashflowView({ quarterId }: CashflowViewProps) {
           </TableHeader>
           <TableBody>
             {data.cashflow.map((entry, idx) => {
-              const isCarryOver = idx === 0 && entry.concept === "Carry over"
+              const isCarryOver = idx === 0 && entry.concept === "Carry over";
               return (
                 <TableRow
                   key={entry.id}
                   className={cn(
                     "border-b border-dashed border-[hsl(var(--ledger-line))] hover:bg-secondary/50",
-                    isCarryOver && "bg-secondary/40 font-semibold"
+                    isCarryOver && "bg-secondary/40 font-semibold",
                   )}
                 >
                   <TableCell className="font-mono text-xs">
@@ -131,7 +142,7 @@ export function CashflowView({ quarterId }: CashflowViewProps) {
                     {formatCurrency(entry.balance)}
                   </TableCell>
                 </TableRow>
-              )
+              );
             })}
           </TableBody>
           <TableFooter>
@@ -153,5 +164,5 @@ export function CashflowView({ quarterId }: CashflowViewProps) {
         </Table>
       </div>
     </div>
-  )
+  );
 }
