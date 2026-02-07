@@ -1,7 +1,7 @@
 export const translations = {
   es: {
     sidebar: {
-      ledgerBook: "Ledger Book",
+      ledgerBook: "Peris",
       accounting: "contabilidad",
       quarters: "Trimestres",
       sampleData: "Datos de ejemplo para demostración",
@@ -10,7 +10,7 @@ export const translations = {
       cashflow: "Flujo de caja",
     },
     welcome: {
-      ledgerBook: "Ledger Book",
+      ledgerBook: "Peris",
       selectQuarter:
         "Selecciona un trimestre en la barra lateral, o explora la descripción general a continuación.",
       invoiced: "Facturado",
@@ -27,10 +27,8 @@ export const translations = {
       date: "Fecha",
       client: "Cliente",
       amount: "Monto",
-      status: "Estado",
-      paid: "Pagado",
+      paymentDate: "Fecha de pago",
       pending: "Pendiente",
-      overdue: "Vencido",
       total: "Total",
     },
     expenses: {
@@ -43,6 +41,8 @@ export const translations = {
     },
     cashflow: {
       cashflow: "Flujo de caja",
+      carryOver: "Saldo arrastrado",
+      carryOverFrom: "Saldo arrastrado de",
       opening: "Apertura",
       invoiced: "Facturado",
       expenses: "Gastos",
@@ -58,7 +58,7 @@ export const translations = {
   },
   en: {
     sidebar: {
-      ledgerBook: "Ledger Book",
+      ledgerBook: "Peris",
       accounting: "accounting",
       quarters: "Quarters",
       sampleData: "Sample data for demonstration",
@@ -67,7 +67,7 @@ export const translations = {
       cashflow: "Cashflow",
     },
     welcome: {
-      ledgerBook: "Ledger Book",
+      ledgerBook: "Peris",
       selectQuarter:
         "Select a quarter from the sidebar, or browse the overview below.",
       invoiced: "Invoiced",
@@ -84,10 +84,8 @@ export const translations = {
       date: "Date",
       client: "Client",
       amount: "Amount",
-      status: "Status",
-      paid: "Paid",
+      paymentDate: "Payment date",
       pending: "Pending",
-      overdue: "Overdue",
       total: "Total",
     },
     expenses: {
@@ -100,6 +98,8 @@ export const translations = {
     },
     cashflow: {
       cashflow: "Cashflow",
+      carryOver: "Carry over",
+      carryOverFrom: "Carry over from",
       opening: "Opening",
       invoiced: "Invoiced",
       expenses: "Expenses",
@@ -113,4 +113,4 @@ export const translations = {
       "4": "Oct - Dec",
     },
   },
-};
+}

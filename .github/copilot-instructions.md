@@ -21,6 +21,7 @@ This is Peris - a minimalist ledger book application for personal accounting and
 - Add translations to `lib/translations.ts` for both ES and EN
 - Use Radix UI components from `components/ui/` for consistency
 - Follow the ledger-inspired design aesthetic (serif fonts, minimal colors)
+- **Format code with Prettier (no semicolons)**: Run `pnpm format` before committing
 
 ### Internationalization (i18n)
 
@@ -38,7 +39,7 @@ This is Peris - a minimalist ledger book application for personal accounting and
 
 ### Git Workflow
 
-- Create feature branches: `feat/feature-name`
+- Create feature branches prefixed with the author, e.g. `pablonete/feature-description`
 - Link to GitHub issues in PR descriptions
 - Keep commits focused and atomic
 - Update documentation before merging

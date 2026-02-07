@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { quarters, formatCurrency, formatDate } from "@/lib/sample-data";
+import { quarters, formatCurrency, formatDate } from "@/lib/sample-data"
 import {
   Table,
   TableBody,
@@ -9,29 +9,21 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { useLanguage } from "@/lib/i18n-context";
+} from "@/components/ui/table"
+import { useLanguage } from "@/lib/i18n-context"
 
 interface InvoicesViewProps {
-  quarterId: string;
+  quarterId: string
 }
 
-const statusStyles: Record<string, string> = {
-  paid: "bg-[hsl(var(--ledger-green))] text-[hsl(var(--card))]",
-  pending: "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]",
-  overdue: "bg-[hsl(var(--ledger-red))] text-[hsl(var(--card))]",
-};
-
 export function InvoicesView({ quarterId }: InvoicesViewProps) {
-  const { t } = useLanguage();
-  const data = quarters[quarterId];
-  if (!data) return null;
+  const { t } = useLanguage()
+  const data = quarters[quarterId]
+  if (!data) return null
 
-  const totalSubtotal = data.invoices.reduce((s, i) => s + i.subtotal, 0);
-  const totalVat = data.invoices.reduce((s, i) => s + i.vat, 0);
-  const totalAmount = data.invoices.reduce((s, i) => s + i.total, 0);
+  const totalSubtotal = data.invoices.reduce((s, i) => s + i.subtotal, 0)
+  const totalVat = data.invoices.reduce((s, i) => s + i.vat, 0)
+  const totalAmount = data.invoices.reduce((s, i) => s + i.total, 0)
 
   return (
     <div>
@@ -53,13 +45,13 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
           {
             label: t("invoices.collected"),
             value: data.invoices
-              .filter((i) => i.status === "paid")
+              .filter((i) => i.paymentDate != null)
               .reduce((s, i) => s + i.total, 0),
           },
           {
             label: t("invoices.outstanding"),
             value: data.invoices
-              .filter((i) => i.status !== "paid")
+              .filter((i) => i.paymentDate == null)
               .reduce((s, i) => s + i.total, 0),
           },
         ].map((card) => (
@@ -104,7 +96,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
                 {t("invoices.total")}
               </TableHead>
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-center">
-                {t("invoices.status")}
+                {t("invoices.paymentDate")}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -133,15 +125,16 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
                 <TableCell className="font-mono text-sm font-semibold text-right">
                   {formatCurrency(inv.total)}
                 </TableCell>
-                <TableCell className="text-center">
-                  <Badge
-                    className={cn(
-                      "rounded-sm text-[10px] font-mono uppercase tracking-wider",
-                      statusStyles[inv.status],
-                    )}
-                  >
-                    {t(`invoices.${inv.status}`)}
-                  </Badge>
+                <TableCell
+                  className={
+                    inv.paymentDate
+                      ? "font-mono text-xs text-center"
+                      : "font-mono text-xs text-center text-muted-foreground"
+                  }
+                >
+                  {inv.paymentDate
+                    ? formatDate(inv.paymentDate)
+                    : t("invoices.pending")}
                 </TableCell>
               </TableRow>
             ))}
@@ -166,5 +159,5 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
         </Table>
       </div>
     </div>
-  );
+  )
 }

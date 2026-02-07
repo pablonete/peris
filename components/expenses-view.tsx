@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { quarters, formatCurrency, formatDate } from "@/lib/sample-data";
+import { quarters, formatCurrency, formatDate } from "@/lib/sample-data"
 import {
   Table,
   TableBody,
@@ -9,28 +9,28 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { useLanguage } from "@/lib/i18n-context";
+} from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { useLanguage } from "@/lib/i18n-context"
 
 interface ExpensesViewProps {
-  quarterId: string;
+  quarterId: string
 }
 
 export function ExpensesView({ quarterId }: ExpensesViewProps) {
-  const { t } = useLanguage();
-  const data = quarters[quarterId];
-  if (!data) return null;
+  const { t } = useLanguage()
+  const data = quarters[quarterId]
+  if (!data) return null
 
-  const totalSubtotal = data.expenses.reduce((s, e) => s + e.subtotal, 0);
-  const totalVat = data.expenses.reduce((s, e) => s + e.vat, 0);
-  const totalAmount = data.expenses.reduce((s, e) => s + e.total, 0);
+  const totalSubtotal = data.expenses.reduce((s, e) => s + e.subtotal, 0)
+  const totalVat = data.expenses.reduce((s, e) => s + e.vat, 0)
+  const totalAmount = data.expenses.reduce((s, e) => s + e.total, 0)
   const deductibleTotal = data.expenses
     .filter((e) => e.deductible)
-    .reduce((s, e) => s + e.total, 0);
+    .reduce((s, e) => s + e.total, 0)
   const nonDeductibleTotal = data.expenses
     .filter((e) => !e.deductible)
-    .reduce((s, e) => s + e.total, 0);
+    .reduce((s, e) => s + e.total, 0)
 
   return (
     <div>
@@ -157,5 +157,5 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
         </Table>
       </div>
     </div>
-  );
+  )
 }

@@ -39,7 +39,12 @@ export default function Home() {
       case "expenses":
         return <ExpensesView quarterId={selectedQuarter} />
       case "cashflow":
-        return <CashflowView quarterId={selectedQuarter} />
+        return (
+          <CashflowView
+            quarterId={selectedQuarter}
+            onNavigateToQuarter={(qId) => handleSelectView(qId, "cashflow")}
+          />
+        )
       default:
         return null
     }
@@ -91,7 +96,7 @@ export default function Home() {
             )}
           </button>
           <span className="font-mono text-sm font-semibold tracking-wider text-foreground">
-            Ledger Book
+            Peris
           </span>
         </div>
 
