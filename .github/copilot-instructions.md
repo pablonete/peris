@@ -44,6 +44,7 @@ This is Peris - a minimalist ledger book application for personal accounting and
 - Link to GitHub issues in PR descriptions
 - Keep commits focused and atomic
 - Update documentation before merging
+- **PR descriptions should be brief** - Ideally 4-5 lines max, focusing on what changed and why
 
 ## Key Files
 
