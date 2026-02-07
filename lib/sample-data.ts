@@ -1,44 +1,44 @@
 // ── Types ──────────────────────────────────────────────────
 
 export interface Invoice {
-  id: string;
-  date: string;
-  number: string;
-  client: string;
-  concept: string;
-  subtotal: number;
-  vat: number;
-  total: number;
-  paymentDate: string | null;
+  id: string
+  date: string
+  number: string
+  client: string
+  concept: string
+  subtotal: number
+  vat: number
+  total: number
+  paymentDate: string | null
 }
 
 export interface Expense {
-  id: string;
-  date: string;
-  number: string | null;
-  vendor: string;
-  concept: string;
-  subtotal: number;
-  vat: number;
-  total: number;
-  deductible: boolean;
+  id: string
+  date: string
+  number: string | null
+  vendor: string
+  concept: string
+  subtotal: number
+  vat: number
+  total: number
+  deductible: boolean
 }
 
 export interface CashflowEntry {
-  id: string;
-  date: string;
-  concept: string;
-  reference: string | null;
-  income: number | null;
-  expense: number | null;
-  balance: number;
+  id: string
+  date: string
+  concept: string
+  reference: string | null
+  income: number | null
+  expense: number | null
+  balance: number
 }
 
 export interface QuarterData {
-  invoices: Invoice[];
-  expenses: Expense[];
-  cashflow: CashflowEntry[];
-  carryOver: number;
+  invoices: Invoice[]
+  expenses: Expense[]
+  cashflow: CashflowEntry[]
+  carryOver: number
 }
 
 // ── Sample Data ────────────────────────────────────────────
@@ -544,9 +544,9 @@ export const quarters: Record<string, QuarterData> = {
       },
     ],
   },
-};
+}
 
-export const quarterIds = Object.keys(quarters);
+export const quarterIds = Object.keys(quarters)
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -555,26 +555,26 @@ export function formatCurrency(amount: number): string {
     style: "currency",
     currency: "EUR",
     minimumFractionDigits: 2,
-  }).format(amount);
+  }).format(amount)
 }
 
 export function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
+  const d = new Date(dateStr)
   return d.toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric",
-  });
+  })
 }
 
 export function getQuarterSummary(qId: string) {
-  const q = quarters[qId];
-  if (!q) return null;
+  const q = quarters[qId]
+  if (!q) return null
 
-  const totalInvoiced = q.invoices.reduce((s, i) => s + i.total, 0);
-  const totalExpenses = q.expenses.reduce((s, e) => s + e.total, 0);
+  const totalInvoiced = q.invoices.reduce((s, i) => s + i.total, 0)
+  const totalExpenses = q.expenses.reduce((s, e) => s + e.total, 0)
   const closingBalance =
-    q.cashflow[q.cashflow.length - 1]?.balance ?? q.carryOver;
+    q.cashflow[q.cashflow.length - 1]?.balance ?? q.carryOver
 
   return {
     totalInvoiced,
@@ -582,5 +582,5 @@ export function getQuarterSummary(qId: string) {
     carryOver: q.carryOver,
     closingBalance,
     net: totalInvoiced - totalExpenses,
-  };
+  }
 }

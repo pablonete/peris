@@ -1,19 +1,19 @@
-"use client";
+"use client"
 
 import {
   quarterIds,
   getQuarterSummary,
   formatCurrency,
-} from "@/lib/sample-data";
-import type { ViewType } from "@/components/ledger-sidebar";
-import { useLanguage } from "@/lib/i18n-context";
+} from "@/lib/sample-data"
+import type { ViewType } from "@/components/ledger-sidebar"
+import { useLanguage } from "@/lib/i18n-context"
 
 interface WelcomeViewProps {
-  onNavigate: (quarter: string, view: ViewType) => void;
+  onNavigate: (quarter: string, view: ViewType) => void
 }
 
 export function WelcomeView({ onNavigate }: WelcomeViewProps) {
-  const { t } = useLanguage();
+  const { t } = useLanguage()
 
   return (
     <div>
@@ -30,8 +30,8 @@ export function WelcomeView({ onNavigate }: WelcomeViewProps) {
       {/* Quarter overview cards */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {quarterIds.map((qId) => {
-          const summary = getQuarterSummary(qId);
-          if (!summary) return null;
+          const summary = getQuarterSummary(qId)
+          if (!summary) return null
           return (
             <div
               key={qId}
@@ -97,9 +97,9 @@ export function WelcomeView({ onNavigate }: WelcomeViewProps) {
                 ))}
               </div>
             </div>
-          );
+          )
         })}
       </div>
     </div>
-  );
+  )
 }

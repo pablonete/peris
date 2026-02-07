@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { quarters, formatCurrency, formatDate } from "@/lib/sample-data";
+import { quarters, formatCurrency, formatDate } from "@/lib/sample-data"
 import {
   Table,
   TableBody,
@@ -9,21 +9,21 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { useLanguage } from "@/lib/i18n-context";
+} from "@/components/ui/table"
+import { useLanguage } from "@/lib/i18n-context"
 
 interface InvoicesViewProps {
-  quarterId: string;
+  quarterId: string
 }
 
 export function InvoicesView({ quarterId }: InvoicesViewProps) {
-  const { t } = useLanguage();
-  const data = quarters[quarterId];
-  if (!data) return null;
+  const { t } = useLanguage()
+  const data = quarters[quarterId]
+  if (!data) return null
 
-  const totalSubtotal = data.invoices.reduce((s, i) => s + i.subtotal, 0);
-  const totalVat = data.invoices.reduce((s, i) => s + i.vat, 0);
-  const totalAmount = data.invoices.reduce((s, i) => s + i.total, 0);
+  const totalSubtotal = data.invoices.reduce((s, i) => s + i.subtotal, 0)
+  const totalVat = data.invoices.reduce((s, i) => s + i.vat, 0)
+  const totalAmount = data.invoices.reduce((s, i) => s + i.total, 0)
 
   return (
     <div>
@@ -159,5 +159,5 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
         </Table>
       </div>
     </div>
-  );
+  )
 }

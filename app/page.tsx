@@ -1,52 +1,52 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { LedgerSidebar, type ViewType } from "@/components/ledger-sidebar";
-import { InvoicesView } from "@/components/invoices-view";
-import { ExpensesView } from "@/components/expenses-view";
-import { CashflowView } from "@/components/cashflow-view";
-import { WelcomeView } from "@/components/welcome-view";
-import { quarterIds } from "@/lib/sample-data";
-import { Menu, X } from "lucide-react";
+import { useState } from "react"
+import { LedgerSidebar, type ViewType } from "@/components/ledger-sidebar"
+import { InvoicesView } from "@/components/invoices-view"
+import { ExpensesView } from "@/components/expenses-view"
+import { CashflowView } from "@/components/cashflow-view"
+import { WelcomeView } from "@/components/welcome-view"
+import { quarterIds } from "@/lib/sample-data"
+import { Menu, X } from "lucide-react"
 
 export default function Home() {
-  const [selectedQuarter, setSelectedQuarter] = useState(quarterIds[0]);
-  const [selectedView, setSelectedView] = useState<ViewType | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedQuarter, setSelectedQuarter] = useState(quarterIds[0])
+  const [selectedView, setSelectedView] = useState<ViewType | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   function handleSelectQuarter(q: string) {
     if (selectedQuarter === q) {
       // Toggle collapse if clicking same quarter
-      return;
+      return
     }
-    setSelectedQuarter(q);
-    setSelectedView(null);
+    setSelectedQuarter(q)
+    setSelectedView(null)
   }
 
   function handleSelectView(q: string, v: ViewType) {
-    setSelectedQuarter(q);
-    setSelectedView(v);
-    setSidebarOpen(false);
+    setSelectedQuarter(q)
+    setSelectedView(v)
+    setSidebarOpen(false)
   }
 
   function renderContent() {
     if (!selectedView) {
-      return <WelcomeView onNavigate={handleSelectView} />;
+      return <WelcomeView onNavigate={handleSelectView} />
     }
     switch (selectedView) {
       case "invoices":
-        return <InvoicesView quarterId={selectedQuarter} />;
+        return <InvoicesView quarterId={selectedQuarter} />
       case "expenses":
-        return <ExpensesView quarterId={selectedQuarter} />;
+        return <ExpensesView quarterId={selectedQuarter} />
       case "cashflow":
         return (
           <CashflowView
             quarterId={selectedQuarter}
             onNavigateToQuarter={(qId) => handleSelectView(qId, "cashflow")}
           />
-        );
+        )
       default:
-        return null;
+        return null
     }
   }
 
@@ -122,5 +122,5 @@ export default function Home() {
         </div>
       </main>
     </div>
-  );
+  )
 }

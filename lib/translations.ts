@@ -113,4 +113,4 @@ export const translations = {
       "4": "Oct - Dec",
     },
   },
-};
+}

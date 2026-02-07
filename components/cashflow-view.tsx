@@ -1,11 +1,11 @@
-"use client";
+"use client"
 
 import {
   quarters,
   quarterIds,
   formatCurrency,
   formatDate,
-} from "@/lib/sample-data";
+} from "@/lib/sample-data"
 import {
   Table,
   TableBody,
@@ -14,32 +14,32 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { cn } from "@/lib/utils";
-import { useLanguage } from "@/lib/i18n-context";
+} from "@/components/ui/table"
+import { cn } from "@/lib/utils"
+import { useLanguage } from "@/lib/i18n-context"
 
 interface CashflowViewProps {
-  quarterId: string;
-  onNavigateToQuarter?: (quarterId: string) => void;
+  quarterId: string
+  onNavigateToQuarter?: (quarterId: string) => void
 }
 
 export function CashflowView({
   quarterId,
   onNavigateToQuarter,
 }: CashflowViewProps) {
-  const { t } = useLanguage();
-  const data = quarters[quarterId];
-  if (!data) return null;
+  const { t } = useLanguage()
+  const data = quarters[quarterId]
+  if (!data) return null
 
-  const currentQuarterIndex = quarterIds.indexOf(quarterId);
+  const currentQuarterIndex = quarterIds.indexOf(quarterId)
   const previousQuarterId =
-    currentQuarterIndex > 0 ? quarterIds[currentQuarterIndex - 1] : null;
+    currentQuarterIndex > 0 ? quarterIds[currentQuarterIndex - 1] : null
 
-  const totalIncome = data.cashflow.reduce((s, e) => s + (e.income ?? 0), 0);
-  const totalExpense = data.cashflow.reduce((s, e) => s + (e.expense ?? 0), 0);
-  const openingBalance = data.carryOver;
+  const totalIncome = data.cashflow.reduce((s, e) => s + (e.income ?? 0), 0)
+  const totalExpense = data.cashflow.reduce((s, e) => s + (e.expense ?? 0), 0)
+  const openingBalance = data.carryOver
   const closingBalance =
-    data.cashflow[data.cashflow.length - 1]?.balance ?? openingBalance;
+    data.cashflow[data.cashflow.length - 1]?.balance ?? openingBalance
 
   return (
     <div>
@@ -79,7 +79,7 @@ export function CashflowView({
             <p
               className={cn(
                 "mt-1 font-mono text-xl font-semibold",
-                card.color || "text-foreground",
+                card.color || "text-foreground"
               )}
             >
               {formatCurrency(card.value)}
@@ -115,13 +115,13 @@ export function CashflowView({
           </TableHeader>
           <TableBody>
             {data.cashflow.map((entry, idx) => {
-              const isCarryOver = idx === 0 && entry.concept === "Carry over";
+              const isCarryOver = idx === 0 && entry.concept === "Carry over"
               return (
                 <TableRow
                   key={entry.id}
                   className={cn(
                     "border-b border-dashed border-[hsl(var(--ledger-line))] hover:bg-secondary/50",
-                    isCarryOver && "bg-secondary/40 font-semibold",
+                    isCarryOver && "bg-secondary/40 font-semibold"
                   )}
                 >
                   <TableCell className="font-mono text-xs">
@@ -181,7 +181,7 @@ export function CashflowView({
                     {formatCurrency(entry.balance)}
                   </TableCell>
                 </TableRow>
-              );
+              )
             })}
           </TableBody>
           <TableFooter>
@@ -203,5 +203,5 @@ export function CashflowView({
         </Table>
       </div>
     </div>
-  );
+  )
 }
