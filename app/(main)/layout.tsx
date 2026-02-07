@@ -1,54 +1,37 @@
 "use client"
 
 import { useState } from "react"
-import { LedgerSidebar, type ViewType } from "@/components/ledger-sidebar"
-import { InvoicesView } from "@/components/invoices-view"
-import { ExpensesView } from "@/components/expenses-view"
-import { CashflowView } from "@/components/cashflow-view"
-import { WelcomeView } from "@/components/welcome-view"
-import { quarterIds } from "@/lib/sample-data"
+import { LedgerSidebar } from "@/components/ledger-sidebar"
 import { Menu, X } from "lucide-react"
+import { usePathname } from "next/navigation"
+import { quarterIds } from "@/lib/sample-data"
 
-export default function Home() {
-  const [selectedQuarter, setSelectedQuarter] = useState(quarterIds[0])
-  const [selectedView, setSelectedView] = useState<ViewType | null>(null)
+export default function MainLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const pathname = usePathname()
 
-  function handleSelectQuarter(q: string) {
-    if (selectedQuarter === q) {
-      // Toggle collapse if clicking same quarter
-      return
+  // Extract current quarter and view from pathname
+  function getCurrentQuarterAndView(): [string, string | null] {
+    const segments = pathname.split("/").filter(Boolean)
+
+    // Handle /2025.4Q/invoices -> quarter = 2025.4Q, view = invoices
+    if (segments.length >= 2 && quarterIds.includes(segments[0])) {
+      const quarter = segments[0]
+      const view = segments[1]
+      if (view === "invoices" || view === "expenses" || view === "cashflow") {
+        return [quarter, view]
+      }
     }
-    setSelectedQuarter(q)
-    setSelectedView(null)
+
+    // Default to first quarter, no view selected (welcome page)
+    return [quarterIds[0], null]
   }
 
-  function handleSelectView(q: string, v: ViewType) {
-    setSelectedQuarter(q)
-    setSelectedView(v)
-    setSidebarOpen(false)
-  }
-
-  function renderContent() {
-    if (!selectedView) {
-      return <WelcomeView onNavigate={handleSelectView} />
-    }
-    switch (selectedView) {
-      case "invoices":
-        return <InvoicesView quarterId={selectedQuarter} />
-      case "expenses":
-        return <ExpensesView quarterId={selectedQuarter} />
-      case "cashflow":
-        return (
-          <CashflowView
-            quarterId={selectedQuarter}
-            onNavigateToQuarter={(qId) => handleSelectView(qId, "cashflow")}
-          />
-        )
-      default:
-        return null
-    }
-  }
+  const [selectedQuarter, selectedView] = getCurrentQuarterAndView()
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -73,9 +56,10 @@ export default function Home() {
       >
         <LedgerSidebar
           selectedQuarter={selectedQuarter}
-          selectedView={selectedView}
-          onSelectQuarter={handleSelectQuarter}
-          onSelectView={handleSelectView}
+          selectedView={
+            selectedView as "invoices" | "expenses" | "cashflow" | null
+          }
+          onSidebarClose={() => setSidebarOpen(false)}
         />
       </div>
 
@@ -117,7 +101,7 @@ export default function Home() {
               paddingLeft: "1.5rem",
             }}
           >
-            {renderContent()}
+            {children}
           </div>
         </div>
       </main>
