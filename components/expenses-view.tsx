@@ -30,7 +30,10 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
     (s, e) => s + e.vat.reduce((v, item) => v + item.amount, 0),
     0
   )
-  const totalIrpf = data.expenses.reduce((s, e) => s + (e.irpf || 0), 0)
+  const totalTaxRetention = data.expenses.reduce(
+    (s, e) => s + (e.taxRetention || 0),
+    0
+  )
   const totalAmount = data.expenses.reduce((s, e) => s + e.total, 0)
   const paidExpenses = data.expenses
     .filter((e) => e.paymentDate !== null)
@@ -155,12 +158,9 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                   )}
                 </TableCell>
                 <TableCell className="font-mono text-xs text-right">
-                  {exp.irpf !== null ? formatCurrency(exp.irpf) : "\u2014"}
-                  {exp.irpf !== null && (
-                    <div className="text-[9px] text-muted-foreground/60">
-                      15%
-                    </div>
-                  )}
+                  {exp.taxRetention !== null
+                    ? formatCurrency(exp.taxRetention)
+                    : "\u2014"}
                 </TableCell>
                 <TableCell className="font-mono text-sm font-semibold text-right text-[hsl(var(--ledger-red))]">
                   {formatCurrency(exp.total)}
@@ -191,7 +191,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                 {formatCurrency(totalVat)}
               </TableCell>
               <TableCell className="font-mono text-xs font-semibold text-right">
-                {formatCurrency(totalIrpf)}
+                {formatCurrency(totalTaxRetention)}
               </TableCell>
               <TableCell className="font-mono text-sm font-bold text-right text-[hsl(var(--ledger-red))]">
                 {formatCurrency(totalAmount)}
