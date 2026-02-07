@@ -128,7 +128,33 @@ export function CashflowView({
                     {formatDate(entry.date)}
                   </TableCell>
                   <TableCell className={cn("text-sm", isCarryOver && "italic")}>
-                    {entry.concept}
+                    {isCarryOver ? (
+                      previousQuarterId ? (
+                        <span>
+                          {t("cashflow.carryOverFrom")}{" "}
+                          {onNavigateToQuarter ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onNavigateToQuarter(previousQuarterId)
+                              }
+                              className="font-mono underline decoration-dotted underline-offset-2 transition-colors hover:text-foreground/70"
+                              aria-label={`${t("cashflow.carryOverFrom")} ${previousQuarterId}`}
+                            >
+                              {previousQuarterId}
+                            </button>
+                          ) : (
+                            <span className="font-mono">
+                              {previousQuarterId}
+                            </span>
+                          )}
+                        </span>
+                      ) : (
+                        t("cashflow.carryOver")
+                      )
+                    ) : (
+                      entry.concept
+                    )}
                   </TableCell>
                   <TableCell className="font-mono text-[10px] text-muted-foreground">
                     {entry.reference ?? ""}
@@ -152,18 +178,7 @@ export function CashflowView({
                     )}
                   </TableCell>
                   <TableCell className="font-mono text-sm font-semibold text-right">
-                    {isCarryOver && previousQuarterId && onNavigateToQuarter ? (
-                      <button
-                        type="button"
-                        onClick={() => onNavigateToQuarter(previousQuarterId)}
-                        className="underline decoration-dotted underline-offset-2 transition-colors hover:text-foreground/70"
-                        aria-label={`View cashflow for ${previousQuarterId}`}
-                      >
-                        {formatCurrency(entry.balance)}
-                      </button>
-                    ) : (
-                      formatCurrency(entry.balance)
-                    )}
+                    {formatCurrency(entry.balance)}
                   </TableCell>
                 </TableRow>
               );

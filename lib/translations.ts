@@ -41,6 +41,8 @@ export const translations = {
     },
     cashflow: {
       cashflow: "Flujo de caja",
+      carryOver: "Saldo arrastrado",
+      carryOverFrom: "Saldo arrastrado de",
       opening: "Apertura",
       invoiced: "Facturado",
       expenses: "Gastos",
@@ -96,6 +98,8 @@ export const translations = {
     },
     cashflow: {
       cashflow: "Cashflow",
+      carryOver: "Carry over",
+      carryOverFrom: "Carry over from",
       opening: "Opening",
       invoiced: "Invoiced",
       expenses: "Expenses",
