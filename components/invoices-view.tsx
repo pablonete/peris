@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { quarters, formatCurrency, formatDate } from "@/lib/sample-data"
+import { quarters, formatCurrency, formatDate } from "@/lib/sample-data";
 import {
   Table,
   TableBody,
@@ -9,52 +9,55 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n-context";
 
 interface InvoicesViewProps {
-  quarterId: string
+  quarterId: string;
 }
 
 const statusStyles: Record<string, string> = {
   paid: "bg-[hsl(var(--ledger-green))] text-[hsl(var(--card))]",
   pending: "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]",
   overdue: "bg-[hsl(var(--ledger-red))] text-[hsl(var(--card))]",
-}
+};
 
 export function InvoicesView({ quarterId }: InvoicesViewProps) {
-  const data = quarters[quarterId]
-  if (!data) return null
+  const { t } = useLanguage();
+  const data = quarters[quarterId];
+  if (!data) return null;
 
-  const totalSubtotal = data.invoices.reduce((s, i) => s + i.subtotal, 0)
-  const totalVat = data.invoices.reduce((s, i) => s + i.vat, 0)
-  const totalAmount = data.invoices.reduce((s, i) => s + i.total, 0)
+  const totalSubtotal = data.invoices.reduce((s, i) => s + i.subtotal, 0);
+  const totalVat = data.invoices.reduce((s, i) => s + i.vat, 0);
+  const totalAmount = data.invoices.reduce((s, i) => s + i.total, 0);
 
   return (
     <div>
       {/* Page heading */}
       <div className="mb-6 border-b-2 border-foreground/20 pb-4">
         <h2 className="text-2xl font-bold tracking-wide text-foreground">
-          Sent Invoices
+          {t("invoices.sentInvoices")}
         </h2>
         <p className="font-mono text-xs text-muted-foreground">
-          {quarterId} &middot; {data.invoices.length} invoices
+          {quarterId} &middot; {data.invoices.length}{" "}
+          {t("invoices.sentInvoices").toLowerCase()}
         </p>
       </div>
 
       {/* Summary cards */}
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {[
-          { label: "Total invoiced", value: totalAmount },
+          { label: t("invoices.totalInvoiced"), value: totalAmount },
           {
-            label: "Collected",
+            label: t("invoices.collected"),
             value: data.invoices
               .filter((i) => i.status === "paid")
               .reduce((s, i) => s + i.total, 0),
           },
           {
-            label: "Outstanding",
+            label: t("invoices.outstanding"),
             value: data.invoices
               .filter((i) => i.status !== "paid")
               .reduce((s, i) => s + i.total, 0),
@@ -80,13 +83,13 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
           <TableHeader>
             <TableRow className="border-b-2 border-foreground/15 hover:bg-transparent">
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
-                Date
+                {t("invoices.date")}
               </TableHead>
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
                 No.
               </TableHead>
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
-                Client
+                {t("invoices.client")}
               </TableHead>
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
                 Concept
@@ -98,10 +101,10 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
                 VAT
               </TableHead>
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-right">
-                Total
+                {t("invoices.total")}
               </TableHead>
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-center">
-                Status
+                {t("invoices.status")}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -134,10 +137,10 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
                   <Badge
                     className={cn(
                       "rounded-sm text-[10px] font-mono uppercase tracking-wider",
-                      statusStyles[inv.status]
+                      statusStyles[inv.status],
                     )}
                   >
-                    {inv.status}
+                    {t(`invoices.${inv.status}`)}
                   </Badge>
                 </TableCell>
               </TableRow>
@@ -146,7 +149,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
           <TableFooter>
             <TableRow className="border-t-2 border-foreground/20 bg-secondary/30 hover:bg-secondary/30">
               <TableCell colSpan={4} className="font-semibold text-sm">
-                Totals
+                {t("invoices.total")}s
               </TableCell>
               <TableCell className="font-mono text-xs font-semibold text-right">
                 {formatCurrency(totalSubtotal)}
@@ -163,5 +166,5 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
         </Table>
       </div>
     </div>
-  )
+  );
 }
