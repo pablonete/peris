@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "export",
-  basePath: "/peris",
+  basePath: process.env.NODE_ENV === "production" ? "/peris" : "",
   typescript: {
     ignoreBuildErrors: true,
   },
