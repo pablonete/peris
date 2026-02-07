@@ -4,6 +4,8 @@ import type { QuarterData } from "./types"
 
 export const quarters: Record<string, QuarterData> = {
   "2025.4Q": {
+    name: "2025.4Q",
+    companyName: "Nómada Digital S.L.",
     carryOver: 12450.3,
     invoices: [
       {
@@ -292,6 +294,8 @@ export const quarters: Record<string, QuarterData> = {
     ],
   },
   "2026.1Q": {
+    name: "2026.1Q",
+    companyName: "Nómada Digital S.L.",
     carryOver: 22885.26,
     invoices: [
       {

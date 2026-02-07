@@ -78,6 +78,9 @@ export interface CashflowEntry {
  * Represents all financial data for a quarter including invoices, expenses, and cashflow.
  */
 export interface QuarterData {
+  /** The quarter year and month (e.g., "2025.4Q", "2026.1Q") */
+  name: string
+  companyName: string
   invoices: Invoice[]
   expenses: Expense[]
   cashflow: CashflowEntry[]

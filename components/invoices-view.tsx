@@ -33,8 +33,8 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
           {t("invoices.sentInvoices")}
         </h2>
         <p className="font-mono text-xs text-muted-foreground">
-          {quarterId} &middot; {data.invoices.length}{" "}
-          {t("invoices.sentInvoices").toLowerCase()}
+          {data.name} &middot; {data.companyName} &middot;{" "}
+          {data.invoices.length} {t("invoices.sentInvoices").toLowerCase()}
         </p>
       </div>
 

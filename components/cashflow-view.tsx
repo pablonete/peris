@@ -49,7 +49,8 @@ export function CashflowView({
           {t("cashflow.cashflow")}
         </h2>
         <p className="font-mono text-xs text-muted-foreground">
-          {quarterId} &middot; Bank Unicaja
+          {data.name} &middot; {data.companyName} &middot;{" "}
+          {data.cashflow.length} {t("cashflow.movements")}
         </p>
       </div>
 
