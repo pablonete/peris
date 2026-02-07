@@ -23,7 +23,10 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
   if (!data) return null
 
   const totalSubtotal = data.expenses.reduce((s, e) => s + e.subtotal, 0)
-  const totalVat = data.expenses.reduce((s, e) => s + e.vat, 0)
+  const totalVat = data.expenses.reduce(
+    (s, e) => s + e.vat.reduce((v, item) => v + item.amount, 0),
+    0
+  )
   const totalIrpf = data.expenses.reduce((s, e) => s + (e.irpf || 0), 0)
   const totalAmount = data.expenses.reduce((s, e) => s + e.total, 0)
   const paidExpenses = data.expenses
@@ -122,11 +125,22 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                   {formatCurrency(exp.subtotal)}
                 </TableCell>
                 <TableCell className="font-mono text-xs text-right text-muted-foreground">
-                  {exp.vat > 0 ? `${formatCurrency(exp.vat)}` : "\u2014"}
-                  {exp.vatRate !== null && (
-                    <div className="text-[9px] text-muted-foreground/60">
-                      {exp.vatRate}%
+                  {exp.vat.length > 0 ? (
+                    <div className="flex flex-col gap-1">
+                      {exp.vat.map((vat, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-baseline justify-end gap-1"
+                        >
+                          <span>{formatCurrency(vat.amount)}</span>
+                          <span className="text-[9px] text-muted-foreground/60">
+                            {vat.rate}%
+                          </span>
+                        </div>
+                      ))}
                     </div>
+                  ) : (
+                    "\u2014"
                   )}
                 </TableCell>
                 <TableCell className="font-mono text-xs text-right">
