@@ -1,5 +1,8 @@
 export const translations = {
   es: {
+    common: {
+      viewAttachment: "Ver adjunto",
+    },
     sidebar: {
       ledgerBook: "Peris",
       accounting: "contabilidad",
@@ -99,6 +102,9 @@ export const translations = {
     },
   },
   en: {
+    common: {
+      viewAttachment: "View attachment",
+    },
     sidebar: {
       ledgerBook: "Peris",
       accounting: "accounting",

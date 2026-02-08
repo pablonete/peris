@@ -49,3 +49,25 @@ export function parseStorageUrl(url: string): ParsedStorage | null {
     return null
   }
 }
+
+/**
+ * Generates a GitHub URL for viewing a file (PDF, etc.) in the browser
+ * @param storageUrl The storage URL (e.g., https://PAT@github.com/owner/repo)
+ * @param quarterId The quarter ID (e.g., "2025.4Q")
+ * @param type The file type ("invoices" or "expenses")
+ * @param filename The filename (e.g., "Invoice-123.pdf")
+ */
+export function getFileUrl(
+  storageUrl: string,
+  quarterId: string,
+  type: "invoices" | "expenses",
+  filename: string
+): string {
+  const parsed = parseStorageUrl(storageUrl)
+  if (!parsed) return "#"
+
+  const folder = parsed.dataPath ? `${parsed.dataPath}/` : ""
+  const path = `${quarterId}/${type}/${filename}`
+
+  return `https://github.com/${parsed.owner}/${parsed.repo}/blob/main/${folder}${path}`
+}
