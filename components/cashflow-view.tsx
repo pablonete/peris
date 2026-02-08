@@ -17,6 +17,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ErrorBanner } from "@/components/error-banner"
 import { CashflowBankFilter } from "@/components/cashflow-bank-filter"
+import { SummaryCard } from "@/components/summary-card"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/i18n-context"
 
@@ -98,37 +99,18 @@ export function CashflowView({
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-4">
-        {[
-          { label: t("cashflow.opening"), value: openingBalance, color: "" },
-          {
-            label: "Total income",
-            value: totalIncome,
-            color: "text-[hsl(var(--ledger-green))]",
-          },
-          {
-            label: "Total outflow",
-            value: totalExpense,
-            color: "text-[hsl(var(--ledger-red))]",
-          },
-          { label: t("cashflow.closing"), value: closingBalance, color: "" },
-        ].map((card) => (
-          <div
-            key={card.label}
-            className="rounded-sm border border-border bg-card px-4 py-3"
-          >
-            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              {card.label}
-            </p>
-            <p
-              className={cn(
-                "mt-1 font-mono text-xl font-semibold",
-                card.color || "text-foreground"
-              )}
-            >
-              {formatCurrency(card.value)}
-            </p>
-          </div>
-        ))}
+        <SummaryCard label={t("cashflow.opening")} value={openingBalance} />
+        <SummaryCard
+          label="Total income"
+          value={totalIncome}
+          valueClassName="text-[hsl(var(--ledger-green))]"
+        />
+        <SummaryCard
+          label="Total outflow"
+          value={totalExpense}
+          valueClassName="text-[hsl(var(--ledger-red))]"
+        />
+        <SummaryCard label={t("cashflow.closing")} value={closingBalance} />
       </div>
 
       <CashflowBankFilter

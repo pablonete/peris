@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ErrorBanner } from "@/components/error-banner"
 import { PaymentDateCell } from "@/components/payment-date-cell"
 import { AttachmentCell } from "@/components/attachment-cell"
+import { SummaryCard } from "@/components/summary-card"
 import { useLanguage } from "@/lib/i18n-context"
 
 interface InvoicesViewProps {
@@ -64,33 +65,19 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {[
-          { label: t("invoices.totalInvoiced"), value: totalAmount },
-          {
-            label: t("invoices.collected"),
-            value: content
-              .filter((i) => i.paymentDate != null)
-              .reduce((s, i) => s + i.total, 0),
-          },
-          {
-            label: t("invoices.outstanding"),
-            value: content
-              .filter((i) => i.paymentDate == null)
-              .reduce((s, i) => s + i.total, 0),
-          },
-        ].map((card) => (
-          <div
-            key={card.label}
-            className="rounded-sm border border-border bg-card px-4 py-3"
-          >
-            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              {card.label}
-            </p>
-            <p className="mt-1 font-mono text-xl font-semibold text-foreground">
-              {formatCurrency(card.value)}
-            </p>
-          </div>
-        ))}
+        <SummaryCard label={t("invoices.totalInvoiced")} value={totalAmount} />
+        <SummaryCard
+          label={t("invoices.collected")}
+          value={content
+            .filter((i) => i.paymentDate != null)
+            .reduce((s, i) => s + i.total, 0)}
+        />
+        <SummaryCard
+          label={t("invoices.outstanding")}
+          value={content
+            .filter((i) => i.paymentDate == null)
+            .reduce((s, i) => s + i.total, 0)}
+        />
       </div>
 
       <div className="rounded-sm border border-border bg-card">
