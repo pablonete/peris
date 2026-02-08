@@ -9,6 +9,7 @@ export const translations = {
       expenses: "Gastos",
       cashflow: "Flujo de caja",
       manageStorages: "Gestionar almacenamientos",
+      errorLoadingQuarters: "Error al cargar trimestres",
     },
     welcome: {
       ledgerBook: "Peris",
@@ -103,6 +104,7 @@ export const translations = {
       expenses: "Expenses",
       cashflow: "Cashflow",
       manageStorages: "Manage storages",
+      errorLoadingQuarters: "Error loading quarters",
     },
     welcome: {
       ledgerBook: "Peris",

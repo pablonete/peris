@@ -9,13 +9,8 @@ import { Storage } from "./storage-types"
 export async function listQuartersInStorage(
   storage: Storage
 ): Promise<string[]> {
-  try {
-    const service = new GitHubStorageService(storage.url)
-    return await service.listQuarters()
-  } catch (error) {
-    console.error("Error listing quarters from storage:", error)
-    return []
-  }
+  const service = new GitHubStorageService(storage.url)
+  return await service.listQuarters()
 }
 
 /**

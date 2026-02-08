@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ErrorBanner } from "@/components/error-banner"
 import { useLanguage } from "@/lib/i18n-context"
 
 interface InvoicesViewProps {
@@ -33,11 +34,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
   }
 
   if (error) {
-    return (
-      <Alert className="border-red-200 bg-red-50">
-        <AlertDescription className="text-red-900">{error}</AlertDescription>
-      </Alert>
-    )
+    return <ErrorBanner title={t("sidebar.invoices")} message={error} />
   }
 
   if (!content || content.length === 0) {

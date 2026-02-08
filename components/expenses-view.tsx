@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ErrorBanner } from "@/components/error-banner"
 import { useLanguage } from "@/lib/i18n-context"
 
 interface ExpensesViewProps {
@@ -34,11 +35,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
   }
 
   if (error) {
-    return (
-      <Alert className="border-red-200 bg-red-50">
-        <AlertDescription className="text-red-900">{error}</AlertDescription>
-      </Alert>
-    )
+    return <ErrorBanner title={t("sidebar.expenses")} message={error} />
   }
 
   if (!content || content.length === 0) {

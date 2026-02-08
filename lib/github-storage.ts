@@ -48,12 +48,6 @@ export class GitHubStorageService {
       if (err.status === 401) {
         return { valid: false, error: "Invalid authentication token" }
       }
-      if (err.status === 403) {
-        return {
-          valid: false,
-          error: "Access denied (check token permissions)",
-        }
-      }
       return {
         valid: false,
         error: err.message || "Unable to access repository",
@@ -86,7 +80,7 @@ export class GitHubStorageService {
         .map((item) => (item as any).name)
     } catch (error) {
       console.error("Error listing quarters:", error)
-      return []
+      throw error
     }
   }
 

@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ErrorBanner } from "@/components/error-banner"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/i18n-context"
 
@@ -40,11 +41,7 @@ export function CashflowView({
   }
 
   if (error) {
-    return (
-      <Alert className="border-red-200 bg-red-50">
-        <AlertDescription className="text-red-900">{error}</AlertDescription>
-      </Alert>
-    )
+    return <ErrorBanner title={t("sidebar.cashflow")} message={error} />
   }
 
   if (!content) {

@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 import { useLanguage } from "@/lib/i18n-context"
 import { StorageSelector } from "./storage-selector"
+import { ErrorBanner } from "./error-banner"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
@@ -28,7 +29,7 @@ export function LedgerSidebar({
 }: LedgerSidebarProps) {
   const { language, setLanguage, t } = useLanguage()
   const router = useRouter()
-  const { quarters } = useStorageQuarters()
+  const { quarters, error: quartersError } = useStorageQuarters()
 
   const viewItems: { key: ViewType; label: string; icon: typeof FileText }[] = [
     { key: "invoices", label: t("sidebar.invoices"), icon: FileText },
@@ -62,6 +63,13 @@ export function LedgerSidebar({
         <p className="mb-3 px-2 font-mono text-[10px] uppercase tracking-[0.2em] text-sidebar-foreground/50">
           {t("sidebar.quarters")}
         </p>
+        {quartersError && (
+          <ErrorBanner
+            title={t("sidebar.errorLoadingQuarters")}
+            message={quartersError}
+            className="mb-3"
+          />
+        )}
         <ul className="flex flex-col gap-1">
           {quarters.map((qId) => {
             const isExpanded = selectedQuarter === qId

@@ -38,6 +38,7 @@ This is Peris - a minimalist ledger book application for personal accounting and
 - Use Tailwind CSS classes following the existing theme
 - Use shared helpers from `lib/ledger-utils.ts`
 - Use GitHub-backed data hooks from `lib/use-storage-data.ts` and `lib/use-storage-quarters.ts`
+- **Use `ErrorBanner` component** from `components/error-banner.tsx` for displaying errors consistently
 
 ### Git Workflow
 
@@ -56,6 +57,7 @@ This is Peris - a minimalist ledger book application for personal accounting and
 - `lib/use-storage-data.ts` - GitHub-backed data loader hook
 - `lib/use-storage-quarters.ts` - GitHub-backed quarters hook
 - `components/ledger-sidebar.tsx` - Main navigation
+- `components/error-banner.tsx` - Shared error display component
 - `app/layout.tsx` - Root layout with providers
 
 ## Remember
