@@ -99,7 +99,7 @@ export const translations = {
     },
   },
   en: {
-    common: {
+    sidebar: {
       ledgerBook: "Peris",
       accounting: "accounting",
       quarters: "Quarters",
