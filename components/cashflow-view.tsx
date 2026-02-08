@@ -20,6 +20,7 @@ import { CashflowBankFilter } from "@/components/cashflow-bank-filter"
 import { SummaryCard } from "@/components/summary-card"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/i18n-context"
+import { FileText, Receipt } from "lucide-react"
 
 interface CashflowViewProps {
   quarterId: string
@@ -132,6 +133,7 @@ export function CashflowView({
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
                 Concept
               </TableHead>
+              <TableHead className="w-[40px]" />
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-right">
                 {t("cashflow.invoiced")}
               </TableHead>
@@ -196,6 +198,20 @@ export function CashflowView({
                       entry.concept
                     )}
                   </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      {entry.invoiceId && (
+                        <span className="inline-flex text-[hsl(var(--ledger-green))]">
+                          <FileText className="h-4 w-4" />
+                        </span>
+                      )}
+                      {entry.expenseId && (
+                        <span className="inline-flex text-[hsl(var(--ledger-red))]">
+                          <Receipt className="h-4 w-4" />
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="font-mono text-xs text-right">
                     {entry.income != null ? (
                       <span className="text-[hsl(var(--ledger-green))] font-semibold">
@@ -223,7 +239,7 @@ export function CashflowView({
           </TableBody>
           <TableFooter>
             <TableRow className="border-t-2 border-foreground/20 bg-secondary/30 hover:bg-secondary/30">
-              <TableCell colSpan={3} className="font-semibold text-sm">
+              <TableCell colSpan={4} className="font-semibold text-sm">
                 Period totals
               </TableCell>
               <TableCell className="font-mono text-xs font-semibold text-right text-[hsl(var(--ledger-green))]">
