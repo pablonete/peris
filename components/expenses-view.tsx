@@ -1,6 +1,6 @@
 "use client"
 
-import { formatCurrency, formatDate } from "@/lib/sample-data"
+import { formatCurrency, formatDate } from "@/lib/ledger-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useStorage } from "@/lib/storage-context"
 import {

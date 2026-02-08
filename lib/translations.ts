@@ -14,6 +14,8 @@ export const translations = {
       ledgerBook: "Peris",
       selectQuarter:
         "Selecciona un trimestre en la barra lateral, o explora la descripción general a continuación.",
+      loading: "Cargando resumen...",
+      noQuarters: "No se encontraron trimestres en este almacenamiento.",
       invoiced: "Facturado",
       expenses: "Gastos",
       opening: "Apertura",
@@ -106,6 +108,8 @@ export const translations = {
       ledgerBook: "Peris",
       selectQuarter:
         "Select a quarter from the sidebar, or browse the overview below.",
+      loading: "Loading overview...",
+      noQuarters: "No quarters found in this storage.",
       invoiced: "Invoiced",
       expenses: "Expenses",
       opening: "Opening",

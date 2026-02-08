@@ -1,13 +1,9 @@
 "use client"
 
-import {
-  quarters,
-  quarterIds,
-  formatCurrency,
-  formatDate,
-} from "@/lib/sample-data"
+import { formatCurrency, formatDate } from "@/lib/ledger-utils"
 import { useStorage } from "@/lib/storage-context"
 import { useStorageData } from "@/lib/use-storage-data"
+import { useStorageQuarters } from "@/lib/use-storage-quarters"
 import {
   Table,
   TableBody,
@@ -32,6 +28,7 @@ export function CashflowView({
 }: CashflowViewProps) {
   const { t } = useLanguage()
   const { activeStorage } = useStorage()
+  const { quarters } = useStorageQuarters()
   const { content, loading, error } = useStorageData(quarterId, "cashflow")
 
   if (loading) {
@@ -58,9 +55,9 @@ export function CashflowView({
     )
   }
 
-  const currentQuarterIndex = quarterIds.indexOf(quarterId)
+  const currentQuarterIndex = quarters.indexOf(quarterId)
   const previousQuarterId =
-    currentQuarterIndex > 0 ? quarterIds[currentQuarterIndex - 1] : null
+    currentQuarterIndex > 0 ? quarters[currentQuarterIndex - 1] : null
 
   const totalIncome = content.entries.reduce((s, e) => s + (e.income ?? 0), 0)
   const totalExpense = content.entries.reduce((s, e) => s + (e.expense ?? 0), 0)

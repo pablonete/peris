@@ -1,6 +1,6 @@
 "use client"
 import { cn } from "@/lib/utils"
-import { quarterIds } from "@/lib/sample-data"
+import { useStorageQuarters } from "@/lib/use-storage-quarters"
 import {
   FileText,
   Receipt,
@@ -28,6 +28,7 @@ export function LedgerSidebar({
 }: LedgerSidebarProps) {
   const { language, setLanguage, t } = useLanguage()
   const router = useRouter()
+  const { quarters } = useStorageQuarters()
 
   const viewItems: { key: ViewType; label: string; icon: typeof FileText }[] = [
     { key: "invoices", label: t("sidebar.invoices"), icon: FileText },
@@ -62,7 +63,7 @@ export function LedgerSidebar({
           {t("sidebar.quarters")}
         </p>
         <ul className="flex flex-col gap-1">
-          {quarterIds.map((qId) => {
+          {quarters.map((qId) => {
             const isExpanded = selectedQuarter === qId
             return (
               <li key={qId}>

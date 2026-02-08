@@ -34,9 +34,10 @@ This is Peris - a minimalist ledger book application for personal accounting and
 ### Component Structure
 
 - Use "use client" directive for interactive components
-- Keep data logic in `lib/sample-data.ts`
 - Follow the established naming: `*-view.tsx` for main views
 - Use Tailwind CSS classes following the existing theme
+- Use shared helpers from `lib/ledger-utils.ts`
+- Use GitHub-backed data hooks from `lib/use-storage-data.ts` and `lib/use-storage-quarters.ts`
 
 ### Git Workflow
 
@@ -51,7 +52,9 @@ This is Peris - a minimalist ledger book application for personal accounting and
 
 - `README.md` - Main documentation (update with features)
 - `lib/translations.ts` - All translatable strings
-- `lib/sample-data.ts` - Demo data and data models
+- `lib/ledger-utils.ts` - Shared formatting helpers
+- `lib/use-storage-data.ts` - GitHub-backed data loader hook
+- `lib/use-storage-quarters.ts` - GitHub-backed quarters hook
 - `components/ledger-sidebar.tsx` - Main navigation
 - `app/layout.tsx` - Root layout with providers
 

@@ -4,7 +4,6 @@ import { useState } from "react"
 import { LedgerSidebar } from "@/components/ledger-sidebar"
 import { Menu, X } from "lucide-react"
 import { usePathname } from "next/navigation"
-import { quarterIds } from "@/lib/sample-data"
 
 export default function MainLayout({
   children,
@@ -17,9 +16,10 @@ export default function MainLayout({
   // Extract current quarter and view from pathname
   function getCurrentQuarterAndView(): [string, string | null] {
     const segments = pathname.split("/").filter(Boolean)
+    const quarterPattern = /^\d{4}\.\d[QqTt]$/
 
     // Handle /2025.4Q/invoices -> quarter = 2025.4Q, view = invoices
-    if (segments.length >= 2 && quarterIds.includes(segments[0])) {
+    if (segments.length >= 2 && quarterPattern.test(segments[0])) {
       const quarter = segments[0]
       const view = segments[1]
       if (view === "invoices" || view === "expenses" || view === "cashflow") {
@@ -28,7 +28,7 @@ export default function MainLayout({
     }
 
     // Default to first quarter, no view selected (welcome page)
-    return [quarterIds[0], null]
+    return ["", null]
   }
 
   const [selectedQuarter, selectedView] = getCurrentQuarterAndView()
