@@ -30,9 +30,9 @@ export function CashflowView({
   const { t } = useLanguage()
   const { activeStorage } = useStorage()
   const { quarters } = useStorageQuarters()
-  const { content, loading, error } = useStorageData(quarterId, "cashflow")
+  const { content, isPending, error } = useStorageData(quarterId, "cashflow")
 
-  if (loading) {
+  if (isPending) {
     return (
       <div className="text-center text-muted-foreground">
         {t("cashflow.cashflow")}...
@@ -41,7 +41,7 @@ export function CashflowView({
   }
 
   if (error) {
-    return <ErrorBanner title={t("sidebar.cashflow")} message={error} />
+    return <ErrorBanner title={t("sidebar.cashflow")} message={error.message} />
   }
 
   if (!content) {

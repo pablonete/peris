@@ -66,7 +66,7 @@ export function LedgerSidebar({
         {quartersError && (
           <ErrorBanner
             title={t("sidebar.errorLoadingQuarters")}
-            message={quartersError}
+            message={quartersError.message}
             className="mb-3"
           />
         )}

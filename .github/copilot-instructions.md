@@ -37,7 +37,7 @@ This is Peris - a minimalist ledger book application for personal accounting and
 - Follow the established naming: `*-view.tsx` for main views
 - Use Tailwind CSS classes following the existing theme
 - Use shared helpers from `lib/ledger-utils.ts`
-- Use GitHub-backed data hooks from `lib/use-storage-data.ts` and `lib/use-storage-quarters.ts`
+- **Data fetching**: Use `useStorageData()` and `useStorageQuarters()` hooks (powered by TanStack React Query). These handle caching (5-min stale time) and provide `data`, `isPending`, and `error` states
 - **Use `ErrorBanner` component** from `components/error-banner.tsx` for displaying errors consistently
 
 ### Git Workflow

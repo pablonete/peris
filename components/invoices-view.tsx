@@ -23,9 +23,9 @@ interface InvoicesViewProps {
 export function InvoicesView({ quarterId }: InvoicesViewProps) {
   const { t } = useLanguage()
   const { activeStorage } = useStorage()
-  const { content, loading, error } = useStorageData(quarterId, "invoices")
+  const { content, isPending, error } = useStorageData(quarterId, "invoices")
 
-  if (loading) {
+  if (isPending) {
     return (
       <div className="text-center text-muted-foreground">
         {t("invoices.sentInvoices")}...
@@ -34,7 +34,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
   }
 
   if (error) {
-    return <ErrorBanner title={t("sidebar.invoices")} message={error} />
+    return <ErrorBanner title={t("sidebar.invoices")} message={error.message} />
   }
 
   if (!content || content.length === 0) {

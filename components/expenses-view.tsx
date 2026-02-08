@@ -24,9 +24,9 @@ interface ExpensesViewProps {
 export function ExpensesView({ quarterId }: ExpensesViewProps) {
   const { t } = useLanguage()
   const { activeStorage } = useStorage()
-  const { content, loading, error } = useStorageData(quarterId, "expenses")
+  const { content, isPending, error } = useStorageData(quarterId, "expenses")
 
-  if (loading) {
+  if (isPending) {
     return (
       <div className="text-center text-muted-foreground">
         {t("expenses.expenses")}...
@@ -35,7 +35,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
   }
 
   if (error) {
-    return <ErrorBanner title={t("sidebar.expenses")} message={error} />
+    return <ErrorBanner title={t("sidebar.expenses")} message={error.message} />
   }
 
   if (!content || content.length === 0) {
