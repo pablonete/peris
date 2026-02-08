@@ -48,6 +48,7 @@ export function CashflowView({
     hasMultipleBanks && selectedBank && uniqueBanks.includes(selectedBank)
       ? selectedBank
       : null
+  const showBankColumn = hasMultipleBanks && activeBank === null
 
   if (isPending) {
     return (
@@ -140,11 +141,9 @@ export function CashflowView({
         <Table>
           <TableHeader>
             <TableRow className="border-b-2 border-foreground/15 hover:bg-transparent">
-              {hasMultipleBanks && (
-                <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
-                  {t("cashflow.bank")}
-                </TableHead>
-              )}
+              <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
+                {showBankColumn ? t("cashflow.bank") : ""}
+              </TableHead>
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
                 {t("cashflow.month")}
               </TableHead>
@@ -173,18 +172,18 @@ export function CashflowView({
                     isCarryOver && "bg-secondary/40 font-semibold"
                   )}
                 >
-                  {hasMultipleBanks && (
-                    <TableCell className="text-xs text-muted-foreground">
-                      {entry.bankName || "—"}
-                    </TableCell>
-                  )}
-                  <TableCell className="font-mono text-xs">
+                  <TableCell className="text-xs text-muted-foreground">
                     <div className="flex items-baseline gap-2">
+                      {showBankColumn ? (
+                        <span>{entry.bankName || "—"}</span>
+                      ) : null}
                       <span className="font-mono text-[10px] text-muted-foreground/60">
                         {String(entry.bankSequence).padStart(4, "0")}
                       </span>
-                      <span>{formatDate(entry.date)}</span>
                     </div>
+                  </TableCell>
+                  <TableCell className="font-mono text-xs">
+                    <span>{formatDate(entry.date)}</span>
                   </TableCell>
                   <TableCell className={cn("text-sm", isCarryOver && "italic")}>
                     {isCarryOver ? (
@@ -242,10 +241,7 @@ export function CashflowView({
           </TableBody>
           <TableFooter>
             <TableRow className="border-t-2 border-foreground/20 bg-secondary/30 hover:bg-secondary/30">
-              <TableCell
-                colSpan={hasMultipleBanks ? 3 : 2}
-                className="font-semibold text-sm"
-              >
+              <TableCell colSpan={3} className="font-semibold text-sm">
                 Period totals
               </TableCell>
               <TableCell className="font-mono text-xs font-semibold text-right text-[hsl(var(--ledger-green))]">
