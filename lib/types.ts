@@ -31,6 +31,8 @@ export interface Invoice {
   total: number
   /** Date when payment was received; undefined if pending */
   paymentDate?: string
+  /** PDF filename stored in the quarter's invoices folder */
+  filename?: string
 }
 
 /**
@@ -54,6 +56,8 @@ export interface Expense {
   total: number
   /** Date when the expense was paid; undefined if pending */
   paymentDate?: string
+  /** PDF filename stored in the quarter's expenses folder */
+  filename?: string
 }
 
 /**

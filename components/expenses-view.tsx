@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PaymentDateCell } from "@/components/payment-date-cell"
+import { AttachmentCell } from "@/components/attachment-cell"
 import { ErrorBanner } from "@/components/error-banner"
 import { useLanguage } from "@/lib/i18n-context"
 
@@ -114,6 +115,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
                 {t("expenses.description")}
               </TableHead>
+              <TableHead className="w-[40px]" />
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-right">
                 Subtotal
               </TableHead>
@@ -148,6 +150,14 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                 <TableCell className="text-sm">{exp.vendor}</TableCell>
                 <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
                   {exp.concept}
+                </TableCell>
+                <TableCell className="text-center">
+                  <AttachmentCell
+                    storage={activeStorage}
+                    quarterId={quarterId}
+                    type="expenses"
+                    filename={exp.filename}
+                  />
                 </TableCell>
                 <TableCell className="font-mono text-xs text-right">
                   {exp.vat.length > 0 ? (
@@ -195,7 +205,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
           </TableBody>
           <TableFooter>
             <TableRow className="border-t-2 border-foreground/20 bg-secondary/30 hover:bg-secondary/30">
-              <TableCell colSpan={4} className="font-semibold text-sm">
+              <TableCell colSpan={5} className="font-semibold text-sm">
                 {t("invoices.total")}s
               </TableCell>
               <TableCell className="font-mono text-xs font-semibold text-right">

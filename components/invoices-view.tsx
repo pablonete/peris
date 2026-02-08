@@ -15,6 +15,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ErrorBanner } from "@/components/error-banner"
 import { PaymentDateCell } from "@/components/payment-date-cell"
+import { AttachmentCell } from "@/components/attachment-cell"
 import { useLanguage } from "@/lib/i18n-context"
 
 interface InvoicesViewProps {
@@ -108,6 +109,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
                 Concept
               </TableHead>
+              <TableHead className="w-[40px]" />
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-right">
                 Subtotal
               </TableHead>
@@ -138,6 +140,14 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
                 <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
                   {inv.concept}
                 </TableCell>
+                <TableCell className="text-center">
+                  <AttachmentCell
+                    storage={activeStorage}
+                    quarterId={quarterId}
+                    type="invoices"
+                    filename={inv.filename}
+                  />
+                </TableCell>
                 <TableCell className="font-mono text-xs text-right">
                   {formatCurrency(inv.subtotal)}
                 </TableCell>
@@ -155,7 +165,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
           </TableBody>
           <TableFooter>
             <TableRow className="border-t-2 border-foreground/20 bg-secondary/30 hover:bg-secondary/30">
-              <TableCell colSpan={4} className="font-semibold text-sm">
+              <TableCell colSpan={5} className="font-semibold text-sm">
                 {t("invoices.total")}s
               </TableCell>
               <TableCell className="font-mono text-xs font-semibold text-right">
