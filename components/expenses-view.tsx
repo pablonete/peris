@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PaymentDateCell } from "@/components/payment-date-cell"
 import { AttachmentCell } from "@/components/attachment-cell"
 import { ErrorBanner } from "@/components/error-banner"
+import { SummaryCard } from "@/components/summary-card"
 import { useLanguage } from "@/lib/i18n-context"
 
 interface ExpensesViewProps {
@@ -80,23 +81,9 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {[
-          { label: t("expenses.totalExpenses"), value: totalAmount },
-          { label: t("expenses.paid"), value: paidExpenses },
-          { label: t("expenses.pending"), value: pendingExpenses },
-        ].map((card) => (
-          <div
-            key={card.label}
-            className="rounded-sm border border-border bg-card px-4 py-3"
-          >
-            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              {card.label}
-            </p>
-            <p className="mt-1 font-mono text-xl font-semibold text-foreground">
-              {formatCurrency(card.value)}
-            </p>
-          </div>
-        ))}
+        <SummaryCard label={t("expenses.totalExpenses")} value={totalAmount} />
+        <SummaryCard label={t("expenses.paid")} value={paidExpenses} />
+        <SummaryCard label={t("expenses.pending")} value={pendingExpenses} />
       </div>
 
       <div className="rounded-sm border border-border bg-card">

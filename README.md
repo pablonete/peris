@@ -7,7 +7,7 @@ A minimalist ledger book application for financial tracking based on GitHub repo
 - 📊 **Quarterly Organization** - Track finances by quarters (Q1-Q4)
 - 💰 **Invoice Management** - Record and monitor sent invoices with payment dates
 - 🧾 **Expense Tracking** - Log business expenses with VAT (multiple), IRPF (15%) and payment dates
-- 💵 **Cashflow View** - Monitor bank balance and transaction flow over time
+- 💵 **Cashflow View** - Monitor bank balance and transaction flow over time with multi-bank support
 - 🌍 **Bilingual Support** - Switch between Spanish (ES) and English (EN)
 - 🔗 **GitHub Data Storage** - Store and sync your financial data from GitHub repositories
 
@@ -132,6 +132,7 @@ finances/
     {
       "date": "2025-01-15",
       "concept": "Invoice received",
+      "bankName": "Unicaja",
       "bankSequence": 1,
       "income": 1210,
       "balance": 6210

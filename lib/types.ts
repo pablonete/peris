@@ -68,6 +68,8 @@ export interface CashflowEntry {
   /** Transaction date in ISO format (YYYY-MM-DD) */
   date: string
   concept: string
+  /** Bank name (e.g., "Unicaja", "Revolut") */
+  bankName?: string
   /** Sequential bank movement number within the quarter */
   bankSequence: number
   /** Income amount if this is an income transaction */

@@ -55,6 +55,8 @@ export const translations = {
       expenses: "Gastos",
       closing: "Cierre",
       month: "Mes",
+      bank: "Banco",
+      allBanks: "Todo",
       movements: "movimientos",
     },
     months: {
@@ -154,6 +156,8 @@ export const translations = {
       expenses: "Expenses",
       closing: "Closing",
       month: "Month",
+      bank: "Bank",
+      allBanks: "All",
       movements: "movements",
     },
     months: {

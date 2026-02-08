@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { formatCurrency, formatDate } from "@/lib/ledger-utils"
 import { useStorage } from "@/lib/storage-context"
 import { useStorageData } from "@/lib/use-storage-data"
@@ -15,6 +16,8 @@ import {
 } from "@/components/ui/table"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ErrorBanner } from "@/components/error-banner"
+import { CashflowBankFilter } from "@/components/cashflow-bank-filter"
+import { SummaryCard } from "@/components/summary-card"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/i18n-context"
 
@@ -31,6 +34,22 @@ export function CashflowView({
   const { activeStorage } = useStorage()
   const { quarters } = useStorageQuarters()
   const { content, isPending, error } = useStorageData(quarterId, "cashflow")
+
+  const [selectedBank, setSelectedBank] = useState<string | null>(null)
+  const entries = content?.entries ?? []
+  const uniqueBanks = Array.from(
+    new Set(
+      entries
+        .map((entry) => entry.bankName)
+        .filter((name): name is string => Boolean(name))
+    )
+  ).sort()
+  const hasMultipleBanks = uniqueBanks.length > 1
+  const activeBank =
+    hasMultipleBanks && selectedBank && uniqueBanks.includes(selectedBank)
+      ? selectedBank
+      : null
+  const showBankColumn = hasMultipleBanks && activeBank === null
 
   if (isPending) {
     return (
@@ -56,11 +75,16 @@ export function CashflowView({
   const previousQuarterId =
     currentQuarterIndex > 0 ? quarters[currentQuarterIndex - 1] : null
 
-  const totalIncome = content.entries.reduce((s, e) => s + (e.income ?? 0), 0)
-  const totalExpense = content.entries.reduce((s, e) => s + (e.expense ?? 0), 0)
-  const openingBalance = content.carryOver
+  // Filter entries by selected bank
+  const filteredEntries = activeBank
+    ? entries.filter((entry) => entry.bankName === activeBank)
+    : entries
+
+  const totalIncome = filteredEntries.reduce((s, e) => s + (e.income ?? 0), 0)
+  const totalExpense = filteredEntries.reduce((s, e) => s + (e.expense ?? 0), 0)
+  const openingBalance = content?.carryOver ?? 0
   const closingBalance =
-    content.entries[content.entries.length - 1]?.balance ?? openingBalance
+    filteredEntries[filteredEntries.length - 1]?.balance ?? openingBalance
 
   return (
     <div>
@@ -69,49 +93,39 @@ export function CashflowView({
           {t("cashflow.cashflow")}
         </h2>
         <p className="font-mono text-xs text-muted-foreground">
-          {quarterId} &middot; {activeStorage.name} &middot;{" "}
-          {content.entries.length} {t("cashflow.movements")}
+          {quarterId} &middot; {activeStorage.name} &middot; {entries.length}{" "}
+          {t("cashflow.movements")}
         </p>
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-4">
-        {[
-          { label: t("cashflow.opening"), value: openingBalance, color: "" },
-          {
-            label: "Total income",
-            value: totalIncome,
-            color: "text-[hsl(var(--ledger-green))]",
-          },
-          {
-            label: "Total outflow",
-            value: totalExpense,
-            color: "text-[hsl(var(--ledger-red))]",
-          },
-          { label: t("cashflow.closing"), value: closingBalance, color: "" },
-        ].map((card) => (
-          <div
-            key={card.label}
-            className="rounded-sm border border-border bg-card px-4 py-3"
-          >
-            <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              {card.label}
-            </p>
-            <p
-              className={cn(
-                "mt-1 font-mono text-xl font-semibold",
-                card.color || "text-foreground"
-              )}
-            >
-              {formatCurrency(card.value)}
-            </p>
-          </div>
-        ))}
+        <SummaryCard label={t("cashflow.opening")} value={openingBalance} />
+        <SummaryCard
+          label="Total income"
+          value={totalIncome}
+          valueClassName="text-[hsl(var(--ledger-green))]"
+        />
+        <SummaryCard
+          label="Total outflow"
+          value={totalExpense}
+          valueClassName="text-[hsl(var(--ledger-red))]"
+        />
+        <SummaryCard label={t("cashflow.closing")} value={closingBalance} />
       </div>
+
+      <CashflowBankFilter
+        banks={uniqueBanks}
+        activeBank={activeBank}
+        onSelect={setSelectedBank}
+      />
 
       <div className="rounded-sm border border-border bg-card">
         <Table>
           <TableHeader>
             <TableRow className="border-b-2 border-foreground/15 hover:bg-transparent">
+              <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
+                {showBankColumn ? t("cashflow.bank") : ""}
+              </TableHead>
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
                 {t("cashflow.month")}
               </TableHead>
@@ -130,7 +144,7 @@ export function CashflowView({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {content.entries.map((entry, idx) => {
+            {filteredEntries.map((entry, idx) => {
               const isCarryOver = idx === 0 && entry.concept === "Carry over"
               return (
                 <TableRow
@@ -140,13 +154,18 @@ export function CashflowView({
                     isCarryOver && "bg-secondary/40 font-semibold"
                   )}
                 >
-                  <TableCell className="font-mono text-xs">
+                  <TableCell className="text-xs text-muted-foreground">
                     <div className="flex items-baseline gap-2">
+                      {showBankColumn ? (
+                        <span>{entry.bankName || "—"}</span>
+                      ) : null}
                       <span className="font-mono text-[10px] text-muted-foreground/60">
                         {String(entry.bankSequence).padStart(4, "0")}
                       </span>
-                      <span>{formatDate(entry.date)}</span>
                     </div>
+                  </TableCell>
+                  <TableCell className="font-mono text-xs">
+                    <span>{formatDate(entry.date)}</span>
                   </TableCell>
                   <TableCell className={cn("text-sm", isCarryOver && "italic")}>
                     {isCarryOver ? (
@@ -204,7 +223,7 @@ export function CashflowView({
           </TableBody>
           <TableFooter>
             <TableRow className="border-t-2 border-foreground/20 bg-secondary/30 hover:bg-secondary/30">
-              <TableCell colSpan={2} className="font-semibold text-sm">
+              <TableCell colSpan={3} className="font-semibold text-sm">
                 Period totals
               </TableCell>
               <TableCell className="font-mono text-xs font-semibold text-right text-[hsl(var(--ledger-green))]">
