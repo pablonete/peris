@@ -1,6 +1,8 @@
 "use client"
 
-import { quarters, formatCurrency, formatDate } from "@/lib/sample-data"
+import { formatCurrency, formatDate } from "@/lib/sample-data"
+import { useStorageData } from "@/lib/use-storage-data"
+import { useStorage } from "@/lib/storage-context"
 import {
   Table,
   TableBody,
@@ -11,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useLanguage } from "@/lib/i18n-context"
 
 interface ExpensesViewProps {
@@ -19,43 +22,65 @@ interface ExpensesViewProps {
 
 export function ExpensesView({ quarterId }: ExpensesViewProps) {
   const { t } = useLanguage()
-  const data = quarters[quarterId]
-  if (!data) return null
+  const { activeStorage } = useStorage()
+  const { content, loading, error } = useStorageData(quarterId, "expenses")
 
-  const totalSubtotal = data.expenses.reduce(
+  if (loading) {
+    return (
+      <div className="text-center text-muted-foreground">
+        {t("expenses.expenses")}...
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <Alert className="border-red-200 bg-red-50">
+        <AlertDescription className="text-red-900">{error}</AlertDescription>
+      </Alert>
+    )
+  }
+
+  if (!content || content.length === 0) {
+    return (
+      <Alert>
+        <AlertDescription>No expenses found</AlertDescription>
+      </Alert>
+    )
+  }
+
+  const totalSubtotal = content.reduce(
     (s, e) => s + e.vat.reduce((v, item) => v + item.subtotal, 0),
     0
   )
-  const totalVat = data.expenses.reduce(
+  const totalVat = content.reduce(
     (s, e) => s + e.vat.reduce((v, item) => v + item.amount, 0),
     0
   )
-  const totalTaxRetention = data.expenses.reduce(
+  const totalTaxRetention = content.reduce(
     (s, e) => s + (e.taxRetention || 0),
     0
   )
-  const totalAmount = data.expenses.reduce((s, e) => s + e.total, 0)
-  const paidExpenses = data.expenses
+  const totalAmount = content.reduce((s, e) => s + e.total, 0)
+  const paidExpenses = content
     .filter((e) => e.paymentDate !== null)
     .reduce((s, e) => s + e.total, 0)
-  const pendingExpenses = data.expenses
+  const pendingExpenses = content
     .filter((e) => e.paymentDate === null)
     .reduce((s, e) => s + e.total, 0)
 
   return (
     <div>
-      {/* Page heading */}
       <div className="mb-6 border-b-2 border-foreground/20 pb-4">
         <h2 className="text-2xl font-bold tracking-wide text-foreground">
           {t("expenses.expenses")}
         </h2>
         <p className="font-mono text-xs text-muted-foreground">
-          {data.name} &middot; {data.companyName} &middot;{" "}
-          {data.expenses.length} {t("expenses.entries")}
+          {quarterId} &middot; {activeStorage.name} &middot; {content.length}{" "}
+          {t("expenses.entries")}
         </p>
       </div>
 
-      {/* Summary cards */}
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {[
           { label: t("expenses.totalExpenses"), value: totalAmount },
@@ -76,7 +101,6 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
         ))}
       </div>
 
-      {/* Ledger table */}
       <div className="rounded-sm border border-border bg-card">
         <Table>
           <TableHeader>
@@ -111,7 +135,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.expenses.map((exp) => (
+            {content.map((exp) => (
               <TableRow
                 key={exp.id}
                 className="border-b border-dashed border-[hsl(var(--ledger-line))] hover:bg-secondary/50"

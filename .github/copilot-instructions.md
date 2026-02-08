@@ -22,6 +22,7 @@ This is Peris - a minimalist ledger book application for personal accounting and
 - Use Radix UI components from `components/ui/` for consistency
 - Follow the ledger-inspired design aesthetic (serif fonts, minimal colors)
 - **Format code with Prettier (no semicolons)**: Run `pnpm format` before committing
+- **Code comments**: Set a high bar - only explain non-obvious logic or the "why", never describe what code obviously does. Self-explanatory code with clear variable/function names is preferred over comments.
 
 ### Internationalization (i18n)
 

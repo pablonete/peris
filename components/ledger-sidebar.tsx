@@ -1,5 +1,4 @@
 "use client"
-
 import { cn } from "@/lib/utils"
 import { quarterIds } from "@/lib/sample-data"
 import {
@@ -10,6 +9,7 @@ import {
   BookOpen,
 } from "lucide-react"
 import { useLanguage } from "@/lib/i18n-context"
+import { StorageSelector } from "./storage-selector"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
@@ -127,11 +127,9 @@ export function LedgerSidebar({
         </ul>
       </nav>
 
-      {/* Footer with language toggle */}
+      <StorageSelector />
+
       <div className="border-t border-sidebar-border px-5 py-3">
-        <p className="font-mono text-[10px] text-sidebar-foreground/40 mb-2">
-          {t("sidebar.sampleData")}
-        </p>
         <div className="flex justify-center gap-2 font-mono text-xs">
           <button
             onClick={() => setLanguage("es")}
