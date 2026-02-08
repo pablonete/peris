@@ -46,16 +46,18 @@ export function LedgerSidebar({
   return (
     <aside className="flex h-full w-64 flex-col bg-sidebar text-sidebar-foreground">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-sidebar-border px-5 py-5">
-        <BookOpen className="h-6 w-6 text-sidebar-primary" />
-        <div>
-          <h1 className="text-lg font-bold tracking-wide text-sidebar-primary">
-            {t("sidebar.ledgerBook")}
-          </h1>
-          <p className="font-mono text-xs text-sidebar-foreground/60">
-            {t("sidebar.accounting")}
-          </p>
-        </div>
+      <div className="flex items-center gap-3 border-b border-sidebar-border px-5 py-5 transition-colors hover:bg-sidebar-accent/80">
+        <Link href="/" className="flex items-center gap-3 rounded-sm px-1 py-1">
+          <BookOpen className="h-6 w-6 text-sidebar-primary" />
+          <div>
+            <h1 className="text-lg font-bold tracking-wide text-sidebar-primary">
+              {t("sidebar.ledgerBook")}
+            </h1>
+            <p className="font-mono text-xs text-sidebar-foreground/60">
+              {t("sidebar.accounting")}
+            </p>
+          </div>
+        </Link>
       </div>
 
       {/* Quarter navigation */}

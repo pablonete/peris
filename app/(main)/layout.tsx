@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react"
 import { LedgerSidebar, ViewType } from "@/components/ledger-sidebar"
 import { Menu, X } from "lucide-react"
+import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 
 function MainLayoutInner({ children }: { children: React.ReactNode }) {
@@ -63,9 +64,12 @@ function MainLayoutInner({ children }: { children: React.ReactNode }) {
               <Menu className="h-5 w-5" />
             )}
           </button>
-          <span className="font-mono text-sm font-semibold tracking-wider text-foreground">
+          <Link
+            href="/"
+            className="font-mono text-sm font-semibold tracking-wider text-foreground"
+          >
             Peris
-          </span>
+          </Link>
         </div>
 
         {/* Decorative ruled-line background + content */}
