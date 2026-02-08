@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ErrorBanner } from "@/components/error-banner"
+import { PaymentDateCell } from "@/components/payment-date-cell"
 import { useLanguage } from "@/lib/i18n-context"
 
 interface InvoicesViewProps {
@@ -146,16 +147,8 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
                 <TableCell className="font-mono text-sm font-semibold text-right">
                   {formatCurrency(inv.total)}
                 </TableCell>
-                <TableCell
-                  className={
-                    inv.paymentDate
-                      ? "font-mono text-xs text-center"
-                      : "font-mono text-xs text-center text-muted-foreground"
-                  }
-                >
-                  {inv.paymentDate
-                    ? formatDate(inv.paymentDate)
-                    : t("invoices.pending")}
+                <TableCell className="text-center">
+                  <PaymentDateCell paymentDate={inv.paymentDate} />
                 </TableCell>
               </TableRow>
             ))}

@@ -12,8 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { PaymentDateCell } from "@/components/payment-date-cell"
 import { ErrorBanner } from "@/components/error-banner"
 import { useLanguage } from "@/lib/i18n-context"
 
@@ -188,15 +188,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                   {formatCurrency(exp.total)}
                 </TableCell>
                 <TableCell className="text-center">
-                  {exp.paymentDate ? (
-                    <Badge className="rounded-sm font-mono text-[10px] uppercase tracking-wider bg-[hsl(var(--ledger-green))] text-[hsl(var(--card))]">
-                      {formatDate(exp.paymentDate)}
-                    </Badge>
-                  ) : (
-                    <Badge className="rounded-sm font-mono text-[10px] uppercase tracking-wider bg-muted text-muted-foreground">
-                      {t("expenses.pending")}
-                    </Badge>
-                  )}
+                  <PaymentDateCell paymentDate={exp.paymentDate} />
                 </TableCell>
               </TableRow>
             ))}
