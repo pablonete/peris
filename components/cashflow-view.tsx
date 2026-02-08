@@ -113,6 +113,9 @@ export function CashflowView({
           <TableHeader>
             <TableRow className="border-b-2 border-foreground/15 hover:bg-transparent">
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
+                {t("cashflow.bank")}
+              </TableHead>
+              <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
                 {t("cashflow.month")}
               </TableHead>
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em]">
@@ -140,6 +143,9 @@ export function CashflowView({
                     isCarryOver && "bg-secondary/40 font-semibold"
                   )}
                 >
+                  <TableCell className="text-xs text-muted-foreground">
+                    {entry.bankName || "—"}
+                  </TableCell>
                   <TableCell className="font-mono text-xs">
                     <div className="flex items-baseline gap-2">
                       <span className="font-mono text-[10px] text-muted-foreground/60">
@@ -204,7 +210,7 @@ export function CashflowView({
           </TableBody>
           <TableFooter>
             <TableRow className="border-t-2 border-foreground/20 bg-secondary/30 hover:bg-secondary/30">
-              <TableCell colSpan={2} className="font-semibold text-sm">
+              <TableCell colSpan={3} className="font-semibold text-sm">
                 Period totals
               </TableCell>
               <TableCell className="font-mono text-xs font-semibold text-right text-[hsl(var(--ledger-green))]">
