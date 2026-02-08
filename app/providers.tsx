@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { LanguageProvider } from "@/lib/i18n-context"
 import { StorageProvider } from "@/lib/storage-context"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { useMemo } from "react"
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -22,7 +23,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <StorageProvider>
-        <LanguageProvider>{children}</LanguageProvider>
+        <LanguageProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+        </LanguageProvider>
       </StorageProvider>
     </QueryClientProvider>
   )
