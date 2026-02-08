@@ -8,11 +8,15 @@ export const translations = {
       invoices: "Facturas",
       expenses: "Gastos",
       cashflow: "Flujo de caja",
+      manageStorages: "Gestionar almacenamientos",
+      errorLoadingQuarters: "Error al cargar trimestres",
     },
     welcome: {
       ledgerBook: "Peris",
       selectQuarter:
         "Selecciona un trimestre en la barra lateral, o explora la descripción general a continuación.",
+      loading: "Cargando resumen...",
+      noQuarters: "No se encontraron trimestres en este almacenamiento.",
       invoiced: "Facturado",
       expenses: "Gastos",
       opening: "Apertura",
@@ -59,6 +63,40 @@ export const translations = {
       "3": "Jul - Sep",
       "4": "Oct - Dic",
     },
+    storage: {
+      title: "Almacenamiento",
+      connectNew: "Conectar nuevo almacenamiento...",
+      manageStorages: "Gestionar almacenamientos",
+      add: "Agregar",
+      delete: "Eliminar",
+      name: "Nombre",
+      nameHelp: "Mi empresa",
+      repositoryUrl: "URL del repositorio",
+      repositoryUrlHelp: "https://PAT@github.com/owner/repo/path",
+      repositoryUrlHint:
+        "Formato: https://[PAT@]github.com/owner/repo[/path]. El PAT es opcional para repositorios públicos.",
+      addNew: "Agregar nuevo almacenamiento",
+      savedStorages: "Almacenamientos guardados",
+      testConnection: "Probar conexión",
+      testing: "Probando...",
+      connectionSuccess: "¡Conexión exitosa!",
+      securityWarning:
+        "⚠️ Advertencia: Tu token se almacena en localStorage. Considera usar tokens con permisos restringidos de lectura.",
+      saveToLocalStorage: "Recordar en este navegador",
+      saveWarning: "⚠️ No lo hagas en computadoras públicas o compartidas.",
+      notSaved:
+        "Conexión no guardada. No podrás acceder a este almacenamiento después de cerrar la sesión.",
+      error: {
+        required: "Completa todos los campos requeridos",
+        notTested: "Prueba la conexión antes de agregar",
+        duplicateName: "Ya existe un almacenamiento con ese nombre",
+        unknown: "Error desconocido",
+      },
+    },
+    views: {
+      selectQuarter:
+        "Selecciona un trimestre en la barra lateral para ver los datos.",
+    },
   },
   en: {
     sidebar: {
@@ -69,11 +107,15 @@ export const translations = {
       invoices: "Invoices",
       expenses: "Expenses",
       cashflow: "Cashflow",
+      manageStorages: "Manage storages",
+      errorLoadingQuarters: "Error loading quarters",
     },
     welcome: {
       ledgerBook: "Peris",
       selectQuarter:
         "Select a quarter from the sidebar, or browse the overview below.",
+      loading: "Loading overview...",
+      noQuarters: "No quarters found in this storage.",
       invoiced: "Invoiced",
       expenses: "Expenses",
       opening: "Opening",
@@ -119,6 +161,40 @@ export const translations = {
       "2": "Apr - Jun",
       "3": "Jul - Sep",
       "4": "Oct - Dec",
+    },
+    storage: {
+      title: "Storage",
+      connectNew: "Connect new storage...",
+      manageStorages: "Manage storages",
+      add: "Add",
+      delete: "Delete",
+      name: "Name",
+      nameHelp: "My company",
+      repositoryUrl: "Repository URL",
+      repositoryUrlHelp: "https://PAT@github.com/owner/repo/path",
+      repositoryUrlHint:
+        "Format: https://[PAT@]github.com/owner/repo[/path]. PAT is optional for public repositories.",
+      addNew: "Add new storage",
+      savedStorages: "Saved storages",
+      testConnection: "Test connection",
+      testing: "Testing...",
+      connectionSuccess: "Connection successful!",
+      securityWarning:
+        "⚠️ Warning: Your token is stored in localStorage. Consider using tokens with restricted read-only permissions.",
+      saveToLocalStorage: "Save in this browser",
+      saveWarning:
+        "⚠️ Saving to localStorage allows Peris to remember this connection. Do NOT do this on public or shared computers.",
+      notSaved:
+        "Connection not saved. You won't be able to access this storage after closing the session.",
+      error: {
+        required: "Complete all required fields",
+        notTested: "Test the connection before adding",
+        duplicateName: "A storage with that name already exists",
+        unknown: "Unknown error",
+      },
+    },
+    views: {
+      selectQuarter: "Select a quarter from the sidebar to view data.",
     },
   },
 }

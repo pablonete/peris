@@ -1,11 +1,9 @@
 "use client"
 
-import {
-  quarters,
-  quarterIds,
-  formatCurrency,
-  formatDate,
-} from "@/lib/sample-data"
+import { formatCurrency, formatDate } from "@/lib/ledger-utils"
+import { useStorage } from "@/lib/storage-context"
+import { useStorageData } from "@/lib/use-storage-data"
+import { useStorageQuarters } from "@/lib/use-storage-quarters"
 import {
   Table,
   TableBody,
@@ -15,6 +13,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ErrorBanner } from "@/components/error-banner"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/i18n-context"
 
@@ -28,33 +28,52 @@ export function CashflowView({
   onNavigateToQuarter,
 }: CashflowViewProps) {
   const { t } = useLanguage()
-  const data = quarters[quarterId]
-  if (!data) return null
+  const { activeStorage } = useStorage()
+  const { quarters } = useStorageQuarters()
+  const { content, isPending, error } = useStorageData(quarterId, "cashflow")
 
-  const currentQuarterIndex = quarterIds.indexOf(quarterId)
+  if (isPending) {
+    return (
+      <div className="text-center text-muted-foreground">
+        {t("cashflow.cashflow")}...
+      </div>
+    )
+  }
+
+  if (error) {
+    return <ErrorBanner title={t("sidebar.cashflow")} message={error.message} />
+  }
+
+  if (!content) {
+    return (
+      <Alert>
+        <AlertDescription>No cashflow data found</AlertDescription>
+      </Alert>
+    )
+  }
+
+  const currentQuarterIndex = quarters.indexOf(quarterId)
   const previousQuarterId =
-    currentQuarterIndex > 0 ? quarterIds[currentQuarterIndex - 1] : null
+    currentQuarterIndex > 0 ? quarters[currentQuarterIndex - 1] : null
 
-  const totalIncome = data.cashflow.reduce((s, e) => s + (e.income ?? 0), 0)
-  const totalExpense = data.cashflow.reduce((s, e) => s + (e.expense ?? 0), 0)
-  const openingBalance = data.carryOver
+  const totalIncome = content.entries.reduce((s, e) => s + (e.income ?? 0), 0)
+  const totalExpense = content.entries.reduce((s, e) => s + (e.expense ?? 0), 0)
+  const openingBalance = content.carryOver
   const closingBalance =
-    data.cashflow[data.cashflow.length - 1]?.balance ?? openingBalance
+    content.entries[content.entries.length - 1]?.balance ?? openingBalance
 
   return (
     <div>
-      {/* Page heading */}
       <div className="mb-6 border-b-2 border-foreground/20 pb-4">
         <h2 className="text-2xl font-bold tracking-wide text-foreground">
           {t("cashflow.cashflow")}
         </h2>
         <p className="font-mono text-xs text-muted-foreground">
-          {data.name} &middot; {data.companyName} &middot;{" "}
-          {data.cashflow.length} {t("cashflow.movements")}
+          {quarterId} &middot; {activeStorage.name} &middot;{" "}
+          {content.entries.length} {t("cashflow.movements")}
         </p>
       </div>
 
-      {/* Summary cards */}
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-4">
         {[
           { label: t("cashflow.opening"), value: openingBalance, color: "" },
@@ -89,7 +108,6 @@ export function CashflowView({
         ))}
       </div>
 
-      {/* Ledger table */}
       <div className="rounded-sm border border-border bg-card">
         <Table>
           <TableHeader>
@@ -112,7 +130,7 @@ export function CashflowView({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.cashflow.map((entry, idx) => {
+            {content.entries.map((entry, idx) => {
               const isCarryOver = idx === 0 && entry.concept === "Carry over"
               return (
                 <TableRow

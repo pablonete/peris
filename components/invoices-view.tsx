@@ -1,6 +1,8 @@
 "use client"
 
-import { quarters, formatCurrency, formatDate } from "@/lib/sample-data"
+import { formatCurrency, formatDate } from "@/lib/ledger-utils"
+import { useStorageData } from "@/lib/use-storage-data"
+import { useStorage } from "@/lib/storage-context"
 import {
   Table,
   TableBody,
@@ -10,6 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ErrorBanner } from "@/components/error-banner"
+import { PaymentDateCell } from "@/components/payment-date-cell"
 import { useLanguage } from "@/lib/i18n-context"
 
 interface InvoicesViewProps {
@@ -18,39 +23,57 @@ interface InvoicesViewProps {
 
 export function InvoicesView({ quarterId }: InvoicesViewProps) {
   const { t } = useLanguage()
-  const data = quarters[quarterId]
-  if (!data) return null
+  const { activeStorage } = useStorage()
+  const { content, isPending, error } = useStorageData(quarterId, "invoices")
 
-  const totalSubtotal = data.invoices.reduce((s, i) => s + i.subtotal, 0)
-  const totalVat = data.invoices.reduce((s, i) => s + i.vat, 0)
-  const totalAmount = data.invoices.reduce((s, i) => s + i.total, 0)
+  if (isPending) {
+    return (
+      <div className="text-center text-muted-foreground">
+        {t("invoices.sentInvoices")}...
+      </div>
+    )
+  }
+
+  if (error) {
+    return <ErrorBanner title={t("sidebar.invoices")} message={error.message} />
+  }
+
+  if (!content || content.length === 0) {
+    return (
+      <Alert>
+        <AlertDescription>No invoices found</AlertDescription>
+      </Alert>
+    )
+  }
+
+  const totalSubtotal = content.reduce((s, i) => s + i.subtotal, 0)
+  const totalVat = content.reduce((s, i) => s + i.vat, 0)
+  const totalAmount = content.reduce((s, i) => s + i.total, 0)
 
   return (
     <div>
-      {/* Page heading */}
       <div className="mb-6 border-b-2 border-foreground/20 pb-4">
         <h2 className="text-2xl font-bold tracking-wide text-foreground">
           {t("invoices.sentInvoices")}
         </h2>
         <p className="font-mono text-xs text-muted-foreground">
-          {data.name} &middot; {data.companyName} &middot;{" "}
-          {data.invoices.length} {t("invoices.sentInvoices").toLowerCase()}
+          {quarterId} &middot; {activeStorage.name} &middot; {content.length}{" "}
+          {t("invoices.sentInvoices").toLowerCase()}
         </p>
       </div>
 
-      {/* Summary cards */}
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {[
           { label: t("invoices.totalInvoiced"), value: totalAmount },
           {
             label: t("invoices.collected"),
-            value: data.invoices
+            value: content
               .filter((i) => i.paymentDate != null)
               .reduce((s, i) => s + i.total, 0),
           },
           {
             label: t("invoices.outstanding"),
-            value: data.invoices
+            value: content
               .filter((i) => i.paymentDate == null)
               .reduce((s, i) => s + i.total, 0),
           },
@@ -69,7 +92,6 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
         ))}
       </div>
 
-      {/* Ledger table */}
       <div className="rounded-sm border border-border bg-card">
         <Table>
           <TableHeader>
@@ -101,7 +123,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.invoices.map((inv) => (
+            {content.map((inv) => (
               <TableRow
                 key={inv.id}
                 className="border-b border-dashed border-[hsl(var(--ledger-line))] hover:bg-secondary/50"
@@ -125,16 +147,8 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
                 <TableCell className="font-mono text-sm font-semibold text-right">
                   {formatCurrency(inv.total)}
                 </TableCell>
-                <TableCell
-                  className={
-                    inv.paymentDate
-                      ? "font-mono text-xs text-center"
-                      : "font-mono text-xs text-center text-muted-foreground"
-                  }
-                >
-                  {inv.paymentDate
-                    ? formatDate(inv.paymentDate)
-                    : t("invoices.pending")}
+                <TableCell className="text-center">
+                  <PaymentDateCell paymentDate={inv.paymentDate} />
                 </TableCell>
               </TableRow>
             ))}

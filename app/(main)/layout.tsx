@@ -1,37 +1,24 @@
 "use client"
 
-import { useState } from "react"
-import { LedgerSidebar } from "@/components/ledger-sidebar"
+import { Suspense, useState } from "react"
+import { LedgerSidebar, ViewType } from "@/components/ledger-sidebar"
 import { Menu, X } from "lucide-react"
-import { usePathname } from "next/navigation"
-import { quarterIds } from "@/lib/sample-data"
+import Link from "next/link"
+import { usePathname, useSearchParams } from "next/navigation"
 
-export default function MainLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+function MainLayoutInner({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
+  const searchParams = useSearchParams()
 
-  // Extract current quarter and view from pathname
-  function getCurrentQuarterAndView(): [string, string | null] {
-    const segments = pathname.split("/").filter(Boolean)
-
-    // Handle /2025.4Q/invoices -> quarter = 2025.4Q, view = invoices
-    if (segments.length >= 2 && quarterIds.includes(segments[0])) {
-      const quarter = segments[0]
-      const view = segments[1]
-      if (view === "invoices" || view === "expenses" || view === "cashflow") {
-        return [quarter, view]
-      }
-    }
-
-    // Default to first quarter, no view selected (welcome page)
-    return [quarterIds[0], null]
-  }
-
-  const [selectedQuarter, selectedView] = getCurrentQuarterAndView()
+  const selectedQuarter = searchParams.get("q") || ""
+  const segments = pathname.split("/").filter(Boolean)
+  const lastSegment = segments[segments.length - 1]
+  const selectedView = (
+    ["invoices", "expenses", "cashflow"].includes(lastSegment ?? "")
+      ? lastSegment
+      : null
+  ) as ViewType | null
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -56,9 +43,7 @@ export default function MainLayout({
       >
         <LedgerSidebar
           selectedQuarter={selectedQuarter}
-          selectedView={
-            selectedView as "invoices" | "expenses" | "cashflow" | null
-          }
+          selectedView={selectedView}
           onSidebarClose={() => setSidebarOpen(false)}
         />
       </div>
@@ -79,9 +64,12 @@ export default function MainLayout({
               <Menu className="h-5 w-5" />
             )}
           </button>
-          <span className="font-mono text-sm font-semibold tracking-wider text-foreground">
+          <Link
+            href="/"
+            className="font-mono text-sm font-semibold tracking-wider text-foreground"
+          >
             Peris
-          </span>
+          </Link>
         </div>
 
         {/* Decorative ruled-line background + content */}
@@ -106,5 +94,17 @@ export default function MainLayout({
         </div>
       </main>
     </div>
+  )
+}
+
+export default function MainLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <Suspense>
+      <MainLayoutInner>{children}</MainLayoutInner>
+    </Suspense>
   )
 }

@@ -9,6 +9,155 @@ A minimalist ledger book application for financial tracking based on GitHub repo
 - 🧾 **Expense Tracking** - Log business expenses with VAT (multiple), IRPF (15%) and payment dates
 - 💵 **Cashflow View** - Monitor bank balance and transaction flow over time
 - 🌍 **Bilingual Support** - Switch between Spanish (ES) and English (EN)
+- 🔗 **GitHub Data Storage** - Store and sync your financial data from GitHub repositories
+
+## Data Storage
+
+### Overview
+
+Peris stores financial data in GitHub repositories as JSON files. This allows you to:
+
+- Keep your data in version control with traceability
+- Access from anywhere, GitHub is your backend
+
+### Sample Data
+
+The app comes with sample data that's read from a public repository. This is perfect for exploring Peris without setting up your own data.
+
+### Setting Up Your Own Repository
+
+To use your own financial data:
+
+1. **Create a GitHub Repository**
+   - Create a new repository (can be private)
+   - Optionally, organize your data in a folder (e.g., `data/` or `financials/`) so the same repo may contain multiple companies
+
+2. **Create JSON Data Files**
+   - Create one folder per quarter: `2025.1Q/`, `2025.2Q/`, etc.
+   - Inside each quarter folder, create three JSON files:
+     - `invoices.json` - List of invoices for that quarter
+     - `expenses.json` - List of expenses for that quarter
+     - `cashflow.json` - Bank transactions for that quarter
+   - Example structure: `peris-data/finances/2025.4Q/invoices.json`
+   - [See sample](https://github.com/pablonete/peris-sample-data)
+
+3. **Create a Fine-Grained Personal Access Token** ⚠️ **SECURITY WARNING**
+   - Go to GitHub Settings → Developer Settings → Personal access tokens → Fine-grained tokens
+   - Click "Generate new token"
+   - **Token settings:**
+     - **Expiration**: Set an expiration date (recommended: 90 days or less)
+     - **Resource owner**: Select the repository owner
+     - **Repository access**: Select "Only select repositories" → Choose your Peris data repository
+     - **Permissions**: Select "Repository permissions" → Contents: Read-only
+   - Copy the token immediately (you'll only see it once!)
+   - Never commit tokens to version control
+   - **Alternative**: If you prefer, [classic personal access tokens](https://github.com/settings/tokens) still work (select `repo` scope with read-only access) but it gives access to all your private repos
+
+4. **Add Your Repository to Peris**
+   - Click the **"Manage storages"** button at the bottom of the sidebar
+   - Click **"Add new storage"**
+   - Fill in:
+     - **Name**: A name for your storage (e.g., "My Company 2025")
+     - **Repository URL**: Your GitHub repository URL with token and path
+       - Format: `https://[PAT@]github.com/owner/repo/path/to/quarters`
+       - Example: `https://ghp_xxxxxxxxxxxx@github.com/pablonete/peris-data/finances`
+       - The path should point to the folder containing your quarter folders (e.g., `finances/` where your `2025.1Q/`, `2025.2Q/` folders are)
+   - **Save to localStorage**: Check to remember this connection on personal computers; uncheck on shared/public ones
+   - Click **"Test connection"** to verify access
+   - Click **"Add"** to save
+
+5. **Switch Between Storages**
+   - Use the dropdown at the bottom of the sidebar to switch between storages
+   - All views will update to show data from the selected storage
+
+### Data Structure
+
+Your repository structure should look like:
+
+```
+finances/
+├── 2025.1Q/
+│   ├── invoices.json
+│   ├── expenses.json
+│   └── cashflow.json
+├── 2025.2Q/
+│   ├── invoices.json
+│   ├── expenses.json
+│   └── cashflow.json
+└── ...
+```
+
+**invoices.json** - Array of invoices:
+
+```json
+[
+  {
+    "id": "inv-001",
+    "date": "2025-01-15",
+    "number": "001",
+    "client": "Client Name",
+    "concept": "Services",
+    "subtotal": 1000,
+    "vat": 210,
+    "total": 1210,
+    "paymentDate": "2025-02-01"
+  }
+]
+```
+
+**expenses.json** - Array of expenses:
+
+```json
+[
+  {
+    "id": "exp-001",
+    "date": "2025-01-10",
+    "number": "001",
+    "vendor": "Vendor Name",
+    "concept": "Office supplies",
+    "vat": [{ "subtotal": 100, "rate": 21, "amount": 21 }],
+    "taxRetention": 15,
+    "paymentDate": "2025-01-15"
+  }
+]
+```
+
+**cashflow.json** - Array of transactions with metadata:
+
+```json
+{
+  "companyName": "Your Company Name",
+  "carryOver": 5000,
+  "entries": [
+    {
+      "date": "2025-01-15",
+      "concept": "Invoice received",
+      "bankSequence": 1,
+      "income": 1210,
+      "balance": 6210
+    }
+  ]
+}
+```
+
+### Security Considerations
+
+- **Token Storage**: Your PAT is stored in browser `localStorage`. This is suitable for:
+  - Personal computers
+  - Private machines
+  - Development environments
+  - **Not recommended**: Public computers or shared machines
+
+- **Token Restrictions**: Always create tokens with minimum required permissions:
+  - **Recommended**: Use Fine-Grained Personal Access Tokens scoped to a single repository with read-only "Contents" permission
+  - **Alternative**: Classic PATs with `repo` scope (read-only) also work but have broader permissions
+  - Each storage should use a separate token if possible
+  - Regularly review and revoke unused tokens
+  - Set token expiration dates (90 days recommended)
+
+- **Private Repositories**: Create a private repository for sensitive financial data
+
+- **No Backend**: All operations are client-side via GitHub API. Peris never stores your data on external servers.
 
 ## Tech Stack
 
@@ -82,29 +231,12 @@ pnpm lint     # Run ESLint
 
 ```
 peris/
-├── app/
-│   ├── (main)/          # Route group for main application
-│   │   ├── page.tsx     # Welcome page
-│   │   ├── layout.tsx   # Main layout with sidebar
-│   │   └── [quarter]/   # Dynamic quarter segment
-│   │       ├── invoices/page.tsx
-│   │       ├── expenses/page.tsx
-│   │       └── cashflow/
-│   │           ├── page.tsx
-│   │           └── cashflow-client.tsx
-│   ├── layout.tsx       # Root layout with providers
-│   ├── providers.tsx
-│   └── globals.css
-├── components/
-│   ├── ui/              # Reusable UI components (Radix-based)
-│   ├── *-view.tsx       # Main view components
-│   └── ledger-sidebar.tsx
-├── lib/
-│   ├── i18n-context.tsx   # Internationalization
-│   ├── translations.ts    # Language dictionaries
-│   ├── types.ts           # TypeScript type definitions
-│   └── sample-data.ts     # Demo financial data
-└── public/              # Static assets
+├── app/                 # Next.js app directory with routes
+├── components/          # React components
+│   └── ui/              # Radix UI component library
+├── lib/                 # Utilities, helpers, and business logic
+├── public/              # Static assets
+└── styles/              # Global styles
 ```
 
 ## Deployment

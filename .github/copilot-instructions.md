@@ -22,6 +22,7 @@ This is Peris - a minimalist ledger book application for personal accounting and
 - Use Radix UI components from `components/ui/` for consistency
 - Follow the ledger-inspired design aesthetic (serif fonts, minimal colors)
 - **Format code with Prettier (no semicolons)**: Run `pnpm format` before committing
+- **Code comments**: Set a high bar - only explain non-obvious logic or the "why", never describe what code obviously does. Self-explanatory code with clear variable/function names is preferred over comments.
 
 ### Internationalization (i18n)
 
@@ -33,9 +34,11 @@ This is Peris - a minimalist ledger book application for personal accounting and
 ### Component Structure
 
 - Use "use client" directive for interactive components
-- Keep data logic in `lib/sample-data.ts`
 - Follow the established naming: `*-view.tsx` for main views
 - Use Tailwind CSS classes following the existing theme
+- Use shared helpers from `lib/ledger-utils.ts`
+- **Data fetching**: Use `useStorageData()` and `useStorageQuarters()` hooks (powered by TanStack React Query). These handle caching (5-min stale time) and provide `data`, `isPending`, and `error` states
+- **Use `ErrorBanner` component** from `components/error-banner.tsx` for displaying errors consistently
 
 ### Git Workflow
 
@@ -50,8 +53,11 @@ This is Peris - a minimalist ledger book application for personal accounting and
 
 - `README.md` - Main documentation (update with features)
 - `lib/translations.ts` - All translatable strings
-- `lib/sample-data.ts` - Demo data and data models
+- `lib/ledger-utils.ts` - Shared formatting helpers
+- `lib/use-storage-data.ts` - GitHub-backed data loader hook
+- `lib/use-storage-quarters.ts` - GitHub-backed quarters hook
 - `components/ledger-sidebar.tsx` - Main navigation
+- `components/error-banner.tsx` - Shared error display component
 - `app/layout.tsx` - Root layout with providers
 
 ## Remember

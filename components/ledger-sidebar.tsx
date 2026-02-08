@@ -1,7 +1,6 @@
 "use client"
-
 import { cn } from "@/lib/utils"
-import { quarterIds } from "@/lib/sample-data"
+import { useStorageQuarters } from "@/lib/use-storage-quarters"
 import {
   FileText,
   Receipt,
@@ -10,6 +9,8 @@ import {
   BookOpen,
 } from "lucide-react"
 import { useLanguage } from "@/lib/i18n-context"
+import { StorageSelector } from "./storage-selector"
+import { ErrorBanner } from "./error-banner"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
@@ -28,6 +29,7 @@ export function LedgerSidebar({
 }: LedgerSidebarProps) {
   const { language, setLanguage, t } = useLanguage()
   const router = useRouter()
+  const { quarters, error: quartersError } = useStorageQuarters()
 
   const viewItems: { key: ViewType; label: string; icon: typeof FileText }[] = [
     { key: "invoices", label: t("sidebar.invoices"), icon: FileText },
@@ -44,16 +46,18 @@ export function LedgerSidebar({
   return (
     <aside className="flex h-full w-64 flex-col bg-sidebar text-sidebar-foreground">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-sidebar-border px-5 py-5">
-        <BookOpen className="h-6 w-6 text-sidebar-primary" />
-        <div>
-          <h1 className="text-lg font-bold tracking-wide text-sidebar-primary">
-            {t("sidebar.ledgerBook")}
-          </h1>
-          <p className="font-mono text-xs text-sidebar-foreground/60">
-            {t("sidebar.accounting")}
-          </p>
-        </div>
+      <div className="flex items-center gap-3 border-b border-sidebar-border px-5 py-5 transition-colors hover:bg-sidebar-accent/80">
+        <Link href="/" className="flex items-center gap-3 rounded-sm px-1 py-1">
+          <BookOpen className="h-6 w-6 text-sidebar-primary" />
+          <div>
+            <h1 className="text-lg font-bold tracking-wide text-sidebar-primary">
+              {t("sidebar.ledgerBook")}
+            </h1>
+            <p className="font-mono text-xs text-sidebar-foreground/60">
+              {t("sidebar.accounting")}
+            </p>
+          </div>
+        </Link>
       </div>
 
       {/* Quarter navigation */}
@@ -61,15 +65,22 @@ export function LedgerSidebar({
         <p className="mb-3 px-2 font-mono text-[10px] uppercase tracking-[0.2em] text-sidebar-foreground/50">
           {t("sidebar.quarters")}
         </p>
+        {quartersError && (
+          <ErrorBanner
+            title={t("sidebar.errorLoadingQuarters")}
+            message={quartersError.message}
+            className="mb-3"
+          />
+        )}
         <ul className="flex flex-col gap-1">
-          {quarterIds.map((qId) => {
+          {quarters.map((qId) => {
             const isExpanded = selectedQuarter === qId
             return (
               <li key={qId}>
                 <button
                   type="button"
                   onClick={() => {
-                    router.push(`/${qId}/invoices`)
+                    router.push(`/invoices?q=${qId}`)
                   }}
                   className={cn(
                     "flex w-full items-center justify-between rounded-sm px-3 py-2.5 text-left text-sm transition-colors",
@@ -98,13 +109,12 @@ export function LedgerSidebar({
                 {isExpanded && (
                   <ul className="ml-3 mt-1 flex flex-col gap-0.5 border-l border-sidebar-border pl-3">
                     {viewItems.map(({ key, label, icon: Icon }) => {
-                      const href = `/${qId}/${key}`
                       const isActive =
                         selectedView === key && selectedQuarter === qId
                       return (
                         <li key={key}>
                           <Link
-                            href={href}
+                            href={`/${key}?q=${qId}`}
                             onClick={onSidebarClose}
                             className={cn(
                               "flex items-center gap-2.5 rounded-sm px-3 py-2 text-left text-sm transition-colors",
@@ -127,11 +137,9 @@ export function LedgerSidebar({
         </ul>
       </nav>
 
-      {/* Footer with language toggle */}
+      <StorageSelector />
+
       <div className="border-t border-sidebar-border px-5 py-3">
-        <p className="font-mono text-[10px] text-sidebar-foreground/40 mb-2">
-          {t("sidebar.sampleData")}
-        </p>
         <div className="flex justify-center gap-2 font-mono text-xs">
           <button
             onClick={() => setLanguage("es")}
