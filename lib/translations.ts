@@ -93,6 +93,10 @@ export const translations = {
         unknown: "Error desconocido",
       },
     },
+    views: {
+      selectQuarter:
+        "Selecciona un trimestre en la barra lateral para ver los datos.",
+    },
   },
   en: {
     sidebar: {
@@ -188,6 +192,9 @@ export const translations = {
         duplicateName: "A storage with that name already exists",
         unknown: "Unknown error",
       },
+    },
+    views: {
+      selectQuarter: "Select a quarter from the sidebar to view data.",
     },
   },
 }

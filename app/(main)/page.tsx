@@ -8,7 +8,7 @@ export default function WelcomePage() {
   const router = useRouter()
 
   function handleNavigate(quarter: string, view: ViewType) {
-    router.push(`/${quarter}/${view}`)
+    router.push(`/${view}?q=${quarter}`)
   }
 
   return <WelcomeView onNavigate={handleNavigate} />

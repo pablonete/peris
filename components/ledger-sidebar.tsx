@@ -78,7 +78,7 @@ export function LedgerSidebar({
                 <button
                   type="button"
                   onClick={() => {
-                    router.push(`/${qId}/invoices`)
+                    router.push(`/invoices?q=${qId}`)
                   }}
                   className={cn(
                     "flex w-full items-center justify-between rounded-sm px-3 py-2.5 text-left text-sm transition-colors",
@@ -107,13 +107,12 @@ export function LedgerSidebar({
                 {isExpanded && (
                   <ul className="ml-3 mt-1 flex flex-col gap-0.5 border-l border-sidebar-border pl-3">
                     {viewItems.map(({ key, label, icon: Icon }) => {
-                      const href = `/${qId}/${key}`
                       const isActive =
                         selectedView === key && selectedQuarter === qId
                       return (
                         <li key={key}>
                           <Link
-                            href={href}
+                            href={`/${key}?q=${qId}`}
                             onClick={onSidebarClose}
                             className={cn(
                               "flex items-center gap-2.5 rounded-sm px-3 py-2 text-left text-sm transition-colors",
