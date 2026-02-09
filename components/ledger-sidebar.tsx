@@ -104,7 +104,10 @@ export function LedgerSidebar({
                     <span className="flex items-center gap-2 font-mono text-xs font-semibold tracking-wider">
                       {qId}
                       {hasEdits && (
-                        <span className="h-2 w-2 rounded-full bg-green-600" />
+                        <span
+                          className="h-2 w-2 rounded-full bg-green-600"
+                          aria-label="Has unsaved changes"
+                        />
                       )}
                     </span>
                     <span className="text-[11px] text-sidebar-foreground/50">
@@ -141,7 +144,10 @@ export function LedgerSidebar({
                             <Icon className="h-4 w-4" />
                             {label}
                             {isEditing && (
-                              <span className="h-2 w-2 rounded-full bg-green-600" />
+                              <span
+                                className="h-2 w-2 rounded-full bg-green-600"
+                                aria-label="Editing"
+                              />
                             )}
                           </Link>
                         </li>

@@ -76,7 +76,12 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
       <div className="mb-6 border-b-2 border-foreground/20 pb-4">
         <h2 className="flex items-center gap-2 text-2xl font-bold tracking-wide text-foreground">
           {t("expenses.expenses")}
-          {isEditing && <span className="h-2 w-2 rounded-full bg-green-600" />}
+          {isEditing && (
+            <span
+              className="h-2 w-2 rounded-full bg-green-600"
+              aria-label="Editing"
+            />
+          )}
         </h2>
         <p className="font-mono text-xs text-muted-foreground">
           {quarterId} &middot; {activeStorage.name} &middot; {content.length}{" "}
