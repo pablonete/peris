@@ -18,6 +18,7 @@ import { PaymentDateCell } from "@/components/payment-date-cell"
 import { AttachmentCell } from "@/components/attachment-cell"
 import { ErrorBanner } from "@/components/error-banner"
 import { SummaryCard } from "@/components/summary-card"
+import { NewExpenseDialog } from "@/components/new-expense-dialog"
 import { useLanguage } from "@/lib/i18n-context"
 
 interface ExpensesViewProps {
@@ -43,54 +44,53 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
     return <ErrorBanner title={t("sidebar.expenses")} message={error.message} />
   }
 
-  if (!content || content.length === 0) {
-    return (
-      <Alert>
-        <AlertDescription>No expenses found</AlertDescription>
-      </Alert>
-    )
-  }
-
-  const totalSubtotal = content.reduce(
+  const expenses = content || []
+  const totalSubtotal = expenses.reduce(
     (s, e) => s + e.vat.reduce((v, item) => v + item.subtotal, 0),
     0
   )
-  const totalVat = content.reduce(
+  const totalVat = expenses.reduce(
     (s, e) => s + e.vat.reduce((v, item) => v + item.amount, 0),
     0
   )
-  const totalTaxRetention = content.reduce(
+  const totalTaxRetention = expenses.reduce(
     (s, e) => s + (e.taxRetention || 0),
     0
   )
-  const totalAmount = content.reduce((s, e) => s + e.total, 0)
-  const paidExpenses = content
-    .filter((e) => e.paymentDate !== null)
+  const totalExpensesAmount = expenses.reduce((s, e) => s + e.total, 0)
+  const paidExpenses = expenses
+    .filter((e) => e.paymentDate != null)
     .reduce((s, e) => s + e.total, 0)
-  const pendingExpenses = content
-    .filter((e) => e.paymentDate === null)
+  const pendingExpenses = expenses
+    .filter((e) => e.paymentDate == null)
     .reduce((s, e) => s + e.total, 0)
 
   return (
     <div>
       <div className="mb-6 border-b-2 border-foreground/20 pb-4">
-        <h2 className="flex items-center gap-2 text-2xl font-bold tracking-wide text-foreground">
-          {t("expenses.expenses")}
-          {isEditing && (
-            <span
-              className="h-2 w-2 rounded-full bg-green-600"
-              aria-label="Editing"
-            />
-          )}
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="flex items-center gap-2 text-2xl font-bold tracking-wide text-foreground">
+            {t("expenses.expenses")}
+            {isEditing && (
+              <span
+                className="h-2 w-2 rounded-full bg-green-600"
+                aria-label="Editing"
+              />
+            )}
+          </h2>
+          <NewExpenseDialog quarterId={quarterId} expenses={expenses} />
+        </div>
         <p className="font-mono text-xs text-muted-foreground">
-          {quarterId} &middot; {activeStorage.name} &middot; {content.length}{" "}
+          {quarterId} &middot; {activeStorage.name} &middot; {expenses.length}{" "}
           {t("expenses.entries")}
         </p>
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <SummaryCard label={t("expenses.totalExpenses")} value={totalAmount} />
+        <SummaryCard
+          label={t("expenses.totalExpenses")}
+          value={totalExpensesAmount}
+        />
         <SummaryCard label={t("expenses.paid")} value={paidExpenses} />
         <SummaryCard label={t("expenses.pending")} value={pendingExpenses} />
       </div>
@@ -130,74 +130,84 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {content.map((exp) => (
-              <TableRow
-                key={exp.id}
-                className="border-b border-dashed border-[hsl(var(--ledger-line))] hover:bg-secondary/50"
-              >
-                <TableCell className="font-mono text-xs">
-                  {formatDate(exp.date)}
-                </TableCell>
-                <TableCell className="font-mono text-xs">
-                  {exp.number ?? (
-                    <span className="text-muted-foreground/50">{"\u2014"}</span>
-                  )}
-                </TableCell>
-                <TableCell className="text-sm">{exp.vendor}</TableCell>
-                <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
-                  {exp.concept}
-                </TableCell>
-                <TableCell className="text-center">
-                  <AttachmentCell
-                    storage={activeStorage}
-                    quarterId={quarterId}
-                    type="expenses"
-                    filename={exp.filename}
-                  />
-                </TableCell>
-                <TableCell className="font-mono text-xs text-right">
-                  {exp.vat.length > 0 ? (
-                    <div className="flex flex-col gap-1">
-                      {exp.vat.map((vat, idx) => (
-                        <div key={idx}>{formatCurrency(vat.subtotal)}</div>
-                      ))}
-                    </div>
-                  ) : (
-                    formatCurrency(exp.total)
-                  )}
-                </TableCell>
-                <TableCell className="font-mono text-xs text-right">
-                  {exp.vat.length > 0 ? (
-                    <div className="flex flex-col gap-1">
-                      {exp.vat.map((vat, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-baseline justify-end gap-1"
-                        >
-                          <span className="text-[9px] text-muted-foreground/60">
-                            {vat.rate}%
-                          </span>
-                          <span>{formatCurrency(vat.amount)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    "\u2014"
-                  )}
-                </TableCell>
-                <TableCell className="font-mono text-xs text-right">
-                  {exp.taxRetention
-                    ? formatCurrency(exp.taxRetention)
-                    : "\u2014"}
-                </TableCell>
-                <TableCell className="font-mono text-sm font-semibold text-right text-[hsl(var(--ledger-red))]">
-                  {formatCurrency(exp.total)}
-                </TableCell>
-                <TableCell className="text-center">
-                  <PaymentDateCell paymentDate={exp.paymentDate} />
+            {expenses.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={10} className="py-6">
+                  {t("expenses.emptyState")}
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              expenses.map((exp) => (
+                <TableRow
+                  key={exp.id}
+                  className="border-b border-dashed border-[hsl(var(--ledger-line))] hover:bg-secondary/50"
+                >
+                  <TableCell className="font-mono text-xs">
+                    {formatDate(exp.date)}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {exp.number ?? (
+                      <span className="text-muted-foreground/50">
+                        {"\u2014"}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-sm">{exp.vendor}</TableCell>
+                  <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
+                    {exp.concept}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <AttachmentCell
+                      storage={activeStorage}
+                      quarterId={quarterId}
+                      type="expenses"
+                      filename={exp.filename}
+                    />
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-right">
+                    {exp.vat.length > 0 ? (
+                      <div className="flex flex-col gap-1">
+                        {exp.vat.map((vat, idx) => (
+                          <div key={idx}>{formatCurrency(vat.subtotal)}</div>
+                        ))}
+                      </div>
+                    ) : (
+                      formatCurrency(exp.total)
+                    )}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-right">
+                    {exp.vat.length > 0 ? (
+                      <div className="flex flex-col gap-1">
+                        {exp.vat.map((vat, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-baseline justify-end gap-1"
+                          >
+                            <span className="text-[9px] text-muted-foreground/60">
+                              {vat.rate}%
+                            </span>
+                            <span>{formatCurrency(vat.amount)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      "\u2014"
+                    )}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-right">
+                    {exp.taxRetention
+                      ? formatCurrency(exp.taxRetention)
+                      : "\u2014"}
+                  </TableCell>
+                  <TableCell className="font-mono text-sm font-semibold text-right text-[hsl(var(--ledger-red))]">
+                    {formatCurrency(exp.total)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <PaymentDateCell paymentDate={exp.paymentDate} />
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
           <TableFooter>
             <TableRow className="border-t-2 border-foreground/20 bg-secondary/30 hover:bg-secondary/30">
@@ -214,7 +224,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                 {formatCurrency(totalTaxRetention)}
               </TableCell>
               <TableCell className="font-mono text-sm font-bold text-right text-[hsl(var(--ledger-red))]">
-                {formatCurrency(totalAmount)}
+                {formatCurrency(totalExpensesAmount)}
               </TableCell>
               <TableCell />
             </TableRow>
