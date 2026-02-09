@@ -130,35 +130,87 @@ export class GitHubStorageService {
   }
 
   /**
-   * Creates or updates a file in the repository
+   * Commits multiple files in a single commit using Git Data API
    */
-  async createOrUpdateFile(
-    quarterId: string,
-    fileName: string,
-    content: any,
-    message: string,
-    sha?: string
+  async commitMultipleFiles(
+    files: Array<{
+      quarterId: string
+      fileName: string
+      content: any
+      sha?: string
+    }>,
+    message: string
   ): Promise<void> {
-    const filePath = this.dataPath
-      ? `${this.dataPath}/${quarterId}/${fileName}`
-      : `${quarterId}/${fileName}`
-
     try {
-      // Create or update the file
-      await this.octokit.rest.repos.createOrUpdateFileContents({
+      const repoInfo = await this.octokit.rest.repos.get({
         owner: this.owner,
         repo: this.repo,
-        path: filePath,
+      })
+      const branch = repoInfo.data.default_branch
+
+      const ref = await this.octokit.rest.git.getRef({
+        owner: this.owner,
+        repo: this.repo,
+        ref: `heads/${branch}`,
+      })
+      const latestCommitSha = ref.data.object.sha
+
+      const commit = await this.octokit.rest.git.getCommit({
+        owner: this.owner,
+        repo: this.repo,
+        commit_sha: latestCommitSha,
+      })
+      const baseTreeSha = commit.data.tree.sha
+
+      const tree = await Promise.all(
+        files.map(async (file) => {
+          const filePath = this.dataPath
+            ? `${this.dataPath}/${file.quarterId}/${file.fileName}`
+            : `${file.quarterId}/${file.fileName}`
+
+          const blob = await this.octokit.rest.git.createBlob({
+            owner: this.owner,
+            repo: this.repo,
+            content: Buffer.from(
+              JSON.stringify(file.content, null, 2)
+            ).toString("base64"),
+            encoding: "base64",
+          })
+
+          return {
+            path: filePath,
+            mode: "100644" as const,
+            type: "blob" as const,
+            sha: blob.data.sha,
+          }
+        })
+      )
+
+      const newTree = await this.octokit.rest.git.createTree({
+        owner: this.owner,
+        repo: this.repo,
+        base_tree: baseTreeSha,
+        tree,
+      })
+
+      const newCommit = await this.octokit.rest.git.createCommit({
+        owner: this.owner,
+        repo: this.repo,
         message,
-        content: Buffer.from(JSON.stringify(content, null, 2)).toString(
-          "base64"
-        ),
-        sha,
+        tree: newTree.data.sha,
+        parents: [latestCommitSha],
+      })
+
+      await this.octokit.rest.git.updateRef({
+        owner: this.owner,
+        repo: this.repo,
+        ref: `heads/${branch}`,
+        sha: newCommit.data.sha,
       })
     } catch (error) {
       const err = error as any
       throw new Error(
-        `Failed to create/update ${filePath}: ${err.message || String(error)}`
+        `Failed to commit multiple files: ${err.message || String(error)}`
       )
     }
   }

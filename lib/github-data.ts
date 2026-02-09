@@ -60,13 +60,21 @@ export async function commitEditingFiles(
 ): Promise<void> {
   const service = new GitHubStorageService(storage.url)
 
-  for (const file of editingFiles) {
-    await service.createOrUpdateFile(
-      file.quarterId,
-      `${file.fileName}.json`,
-      file.data,
-      `Update ${file.quarterId}/${file.fileName}.json`,
-      file.sha
-    )
-  }
+  const uniqueQuarters = Array.from(
+    new Set(editingFiles.map((f) => f.quarterId))
+  )
+  const message =
+    uniqueQuarters.length === 1
+      ? `Update ${uniqueQuarters[0]} (${editingFiles.length} files)`
+      : `Update ${uniqueQuarters.length} quarters (${editingFiles.length} files)`
+
+  await service.commitMultipleFiles(
+    editingFiles.map((file) => ({
+      quarterId: file.quarterId,
+      fileName: `${file.fileName}.json`,
+      content: file.data,
+      sha: file.sha,
+    })),
+    message
+  )
 }
