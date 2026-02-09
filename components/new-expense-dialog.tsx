@@ -168,7 +168,9 @@ function ExpenseDialogContent({
       paymentDate: isPaid ? paymentDate : undefined,
     }
 
-    const nextExpenses = [...expenses, newExpense]
+    const nextExpenses = [...expenses, newExpense].sort((a, b) =>
+      a.date.localeCompare(b.date)
+    )
     const nextSha = editingFile?.sha ?? fileSha
     setEditingFile(quarterId, "expenses", nextExpenses, nextSha)
     onSuccess()
