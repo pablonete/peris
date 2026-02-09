@@ -140,7 +140,7 @@ export function NewQuarterDialog({ existingQuarters }: NewQuarterDialogProps) {
                 error
               ) : (
                 <>
-                  You're creating folder{" "}
+                  {t("quarters.creatingFolder")}{" "}
                   <code className="font-mono">
                     {year}.{quarter}Q
                   </code>

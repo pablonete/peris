@@ -24,6 +24,7 @@ export const translations = {
       create: "Crear",
       creating: "Creando...",
       cancel: "Cancelar",
+      creatingFolder: "Estás creando la carpeta",
       error: {
         required: "Año y trimestre son requeridos",
         invalidYear: "Año inválido (debe estar entre 2000-2100)",
@@ -146,6 +147,7 @@ export const translations = {
       create: "Create",
       creating: "Creating...",
       cancel: "Cancel",
+      creatingFolder: "You're creating folder",
       error: {
         required: "Year and quarter are required",
         invalidYear: "Invalid year (must be between 2000-2100)",
