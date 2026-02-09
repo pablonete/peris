@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Plus, X } from "lucide-react"
 import { formatCurrency } from "@/lib/ledger-utils"
 import { useEditingState } from "@/lib/editing-state-context"
@@ -24,8 +24,13 @@ import { Checkbox } from "@/components/ui/checkbox"
 interface NewExpenseDialogProps {
   quarterId: string
   expenses: Expense[]
-  initialExpense?: Expense | null
-  onDialogClose?: () => void
+}
+
+interface DuplicateExpenseDialogProps {
+  quarterId: string
+  expenses: Expense[]
+  expense: Expense | null
+  onClose: () => void
 }
 
 const IRPF_RATE = 15
@@ -72,62 +77,46 @@ function getNumeric(vatLines: VatLineItem[], applyIrpf: boolean) {
   }
 }
 
-export function NewExpenseDialog({
+interface ExpenseDialogContentProps {
+  quarterId: string
+  expenses: Expense[]
+  initialExpense?: Expense | null
+  onSuccess: () => void
+  onCancel: () => void
+}
+
+function ExpenseDialogContent({
   quarterId,
   expenses,
   initialExpense,
-  onDialogClose,
-}: NewExpenseDialogProps) {
+  onSuccess,
+  onCancel,
+}: ExpenseDialogContentProps) {
   const { t } = useLanguage()
   const { getEditingFile, setEditingFile } = useEditingState()
   const editingFile = getEditingFile(quarterId, "expenses")
   const fileSha = useFileSha(quarterId, "expenses")
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [expenseDate, setExpenseDate] = useState(getTodayIsoDate())
-  const [paymentDate, setPaymentDate] = useState("")
-  const [vendor, setVendor] = useState("")
-  const [number, setNumber] = useState("")
-  const [concept, setConcept] = useState("")
-  const [vatLines, setVatLines] = useState<VatLineItem[]>([
-    { id: "initial", rate: "", subtotal: "" },
-  ])
-  const [applyIrpf, setApplyIrpf] = useState(false)
-  const [isPaid, setIsPaid] = useState(false)
 
-  useEffect(() => {
-    if (initialExpense) {
-      populateFromExpense(initialExpense)
-      setDialogOpen(true)
-    }
-  }, [initialExpense])
-
-  const populateFromExpense = (expense: Expense) => {
-    setExpenseDate(expense.date)
-    setPaymentDate(expense.paymentDate || "")
-    setVendor(expense.vendor)
-    setNumber(expense.number || "")
-    setConcept(expense.concept)
-    setVatLines(
-      expense.vat.map((item, idx) => ({
-        id: idx === 0 ? "initial" : `vat-${idx}`,
-        rate: String(item.rate),
-        subtotal: String(item.subtotal),
-      }))
-    )
-    setApplyIrpf(!!expense.taxRetention)
-    setIsPaid(!!expense.paymentDate)
-  }
-
-  const resetForm = () => {
-    setExpenseDate(getTodayIsoDate())
-    setPaymentDate("")
-    setVendor("")
-    setNumber("")
-    setConcept("")
-    setVatLines([{ id: "initial", rate: "", subtotal: "" }])
-    setApplyIrpf(false)
-    setIsPaid(false)
-  }
+  const [expenseDate, setExpenseDate] = useState(
+    initialExpense?.date || getTodayIsoDate()
+  )
+  const [paymentDate, setPaymentDate] = useState(
+    initialExpense?.paymentDate || ""
+  )
+  const [vendor, setVendor] = useState(initialExpense?.vendor || "")
+  const [number, setNumber] = useState(initialExpense?.number || "")
+  const [concept, setConcept] = useState(initialExpense?.concept || "")
+  const [vatLines, setVatLines] = useState<VatLineItem[]>(
+    initialExpense
+      ? initialExpense.vat.map((item, idx) => ({
+          id: idx === 0 ? "initial" : `vat-${idx}`,
+          rate: String(item.rate),
+          subtotal: String(item.subtotal),
+        }))
+      : [{ id: "initial", rate: "", subtotal: "" }]
+  )
+  const [applyIrpf, setApplyIrpf] = useState(!!initialExpense?.taxRetention)
+  const [isPaid, setIsPaid] = useState(!!initialExpense?.paymentDate)
 
   const addVatLine = () => {
     setVatLines((prev) => [
@@ -159,7 +148,7 @@ export function NewExpenseDialog({
   const isValid =
     expenseDate && vendor.trim() && concept.trim() && numeric.baseAmount > 0
 
-  const handleCreateExpense = () => {
+  const handleSubmit = () => {
     if (!isValid) return
 
     const id =
@@ -182,21 +171,228 @@ export function NewExpenseDialog({
     const nextExpenses = [...expenses, newExpense]
     const nextSha = editingFile?.sha ?? fileSha
     setEditingFile(quarterId, "expenses", nextExpenses, nextSha)
-    resetForm()
-    setDialogOpen(false)
+    onSuccess()
   }
 
   return (
-    <Dialog
-      open={dialogOpen}
-      onOpenChange={(nextOpen) => {
-        setDialogOpen(nextOpen)
-        if (!nextOpen) {
-          resetForm()
-          onDialogClose?.()
-        }
-      }}
-    >
+    <>
+      <DialogHeader>
+        <DialogTitle>{t("expenses.newExpense")}</DialogTitle>
+        <DialogDescription>{t("expenses.newExpenseDesc")}</DialogDescription>
+      </DialogHeader>
+      <div className="grid gap-4 py-2">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-2">
+            <Label htmlFor="expense-date">{t("expenses.expenseDate")}</Label>
+            <Input
+              id="expense-date"
+              type="date"
+              value={expenseDate}
+              onChange={(e) => setExpenseDate(e.target.value)}
+            />
+          </div>
+          <div className="grid">
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="is-paid"
+                checked={isPaid}
+                onCheckedChange={(checked) => {
+                  setIsPaid(checked === true)
+                  if (checked === true) {
+                    setPaymentDate(getTodayIsoDate())
+                  } else {
+                    setPaymentDate("")
+                  }
+                }}
+              />
+              <Label htmlFor="is-paid" className="text-sm">
+                {t("expenses.paid")}
+              </Label>
+            </div>
+            {isPaid && (
+              <Input
+                id="payment-date"
+                type="date"
+                value={paymentDate}
+                onChange={(e) => setPaymentDate(e.target.value)}
+              />
+            )}
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-2">
+            <Label htmlFor="vendor">{t("expenses.vendor")}</Label>
+            <Input
+              id="vendor"
+              value={vendor}
+              onChange={(e) => setVendor(e.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="number">Nº Factura</Label>
+            <Input
+              id="number"
+              value={number}
+              onChange={(e) => setNumber(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="concept">{t("expenses.concept")}</Label>
+          <Input
+            id="concept"
+            value={concept}
+            onChange={(e) => setConcept(e.target.value)}
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <Label>{t("expenses.vatRate")}</Label>
+          <div className="space-y-2">
+            {vatLines.map((line, index) => {
+              const vatItem = numeric.vatItems[index]
+              return (
+                <div
+                  key={line.id}
+                  className="grid grid-cols-12 gap-2 items-center"
+                >
+                  <div className="col-span-4">
+                    <Input
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      step="0.01"
+                      value={line.subtotal}
+                      onChange={(e) =>
+                        updateVatLine(line.id, "subtotal", e.target.value)
+                      }
+                      placeholder={t("expenses.subtotal")}
+                    />
+                  </div>
+                  <div className="col-span-3">
+                    <Input
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value={line.rate}
+                      onChange={(e) =>
+                        updateVatLine(line.id, "rate", e.target.value)
+                      }
+                      placeholder="IVA %"
+                    />
+                  </div>
+                  <div className="col-span-3 text-right font-mono text-sm">
+                    {formatCurrency(vatItem?.amount || 0)}
+                  </div>
+                  <div className="col-span-2 flex justify-end">
+                    {index === 0 ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={addVatLine}
+                        className="h-8 w-8"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeVatLine(line.id)}
+                        className="h-8 w-8"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="irpf"
+            checked={applyIrpf}
+            onCheckedChange={(checked) => setApplyIrpf(checked === true)}
+          />
+          <Label htmlFor="irpf" className="text-sm">
+            {t("expenses.irpfApply")}
+          </Label>
+        </div>
+
+        <div className="rounded-sm border border-border bg-secondary/20 px-4 py-3">
+          {numeric.baseAmount !== numeric.total && (
+            <>
+              <div className="mb-2 flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {t("expenses.subtotal")}
+                </span>
+                <span className="font-mono">
+                  {formatCurrency(numeric.baseAmount)}
+                </span>
+              </div>
+              {numeric.vatItems.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="mb-2 flex items-center justify-between text-sm"
+                >
+                  <span className="text-muted-foreground">
+                    IVA {item.rate}% de {formatCurrency(item.subtotal)}
+                  </span>
+                  <span className="font-mono">
+                    {formatCurrency(item.amount)}
+                  </span>
+                </div>
+              ))}
+            </>
+          )}
+          {numeric.irpfAmount > 0 && (
+            <div className="mb-2 flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">
+                {t("expenses.irpfAmount")}
+              </span>
+              <span className="font-mono">
+                {formatCurrency(-numeric.irpfAmount)}
+              </span>
+            </div>
+          )}
+          <div className="flex items-center justify-between text-sm font-semibold">
+            <span>{t("expenses.total")}</span>
+            <span className="font-mono text-[hsl(var(--ledger-red))]">
+              {formatCurrency(numeric.total)}
+            </span>
+          </div>
+        </div>
+      </div>
+      <DialogFooter>
+        <Button variant="outline" onClick={onCancel}>
+          {t("expenses.cancel")}
+        </Button>
+        <Button onClick={handleSubmit} disabled={!isValid}>
+          {t("expenses.createExpense")}
+        </Button>
+      </DialogFooter>
+    </>
+  )
+}
+
+export function NewExpenseDialog({
+  quarterId,
+  expenses,
+}: NewExpenseDialogProps) {
+  const { t } = useLanguage()
+  const [dialogOpen, setDialogOpen] = useState(false)
+
+  return (
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline" className="gap-2">
           <Plus className="h-4 w-4" />
@@ -204,216 +400,33 @@ export function NewExpenseDialog({
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[560px]">
-        <DialogHeader>
-          <DialogTitle>{t("expenses.newExpense")}</DialogTitle>
-          <DialogDescription>{t("expenses.newExpenseDesc")}</DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-2">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <Label htmlFor="expense-date">{t("expenses.expenseDate")}</Label>
-              <Input
-                id="expense-date"
-                type="date"
-                value={expenseDate}
-                onChange={(e) => setExpenseDate(e.target.value)}
-              />
-            </div>
-            <div className="grid">
-              <div className="flex items-start gap-2">
-                <Checkbox
-                  id="is-paid"
-                  checked={isPaid}
-                  onCheckedChange={(checked) => {
-                    setIsPaid(checked === true)
-                    if (checked === true) {
-                      setPaymentDate(getTodayIsoDate())
-                    } else {
-                      setPaymentDate("")
-                    }
-                  }}
-                />
-                <Label htmlFor="is-paid" className="text-sm">
-                  {t("expenses.paid")}
-                </Label>
-              </div>
-              {isPaid && (
-                <Input
-                  id="payment-date"
-                  type="date"
-                  value={paymentDate}
-                  onChange={(e) => setPaymentDate(e.target.value)}
-                />
-              )}
-            </div>
-          </div>
+        <ExpenseDialogContent
+          quarterId={quarterId}
+          expenses={expenses}
+          onSuccess={() => setDialogOpen(false)}
+          onCancel={() => setDialogOpen(false)}
+        />
+      </DialogContent>
+    </Dialog>
+  )
+}
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <Label htmlFor="vendor">{t("expenses.vendor")}</Label>
-              <Input
-                id="vendor"
-                value={vendor}
-                onChange={(e) => setVendor(e.target.value)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="number">Nº Factura</Label>
-              <Input
-                id="number"
-                value={number}
-                onChange={(e) => setNumber(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="concept">{t("expenses.concept")}</Label>
-            <Input
-              id="concept"
-              value={concept}
-              onChange={(e) => setConcept(e.target.value)}
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label>{t("expenses.vatRate")}</Label>
-            <div className="space-y-2">
-              {vatLines.map((line, index) => {
-                const vatItem = numeric.vatItems[index]
-                return (
-                  <div
-                    key={line.id}
-                    className="grid grid-cols-12 gap-2 items-center"
-                  >
-                    <div className="col-span-4">
-                      <Input
-                        type="number"
-                        inputMode="decimal"
-                        min="0"
-                        step="0.01"
-                        value={line.subtotal}
-                        onChange={(e) =>
-                          updateVatLine(line.id, "subtotal", e.target.value)
-                        }
-                        placeholder={t("expenses.subtotal")}
-                      />
-                    </div>
-                    <div className="col-span-3">
-                      <Input
-                        type="number"
-                        inputMode="decimal"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        value={line.rate}
-                        onChange={(e) =>
-                          updateVatLine(line.id, "rate", e.target.value)
-                        }
-                        placeholder="IVA %"
-                      />
-                    </div>
-                    <div className="col-span-3 text-right font-mono text-sm">
-                      {formatCurrency(vatItem?.amount || 0)}
-                    </div>
-                    <div className="col-span-2 flex justify-end">
-                      {index === 0 ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={addVatLine}
-                          className="h-8 w-8"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      ) : (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeVatLine(line.id)}
-                          className="h-8 w-8"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="irpf"
-              checked={applyIrpf}
-              onCheckedChange={(checked) => setApplyIrpf(checked === true)}
-            />
-            <Label htmlFor="irpf" className="text-sm">
-              {t("expenses.irpfApply")}
-            </Label>
-          </div>
-
-          <div className="rounded-sm border border-border bg-secondary/20 px-4 py-3">
-            {numeric.baseAmount !== numeric.total && (
-              <>
-                <div className="mb-2 flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    {t("expenses.subtotal")}
-                  </span>
-                  <span className="font-mono">
-                    {formatCurrency(numeric.baseAmount)}
-                  </span>
-                </div>
-                {numeric.vatItems.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="mb-2 flex items-center justify-between text-sm"
-                  >
-                    <span className="text-muted-foreground">
-                      IVA {item.rate}% de {formatCurrency(item.subtotal)}
-                    </span>
-                    <span className="font-mono">
-                      {formatCurrency(item.amount)}
-                    </span>
-                  </div>
-                ))}
-              </>
-            )}
-            {numeric.irpfAmount > 0 && (
-              <div className="mb-2 flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {t("expenses.irpfAmount")}
-                </span>
-                <span className="font-mono">
-                  {formatCurrency(-numeric.irpfAmount)}
-                </span>
-              </div>
-            )}
-            <div className="flex items-center justify-between text-sm font-semibold">
-              <span>{t("expenses.total")}</span>
-              <span className="font-mono text-[hsl(var(--ledger-red))]">
-                {formatCurrency(numeric.total)}
-              </span>
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => {
-              resetForm()
-              setDialogOpen(false)
-            }}
-          >
-            {t("expenses.cancel")}
-          </Button>
-          <Button onClick={handleCreateExpense} disabled={!isValid}>
-            {t("expenses.createExpense")}
-          </Button>
-        </DialogFooter>
+export function DuplicateExpenseDialog({
+  quarterId,
+  expenses,
+  expense,
+  onClose,
+}: DuplicateExpenseDialogProps) {
+  return (
+    <Dialog open={!!expense} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[560px]">
+        <ExpenseDialogContent
+          quarterId={quarterId}
+          expenses={expenses}
+          initialExpense={expense}
+          onSuccess={onClose}
+          onCancel={onClose}
+        />
       </DialogContent>
     </Dialog>
   )

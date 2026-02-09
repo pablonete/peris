@@ -19,7 +19,10 @@ import { PaymentDateCell } from "@/components/payment-date-cell"
 import { AttachmentCell } from "@/components/attachment-cell"
 import { ErrorBanner } from "@/components/error-banner"
 import { SummaryCard } from "@/components/summary-card"
-import { NewExpenseDialog } from "@/components/new-expense-dialog"
+import {
+  NewExpenseDialog,
+  DuplicateExpenseDialog,
+} from "@/components/new-expense-dialog"
 import { ExpenseRowActions } from "@/components/expense-row-actions"
 import { DeleteExpenseAlert } from "@/components/delete-expense-alert"
 import { useLanguage } from "@/lib/i18n-context"
@@ -90,12 +93,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
               />
             )}
           </h2>
-          <NewExpenseDialog
-            quarterId={quarterId}
-            expenses={expenses}
-            initialExpense={duplicateExpense}
-            onDialogClose={() => setDuplicateExpense(null)}
-          />
+          <NewExpenseDialog quarterId={quarterId} expenses={expenses} />
         </div>
         <p className="font-mono text-xs text-muted-foreground">
           {quarterId} &middot; {activeStorage.name} &middot; {expenses.length}{" "}
@@ -262,6 +260,13 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
         expenseId={deleteAlert}
         onClose={() => setDeleteAlert(null)}
         onConfirm={handleDeleteExpense}
+      />
+
+      <DuplicateExpenseDialog
+        quarterId={quarterId}
+        expenses={expenses}
+        expense={duplicateExpense}
+        onClose={() => setDuplicateExpense(null)}
       />
     </div>
   )
