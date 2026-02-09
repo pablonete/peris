@@ -48,3 +48,23 @@ export async function loadFileFromQuarter<T>(
     return { data: null, error: message }
   }
 }
+
+export async function commitEditingFiles(
+  storage: Storage,
+  editingFiles: Array<{
+    quarterId: string
+    fileName: string
+    data: any
+  }>
+): Promise<void> {
+  const service = new GitHubStorageService(storage.url)
+
+  for (const file of editingFiles) {
+    await service.createOrUpdateFile(
+      file.quarterId,
+      `${file.fileName}.json`,
+      file.data,
+      `Update ${file.quarterId}/${file.fileName}.json`
+    )
+  }
+}

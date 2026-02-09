@@ -29,6 +29,7 @@ This is Peris - a minimalist ledger book application for personal accounting and
 - All user-facing strings must be translatable
 - Use `t("key.path")` from `useLanguage()` hook
 - Add entries to both `es` and `en` objects in `translations.ts`
+- Clean up unused translations: When removing UI elements, always remove their corresponding translation keys from `translations.ts`
 - Test both languages before committing
 
 ### Component Structure

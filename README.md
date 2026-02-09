@@ -48,10 +48,10 @@ To use your own financial data:
      - **Expiration**: Set an expiration date (recommended: 90 days or less)
      - **Resource owner**: Select the repository owner
      - **Repository access**: Select "Only select repositories" → Choose your Peris data repository
-     - **Permissions**: Select "Repository permissions" → Contents: Read-only
+     - **Permissions**: Select "Repository permissions" → Contents: either Read-only or Read and write if you want to commit changes
    - Copy the token immediately (you'll only see it once!)
    - Never commit tokens to version control
-   - **Alternative**: If you prefer, [classic personal access tokens](https://github.com/settings/tokens) still work (select `repo` scope with read-only access) but it gives access to all your private repos
+   - **Alternative**: If you prefer, [classic personal access tokens](https://github.com/settings/tokens) still work (select `repo` scope) but it gives access to all your private repos
 
 4. **Add Your Repository to Peris**
    - Click the **"Manage storages"** button at the bottom of the sidebar
@@ -69,6 +69,11 @@ To use your own financial data:
 5. **Switch Between Storages**
    - Use the dropdown at the bottom of the sidebar to switch between storages
    - All views will update to show data from the selected storage
+
+6. **Creating New Quarters**
+   - Once you have a storage connected with write permissions, you can create new quarters directly with the **"+"** button next to "Quarters" in the sidebar
+
+When you edit data in Peris, changes are kept in memory until you commit them
 
 ### Data Structure
 

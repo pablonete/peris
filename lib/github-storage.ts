@@ -121,4 +121,55 @@ export class GitHubStorageService {
       )
     }
   }
+
+  /**
+   * Creates or updates a file in the repository
+   */
+  async createOrUpdateFile(
+    quarterId: string,
+    fileName: string,
+    content: any,
+    message: string
+  ): Promise<void> {
+    const filePath = this.dataPath
+      ? `${this.dataPath}/${quarterId}/${fileName}`
+      : `${quarterId}/${fileName}`
+
+    try {
+      // Try to get existing file to get its SHA (needed for updates)
+      let sha: string | undefined
+      try {
+        const response = await this.octokit.rest.repos.getContent({
+          owner: this.owner,
+          repo: this.repo,
+          path: filePath,
+        })
+        if (
+          typeof response.data === "object" &&
+          !Array.isArray(response.data)
+        ) {
+          sha = (response.data as any).sha
+        }
+      } catch (error) {
+        // File doesn't exist, that's ok for creation
+      }
+
+      // Create or update the file
+      await this.octokit.rest.repos.createOrUpdateFileContents({
+        owner: this.owner,
+        repo: this.repo,
+        path: filePath,
+        message,
+        content: Buffer.from(JSON.stringify(content, null, 2)).toString(
+          "base64"
+        ),
+        sha,
+      })
+    } catch (error) {
+      const err = error as any
+      throw new Error(
+        `Failed to create/update ${filePath}: ${err.message || String(error)}`
+      )
+    }
+  }
 }

@@ -5,6 +5,7 @@ import { formatCurrency, formatDate } from "@/lib/ledger-utils"
 import { useStorage } from "@/lib/storage-context"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useStorageQuarters } from "@/lib/use-storage-quarters"
+import { useEditingState } from "@/lib/editing-state-context"
 import {
   Table,
   TableBody,
@@ -34,7 +35,9 @@ export function CashflowView({
   const { t } = useLanguage()
   const { activeStorage } = useStorage()
   const { quarters } = useStorageQuarters()
+  const { getEditingFile } = useEditingState()
   const { content, isPending, error } = useStorageData(quarterId, "cashflow")
+  const isEditing = !!getEditingFile(quarterId, "cashflow")
 
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
   const entries = content?.entries ?? []
@@ -90,8 +93,9 @@ export function CashflowView({
   return (
     <div>
       <div className="mb-6 border-b-2 border-foreground/20 pb-4">
-        <h2 className="text-2xl font-bold tracking-wide text-foreground">
+        <h2 className="flex items-center gap-2 text-2xl font-bold tracking-wide text-foreground">
           {t("cashflow.cashflow")}
+          {isEditing && <span className="h-2 w-2 rounded-full bg-green-600" />}
         </h2>
         <p className="font-mono text-xs text-muted-foreground">
           {quarterId} &middot; {activeStorage.name} &middot; {entries.length}{" "}
