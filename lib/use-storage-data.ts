@@ -1,6 +1,6 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useStorage } from "@/lib/storage-context"
 import { useEditingState } from "@/lib/editing-state-context"
 import { loadFileFromQuarter } from "@/lib/github-data"
@@ -22,6 +22,24 @@ type UseStorageDataResult<T extends LedgerFileName> = T extends "invoices"
     ? StorageDataResult<Expense[]>
     : StorageDataResult<CashflowFileData>
 
+/**
+ * Helper to get the SHA for a file from the query cache
+ */
+export function useFileSha(
+  quarterId: string,
+  type: LedgerFileName
+): string | undefined {
+  const queryClient = useQueryClient()
+  const { activeStorage } = useStorage()
+
+  const queryKey = ["loadFile", activeStorage?.name, quarterId, type]
+  const cachedData = queryClient.getQueryData<{ data: any; sha?: string }>(
+    queryKey
+  )
+
+  return cachedData?.sha
+}
+
 export function useStorageData<T extends LedgerFileName>(
   quarterId: string,
   type: T
@@ -35,7 +53,6 @@ export function useStorageData<T extends LedgerFileName>(
     queryKey: ["loadFile", activeStorage?.name, quarterId, type],
     queryFn: () => loadFileFromQuarter(activeStorage, quarterId, type),
     enabled: !!activeStorage && !editingFile,
-    select: (result) => result.data,
   })
 
   if (editingFile) {
@@ -48,7 +65,7 @@ export function useStorageData<T extends LedgerFileName>(
   }
 
   return {
-    content: query.data,
+    content: query.data?.data ?? null,
     isPending: query.isPending,
     error: query.error,
     isEditing: false,

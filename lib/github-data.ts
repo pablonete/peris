@@ -35,14 +35,14 @@ export async function loadFileFromQuarter<T>(
   storage: Storage,
   quarterId: string,
   ledgerFileName: string
-): Promise<{ data: T | null; error?: string }> {
+): Promise<{ data: T | null; sha?: string; error?: string }> {
   try {
     const service = new GitHubStorageService(storage.url)
-    const data = await service.fetchQuarterFile(
+    const result = await service.fetchQuarterFile(
       quarterId,
       `${ledgerFileName}.json`
     )
-    return { data }
+    return { data: result.data, sha: result.sha }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     return { data: null, error: message }
@@ -55,6 +55,7 @@ export async function commitEditingFiles(
     quarterId: string
     fileName: string
     data: any
+    sha?: string
   }>
 ): Promise<void> {
   const service = new GitHubStorageService(storage.url)
@@ -64,7 +65,8 @@ export async function commitEditingFiles(
       file.quarterId,
       `${file.fileName}.json`,
       file.data,
-      `Update ${file.quarterId}/${file.fileName}.json`
+      `Update ${file.quarterId}/${file.fileName}.json`,
+      file.sha
     )
   }
 }

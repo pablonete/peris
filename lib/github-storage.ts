@@ -87,7 +87,10 @@ export class GitHubStorageService {
   /**
    * Fetches a file from the quarter folder
    */
-  async fetchQuarterFile(quarterId: string, fileName: string): Promise<any> {
+  async fetchQuarterFile(
+    quarterId: string,
+    fileName: string
+  ): Promise<{ data: any; sha: string }> {
     const filePath = this.dataPath
       ? `${this.dataPath}/${quarterId}/${fileName}`
       : `${quarterId}/${fileName}`
@@ -100,14 +103,18 @@ export class GitHubStorageService {
       })
 
       if (typeof response.data === "object" && !Array.isArray(response.data)) {
-        const content = Buffer.from(
-          (response.data as any).content,
-          "base64"
-        ).toString("utf-8")
-        return JSON.parse(content)
+        const fileData = response.data as any
+
+        const content = Buffer.from(fileData.content, "base64").toString(
+          "utf-8"
+        )
+        return {
+          data: JSON.parse(content),
+          sha: fileData.sha,
+        }
       }
 
-      return null
+      throw new Error(`Invalid response for ${filePath}`)
     } catch (error) {
       const err = error as any
       if (err.status === 404) {
@@ -129,31 +136,14 @@ export class GitHubStorageService {
     quarterId: string,
     fileName: string,
     content: any,
-    message: string
+    message: string,
+    sha?: string
   ): Promise<void> {
     const filePath = this.dataPath
       ? `${this.dataPath}/${quarterId}/${fileName}`
       : `${quarterId}/${fileName}`
 
     try {
-      // Try to get existing file to get its SHA (needed for updates)
-      let sha: string | undefined
-      try {
-        const response = await this.octokit.rest.repos.getContent({
-          owner: this.owner,
-          repo: this.repo,
-          path: filePath,
-        })
-        if (
-          typeof response.data === "object" &&
-          !Array.isArray(response.data)
-        ) {
-          sha = (response.data as any).sha
-        }
-      } catch (error) {
-        // File doesn't exist, that's ok for creation
-      }
-
       // Create or update the file
       await this.octokit.rest.repos.createOrUpdateFileContents({
         owner: this.owner,

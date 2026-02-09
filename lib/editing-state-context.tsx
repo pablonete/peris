@@ -13,6 +13,7 @@ interface EditingFile {
   quarterId: string
   fileName: LedgerFileName
   data: Invoice[] | Expense[] | CashflowFileData
+  sha?: string
 }
 
 interface EditingStateContextType {
@@ -27,7 +28,8 @@ interface EditingStateContextType {
   setEditingFile: (
     quarterId: string,
     fileName: LedgerFileName,
-    data: Invoice[] | Expense[] | CashflowFileData
+    data: Invoice[] | Expense[] | CashflowFileData,
+    sha?: string
   ) => void
   createNewQuarter: (quarterId: string, companyName: string) => void
   clearAllEditing: () => void
@@ -65,7 +67,8 @@ export function EditingStateProvider({
   const setEditingFile = (
     quarterId: string,
     fileName: LedgerFileName,
-    data: Invoice[] | Expense[] | CashflowFileData
+    data: Invoice[] | Expense[] | CashflowFileData,
+    sha?: string
   ) => {
     setEditingFiles((prev) => {
       const newMap = new Map(prev)
@@ -73,6 +76,7 @@ export function EditingStateProvider({
         quarterId,
         fileName,
         data,
+        sha,
       })
       return newMap
     })
