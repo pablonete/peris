@@ -138,7 +138,7 @@ export function useEditingState() {
   const context = useContext(EditingStateContext)
   if (context === undefined) {
     throw new Error(
-      "useEditingState must be used within a EditingStateProvider"
+      "useEditingState must be used within an EditingStateProvider"
     )
   }
   return context

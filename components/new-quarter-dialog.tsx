@@ -80,6 +80,7 @@ export function NewQuarterDialog({ existingQuarters }: NewQuarterDialogProps) {
           variant="ghost"
           size="icon"
           className="h-6 w-6 text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+          aria-label={t("quarters.newQuarter")}
           title={t("quarters.newQuarter")}
         >
           <Plus className="h-4 w-4" />
