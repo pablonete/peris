@@ -67,7 +67,7 @@ export function useStorageData<T extends LedgerFileName>(
   return {
     content: query.data?.data ?? null,
     isPending: query.isPending,
-    error: query.error,
+    error: query.error || query.data?.error,
     isEditing: false,
   } as UseStorageDataResult<T>
 }
