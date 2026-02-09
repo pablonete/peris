@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Plus, X } from "lucide-react"
 import { formatCurrency } from "@/lib/ledger-utils"
 import { useEditingState } from "@/lib/editing-state-context"
@@ -24,6 +24,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 interface NewExpenseDialogProps {
   quarterId: string
   expenses: Expense[]
+  initialExpense?: Expense | null
+  onDialogClose?: () => void
 }
 
 const IRPF_RATE = 15
@@ -73,6 +75,8 @@ function getNumeric(vatLines: VatLineItem[], applyIrpf: boolean) {
 export function NewExpenseDialog({
   quarterId,
   expenses,
+  initialExpense,
+  onDialogClose,
 }: NewExpenseDialogProps) {
   const { t } = useLanguage()
   const { getEditingFile, setEditingFile } = useEditingState()
@@ -89,6 +93,30 @@ export function NewExpenseDialog({
   ])
   const [applyIrpf, setApplyIrpf] = useState(false)
   const [isPaid, setIsPaid] = useState(false)
+
+  useEffect(() => {
+    if (initialExpense) {
+      populateFromExpense(initialExpense)
+      setDialogOpen(true)
+    }
+  }, [initialExpense])
+
+  const populateFromExpense = (expense: Expense) => {
+    setExpenseDate(expense.date)
+    setPaymentDate(expense.paymentDate || "")
+    setVendor(expense.vendor)
+    setNumber(expense.number || "")
+    setConcept(expense.concept)
+    setVatLines(
+      expense.vat.map((item, idx) => ({
+        id: idx === 0 ? "initial" : `vat-${idx}`,
+        rate: String(item.rate),
+        subtotal: String(item.subtotal),
+      }))
+    )
+    setApplyIrpf(!!expense.taxRetention)
+    setIsPaid(!!expense.paymentDate)
+  }
 
   const resetForm = () => {
     setExpenseDate(getTodayIsoDate())
@@ -165,6 +193,7 @@ export function NewExpenseDialog({
         setDialogOpen(nextOpen)
         if (!nextOpen) {
           resetForm()
+          onDialogClose?.()
         }
       }}
     >

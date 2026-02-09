@@ -1,9 +1,11 @@
 "use client"
 
+import { useState } from "react"
 import { formatCurrency, formatDate } from "@/lib/ledger-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useStorage } from "@/lib/storage-context"
 import { useEditingState } from "@/lib/editing-state-context"
+import { Expense } from "@/lib/types"
 import {
   Table,
   TableBody,
@@ -13,12 +15,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PaymentDateCell } from "@/components/payment-date-cell"
 import { AttachmentCell } from "@/components/attachment-cell"
 import { ErrorBanner } from "@/components/error-banner"
 import { SummaryCard } from "@/components/summary-card"
 import { NewExpenseDialog } from "@/components/new-expense-dialog"
+import { ExpenseRowActions } from "@/components/expense-row-actions"
+import { DeleteExpenseAlert } from "@/components/delete-expense-alert"
 import { useLanguage } from "@/lib/i18n-context"
 
 interface ExpensesViewProps {
@@ -28,9 +31,11 @@ interface ExpensesViewProps {
 export function ExpensesView({ quarterId }: ExpensesViewProps) {
   const { t } = useLanguage()
   const { activeStorage } = useStorage()
-  const { getEditingFile } = useEditingState()
+  const { getEditingFile, setEditingFile } = useEditingState()
   const { content, isPending, error } = useStorageData(quarterId, "expenses")
   const isEditing = !!getEditingFile(quarterId, "expenses")
+  const [deleteAlert, setDeleteAlert] = useState<string | null>(null)
+  const [duplicateExpense, setDuplicateExpense] = useState<Expense | null>(null)
 
   if (isPending) {
     return (
@@ -65,6 +70,13 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
     .filter((e) => e.paymentDate == null)
     .reduce((s, e) => s + e.total, 0)
 
+  const handleDeleteExpense = (id: string) => {
+    const nextExpenses = expenses.filter((e) => e.id !== id)
+    const editingFile = getEditingFile(quarterId, "expenses")
+    setEditingFile(quarterId, "expenses", nextExpenses, editingFile?.sha)
+    setDeleteAlert(null)
+  }
+
   return (
     <div>
       <div className="mb-6 border-b-2 border-foreground/20 pb-4">
@@ -78,7 +90,12 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
               />
             )}
           </h2>
-          <NewExpenseDialog quarterId={quarterId} expenses={expenses} />
+          <NewExpenseDialog
+            quarterId={quarterId}
+            expenses={expenses}
+            initialExpense={duplicateExpense}
+            onDialogClose={() => setDuplicateExpense(null)}
+          />
         </div>
         <p className="font-mono text-xs text-muted-foreground">
           {quarterId} &middot; {activeStorage.name} &middot; {expenses.length}{" "}
@@ -127,12 +144,13 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-center">
                 Payment
               </TableHead>
+              <TableHead className="w-[40px] text-center" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {expenses.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="py-6">
+                <TableCell colSpan={11} className="py-6">
                   {t("expenses.emptyState")}
                 </TableCell>
               </TableRow>
@@ -205,6 +223,13 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                   <TableCell className="text-center">
                     <PaymentDateCell paymentDate={exp.paymentDate} />
                   </TableCell>
+                  <TableCell className="text-center">
+                    <ExpenseRowActions
+                      expense={exp}
+                      onDuplicate={setDuplicateExpense}
+                      onDelete={setDeleteAlert}
+                    />
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -227,10 +252,17 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                 {formatCurrency(totalExpensesAmount)}
               </TableCell>
               <TableCell />
+              <TableCell />
             </TableRow>
           </TableFooter>
         </Table>
       </div>
+
+      <DeleteExpenseAlert
+        expenseId={deleteAlert}
+        onClose={() => setDeleteAlert(null)}
+        onConfirm={handleDeleteExpense}
+      />
     </div>
   )
 }

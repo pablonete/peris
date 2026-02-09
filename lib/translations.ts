@@ -83,6 +83,12 @@ export const translations = {
       entries: "registros",
       paid: "Pagado",
       pending: "Pendiente",
+      duplicate: "Duplicar",
+      delete: "Eliminar",
+      deleteConfirmTitle: "Eliminar gasto",
+      deleteConfirmDesc:
+        "¿Estás seguro de que deseas eliminar este gasto? Esta acción no se puede deshacer.",
+      deleteButton: "Eliminar",
     },
     cashflow: {
       cashflow: "Flujo de caja",
@@ -222,6 +228,12 @@ export const translations = {
       entries: "entries",
       paid: "Paid",
       pending: "Pending",
+      duplicate: "Duplicate",
+      delete: "Delete",
+      deleteConfirmTitle: "Delete expense",
+      deleteConfirmDesc:
+        "Are you sure you want to delete this expense? This action cannot be undone.",
+      deleteButton: "Delete",
     },
     cashflow: {
       cashflow: "Cashflow",
