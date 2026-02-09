@@ -1,6 +1,7 @@
 "use client"
 import { cn } from "@/lib/utils"
 import { useStorageQuarters } from "@/lib/use-storage-quarters"
+import { useEditingState } from "@/lib/editing-state-context"
 import {
   FileText,
   Receipt,
@@ -10,7 +11,9 @@ import {
 } from "lucide-react"
 import { useLanguage } from "@/lib/i18n-context"
 import { StorageSelector } from "./storage-selector"
+import { CommitButton } from "./commit-button"
 import { ErrorBanner } from "./error-banner"
+import { NewQuarterDialog } from "./new-quarter-dialog"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
@@ -30,6 +33,7 @@ export function LedgerSidebar({
   const { language, setLanguage, t } = useLanguage()
   const router = useRouter()
   const { quarters, error: quartersError } = useStorageQuarters()
+  const { getEditingFile } = useEditingState()
 
   const viewItems: { key: ViewType; label: string; icon: typeof FileText }[] = [
     { key: "invoices", label: t("sidebar.invoices"), icon: FileText },
@@ -62,9 +66,12 @@ export function LedgerSidebar({
 
       {/* Quarter navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <p className="mb-3 px-2 font-mono text-[10px] uppercase tracking-[0.2em] text-sidebar-foreground/50">
-          {t("sidebar.quarters")}
-        </p>
+        <div className="mb-3 flex items-center justify-between px-2">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-sidebar-foreground/50">
+            {t("sidebar.quarters")}
+          </p>
+          <NewQuarterDialog existingQuarters={quarters} />
+        </div>
         {quartersError && (
           <ErrorBanner
             title={t("sidebar.errorLoadingQuarters")}
@@ -75,6 +82,10 @@ export function LedgerSidebar({
         <ul className="flex flex-col gap-1">
           {quarters.map((qId) => {
             const isExpanded = selectedQuarter === qId
+            const hasEdits =
+              !!getEditingFile(qId, "invoices") ||
+              !!getEditingFile(qId, "expenses") ||
+              !!getEditingFile(qId, "cashflow")
             return (
               <li key={qId}>
                 <button
@@ -90,8 +101,14 @@ export function LedgerSidebar({
                   )}
                 >
                   <span className="flex flex-col">
-                    <span className="font-mono text-xs font-semibold tracking-wider">
+                    <span className="flex items-center gap-2 font-mono text-xs font-semibold tracking-wider">
                       {qId}
+                      {hasEdits && (
+                        <span
+                          className="h-2 w-2 rounded-full bg-green-600"
+                          aria-label="Has unsaved changes"
+                        />
+                      )}
                     </span>
                     <span className="text-[11px] text-sidebar-foreground/50">
                       {formatQuarterLabel(qId)}
@@ -111,6 +128,7 @@ export function LedgerSidebar({
                     {viewItems.map(({ key, label, icon: Icon }) => {
                       const isActive =
                         selectedView === key && selectedQuarter === qId
+                      const isEditing = !!getEditingFile(qId, key)
                       return (
                         <li key={key}>
                           <Link
@@ -125,6 +143,12 @@ export function LedgerSidebar({
                           >
                             <Icon className="h-4 w-4" />
                             {label}
+                            {isEditing && (
+                              <span
+                                className="h-2 w-2 rounded-full bg-green-600"
+                                aria-label="Editing"
+                              />
+                            )}
                           </Link>
                         </li>
                       )
@@ -137,6 +161,7 @@ export function LedgerSidebar({
         </ul>
       </nav>
 
+      <CommitButton />
       <StorageSelector />
 
       <div className="border-t border-sidebar-border px-5 py-3">

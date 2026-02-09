@@ -2,6 +2,9 @@
 
 import { Suspense, useState } from "react"
 import { LedgerSidebar, ViewType } from "@/components/ledger-sidebar"
+import { ErrorBanner } from "@/components/error-banner"
+import { useEditingState } from "@/lib/editing-state-context"
+import { useLanguage } from "@/lib/i18n-context"
 import { Menu, X } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
@@ -10,6 +13,8 @@ function MainLayoutInner({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const { error } = useEditingState()
+  const { t } = useLanguage()
 
   const selectedQuarter = searchParams.get("q") || ""
   const segments = pathname.split("/").filter(Boolean)
@@ -22,7 +27,6 @@ function MainLayoutInner({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-foreground/30 lg:hidden"
@@ -34,7 +38,6 @@ function MainLayoutInner({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      {/* Sidebar */}
       <div
         className={`
           fixed inset-y-0 left-0 z-50 w-64 transform transition-transform lg:relative lg:translate-x-0
@@ -48,9 +51,7 @@ function MainLayoutInner({ children }: { children: React.ReactNode }) {
         />
       </div>
 
-      {/* Main content */}
       <main className="flex-1 overflow-y-auto">
-        {/* Mobile header */}
         <div className="flex items-center border-b border-border bg-card px-4 py-3 lg:hidden">
           <button
             type="button"
@@ -72,7 +73,6 @@ function MainLayoutInner({ children }: { children: React.ReactNode }) {
           </Link>
         </div>
 
-        {/* Decorative ruled-line background + content */}
         <div
           className="min-h-full px-6 py-8 lg:px-10 lg:py-10"
           style={{
@@ -81,7 +81,6 @@ function MainLayoutInner({ children }: { children: React.ReactNode }) {
             backgroundSize: "100% 32px",
           }}
         >
-          {/* Red margin line like a real ledger page */}
           <div
             className="relative"
             style={{
@@ -89,6 +88,13 @@ function MainLayoutInner({ children }: { children: React.ReactNode }) {
               paddingLeft: "1.5rem",
             }}
           >
+            {error && (
+              <ErrorBanner
+                title={t("storage.error.saving")}
+                message={error}
+                className="mb-6"
+              />
+            )}
             {children}
           </div>
         </div>

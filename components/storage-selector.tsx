@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useStorage } from "@/lib/storage-context"
+import { useEditingState } from "@/lib/editing-state-context"
 import {
   Select,
   SelectContent,
@@ -17,6 +18,7 @@ import { StorageModal } from "./storage-modal"
 export function StorageSelector() {
   const { storages, activeStorage, setActiveStorage, removeStorage, isSample } =
     useStorage()
+  const { clearAllEditing } = useEditingState()
   const { t } = useLanguage()
   const [storageModalOpen, setStorageModalOpen] = useState(false)
 
@@ -24,6 +26,7 @@ export function StorageSelector() {
     if (value === "ADD_NEW") {
       setStorageModalOpen(true)
     } else {
+      clearAllEditing()
       setActiveStorage(value)
     }
   }

@@ -87,7 +87,10 @@ export class GitHubStorageService {
   /**
    * Fetches a file from the quarter folder
    */
-  async fetchQuarterFile(quarterId: string, fileName: string): Promise<any> {
+  async fetchQuarterFile(
+    quarterId: string,
+    fileName: string
+  ): Promise<{ data: any; sha: string }> {
     const filePath = this.dataPath
       ? `${this.dataPath}/${quarterId}/${fileName}`
       : `${quarterId}/${fileName}`
@@ -100,14 +103,18 @@ export class GitHubStorageService {
       })
 
       if (typeof response.data === "object" && !Array.isArray(response.data)) {
-        const content = Buffer.from(
-          (response.data as any).content,
-          "base64"
-        ).toString("utf-8")
-        return JSON.parse(content)
+        const fileData = response.data as any
+
+        const content = Buffer.from(fileData.content, "base64").toString(
+          "utf-8"
+        )
+        return {
+          data: JSON.parse(content),
+          sha: fileData.sha,
+        }
       }
 
-      return null
+      throw new Error(`Invalid response for ${filePath}`)
     } catch (error) {
       const err = error as any
       if (err.status === 404) {
@@ -118,6 +125,92 @@ export class GitHubStorageService {
       }
       throw new Error(
         `Failed to fetch ${filePath}: ${err.message || String(error)}`
+      )
+    }
+  }
+
+  /**
+   * Commits multiple files in a single commit using Git Data API
+   */
+  async commitMultipleFiles(
+    files: Array<{
+      quarterId: string
+      fileName: string
+      content: any
+      sha?: string
+    }>,
+    message: string
+  ): Promise<void> {
+    try {
+      const repoInfo = await this.octokit.rest.repos.get({
+        owner: this.owner,
+        repo: this.repo,
+      })
+      const branch = repoInfo.data.default_branch
+
+      const ref = await this.octokit.rest.git.getRef({
+        owner: this.owner,
+        repo: this.repo,
+        ref: `heads/${branch}`,
+      })
+      const latestCommitSha = ref.data.object.sha
+
+      const commit = await this.octokit.rest.git.getCommit({
+        owner: this.owner,
+        repo: this.repo,
+        commit_sha: latestCommitSha,
+      })
+      const baseTreeSha = commit.data.tree.sha
+
+      const tree = await Promise.all(
+        files.map(async (file) => {
+          const filePath = this.dataPath
+            ? `${this.dataPath}/${file.quarterId}/${file.fileName}`
+            : `${file.quarterId}/${file.fileName}`
+
+          const blob = await this.octokit.rest.git.createBlob({
+            owner: this.owner,
+            repo: this.repo,
+            content: Buffer.from(
+              JSON.stringify(file.content, null, 2)
+            ).toString("base64"),
+            encoding: "base64",
+          })
+
+          return {
+            path: filePath,
+            mode: "100644" as const,
+            type: "blob" as const,
+            sha: blob.data.sha,
+          }
+        })
+      )
+
+      const newTree = await this.octokit.rest.git.createTree({
+        owner: this.owner,
+        repo: this.repo,
+        base_tree: baseTreeSha,
+        tree,
+      })
+
+      const newCommit = await this.octokit.rest.git.createCommit({
+        owner: this.owner,
+        repo: this.repo,
+        message,
+        tree: newTree.data.sha,
+        parents: [latestCommitSha],
+      })
+
+      await this.octokit.rest.git.updateRef({
+        owner: this.owner,
+        repo: this.repo,
+        ref: `heads/${branch}`,
+        sha: newCommit.data.sha,
+      })
+    } catch (error) {
+      const err = error as any
+      throw new Error(
+        `Failed to commit multiple files: ${err.message || String(error)}`
       )
     }
   }
