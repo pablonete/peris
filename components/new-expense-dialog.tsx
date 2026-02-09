@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Plus, X } from "lucide-react"
 import { formatCurrency } from "@/lib/ledger-utils"
+import { generateNextId } from "@/lib/id-utils"
 import { useEditingState } from "@/lib/editing-state-context"
 import { useFileSha } from "@/lib/use-storage-data"
 import { Expense } from "@/lib/types"
@@ -151,10 +152,7 @@ function ExpenseDialogContent({
   const handleSubmit = () => {
     if (!isValid) return
 
-    const id =
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `exp-${Date.now()}`
+    const id = generateNextId(expenses, "exp")
 
     const newExpense: Expense = {
       id,
