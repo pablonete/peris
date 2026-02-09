@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus } from "lucide-react"
+import { Plus, X } from "lucide-react"
 import { formatCurrency } from "@/lib/ledger-utils"
 import { useEditingState } from "@/lib/editing-state-context"
 import { useFileSha } from "@/lib/use-storage-data"
@@ -19,7 +19,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 
 interface NewExpenseDialogProps {
@@ -83,19 +82,23 @@ export function NewExpenseDialog({
   const [expenseDate, setExpenseDate] = useState(getTodayIsoDate())
   const [paymentDate, setPaymentDate] = useState("")
   const [vendor, setVendor] = useState("")
+  const [number, setNumber] = useState("")
   const [concept, setConcept] = useState("")
   const [vatLines, setVatLines] = useState<VatLineItem[]>([
     { id: "initial", rate: "", subtotal: "" },
   ])
   const [applyIrpf, setApplyIrpf] = useState(false)
+  const [isPaid, setIsPaid] = useState(false)
 
   const resetForm = () => {
     setExpenseDate(getTodayIsoDate())
     setPaymentDate("")
     setVendor("")
+    setNumber("")
     setConcept("")
     setVatLines([{ id: "initial", rate: "", subtotal: "" }])
     setApplyIrpf(false)
+    setIsPaid(false)
   }
 
   const addVatLine = () => {
@@ -139,12 +142,13 @@ export function NewExpenseDialog({
     const newExpense: Expense = {
       id,
       date: expenseDate,
+      number: number || undefined,
       vendor: vendor.trim(),
       concept: concept.trim(),
       vat: numeric.vatItems,
       taxRetention: applyIrpf ? numeric.irpfAmount : undefined,
       total: numeric.total,
-      paymentDate,
+      paymentDate: isPaid ? paymentDate : undefined,
     }
 
     const nextExpenses = [...expenses, newExpense]
@@ -186,33 +190,60 @@ export function NewExpenseDialog({
                 onChange={(e) => setExpenseDate(e.target.value)}
               />
             </div>
+            <div className="grid">
+              <div className="flex items-start gap-2">
+                <Checkbox
+                  id="is-paid"
+                  checked={isPaid}
+                  onCheckedChange={(checked) => {
+                    setIsPaid(checked === true)
+                    if (checked === true) {
+                      setPaymentDate(getTodayIsoDate())
+                    } else {
+                      setPaymentDate("")
+                    }
+                  }}
+                />
+                <Label htmlFor="is-paid" className="text-sm">
+                  {t("expenses.paid")}
+                </Label>
+              </div>
+              {isPaid && (
+                <Input
+                  id="payment-date"
+                  type="date"
+                  value={paymentDate}
+                  onChange={(e) => setPaymentDate(e.target.value)}
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
-              <Label htmlFor="payment-date">{t("expenses.paymentDate")}</Label>
+              <Label htmlFor="vendor">{t("expenses.vendor")}</Label>
               <Input
-                id="payment-date"
-                type="date"
-                value={paymentDate}
-                onChange={(e) => setPaymentDate(e.target.value)}
+                id="vendor"
+                value={vendor}
+                onChange={(e) => setVendor(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="number">Nº Factura</Label>
+              <Input
+                id="number"
+                value={number}
+                onChange={(e) => setNumber(e.target.value)}
               />
             </div>
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="vendor">{t("expenses.vendor")}</Label>
-            <Input
-              id="vendor"
-              value={vendor}
-              onChange={(e) => setVendor(e.target.value)}
-            />
-          </div>
-
-          <div className="grid gap-2">
             <Label htmlFor="concept">{t("expenses.concept")}</Label>
-            <Textarea
+            <Input
               id="concept"
               value={concept}
               onChange={(e) => setConcept(e.target.value)}
-              rows={3}
             />
           </div>
 
@@ -275,7 +306,7 @@ export function NewExpenseDialog({
                           onClick={() => removeVatLine(line.id)}
                           className="h-8 w-8"
                         >
-                          X
+                          <X className="h-4 w-4" />
                         </Button>
                       )}
                     </div>
@@ -299,7 +330,7 @@ export function NewExpenseDialog({
           <div className="rounded-sm border border-border bg-secondary/20 px-4 py-3">
             {numeric.baseAmount !== numeric.total && (
               <>
-                <div className="mb-3 flex items-center justify-between text-sm border-b border-border pb-3">
+                <div className="mb-2 flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">
                     {t("expenses.subtotal")}
                   </span>
@@ -328,7 +359,7 @@ export function NewExpenseDialog({
                   {t("expenses.irpfAmount")}
                 </span>
                 <span className="font-mono">
-                  {formatCurrency(numeric.irpfAmount)}
+                  {formatCurrency(-numeric.irpfAmount)}
                 </span>
               </div>
             )}
@@ -341,7 +372,13 @@ export function NewExpenseDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              resetForm()
+              setDialogOpen(false)
+            }}
+          >
             {t("expenses.cancel")}
           </Button>
           <Button onClick={handleCreateExpense} disabled={!isValid}>
