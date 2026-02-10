@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Plus, X, File } from "lucide-react"
 import { formatCurrency } from "@/lib/ledger-utils"
 import { generateNextId } from "@/lib/id-utils"
@@ -122,6 +122,7 @@ function ExpenseDialogContent({
   const [filename, setFilename] = useState(initialExpense?.filename || "")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const { addAttachment } = useEditingState()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -134,11 +135,8 @@ function ExpenseDialogContent({
   const handleRemoveFile = () => {
     setFilename("")
     setSelectedFile(null)
-    const fileInput = document.querySelector(
-      'input[type="file"]'
-    ) as HTMLInputElement | null
-    if (fileInput) {
-      fileInput.value = ""
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
     }
   }
 
@@ -284,39 +282,6 @@ function ExpenseDialogContent({
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="attachment">{t("expenses.attachFile")}</Label>
-          <div className="flex gap-2">
-            <Input
-              id="attachment"
-              type="file"
-              onChange={handleFileSelect}
-              className="cursor-pointer"
-              accept="image/*,.pdf,.doc,.docx"
-            />
-            {filename && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleRemoveFile}
-                className="shrink-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-          {filename && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <File className="h-4 w-4" />
-              {filename}
-            </div>
-          )}
-          <p className="text-xs text-muted-foreground">
-            {t("expenses.attachFileHelp")}
-          </p>
-        </div>
-
-        <div className="grid gap-2">
           <Label>{t("expenses.vatRate")}</Label>
           <div className="space-y-2">
             {vatLines.map((line, index) => {
@@ -440,13 +405,52 @@ function ExpenseDialogContent({
           </div>
         </div>
       </div>
-      <DialogFooter>
-        <Button variant="outline" onClick={onCancel}>
-          {t("expenses.cancel")}
-        </Button>
-        <Button onClick={handleSubmit} disabled={!isValid}>
-          {t("expenses.createExpense")}
-        </Button>
+      <DialogFooter className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <Input
+            ref={fileInputRef}
+            id="attachment"
+            type="file"
+            onChange={handleFileSelect}
+            className="hidden"
+            accept="image/*,.pdf,.doc,.docx"
+          />
+          {!filename && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              className="gap-2"
+            >
+              <File className="h-4 w-4" />
+              {t("expenses.attachFile")}
+            </Button>
+          )}
+          {filename && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <File className="h-3.5 w-3.5" />
+              <span className="max-w-[180px] truncate">{filename}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={handleRemoveFile}
+                className="h-7 w-7"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={onCancel}>
+            {t("expenses.cancel")}
+          </Button>
+          <Button onClick={handleSubmit} disabled={!isValid}>
+            {t("expenses.createExpense")}
+          </Button>
+        </div>
       </DialogFooter>
     </>
   )
