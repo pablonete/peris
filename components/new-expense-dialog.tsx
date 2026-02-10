@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, X } from "lucide-react"
+import { Plus, X, File } from "lucide-react"
 import { formatCurrency } from "@/lib/ledger-utils"
 import { generateNextId } from "@/lib/id-utils"
+import { readFileAsArrayBuffer } from "@/lib/file-utils"
 import { useEditingState } from "@/lib/editing-state-context"
 import { useFileSha } from "@/lib/use-storage-data"
 import { Expense } from "@/lib/types"
@@ -118,6 +119,28 @@ function ExpenseDialogContent({
   )
   const [applyIrpf, setApplyIrpf] = useState(!!initialExpense?.taxRetention)
   const [isPaid, setIsPaid] = useState(!!initialExpense?.paymentDate)
+  const [filename, setFilename] = useState(initialExpense?.filename || "")
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const { addAttachment } = useEditingState()
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setFilename(file.name)
+      setSelectedFile(file)
+    }
+  }
+
+  const handleRemoveFile = () => {
+    setFilename("")
+    setSelectedFile(null)
+    const fileInput = document.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement | null
+    if (fileInput) {
+      fileInput.value = ""
+    }
+  }
 
   const addVatLine = () => {
     setVatLines((prev) => [
@@ -149,7 +172,7 @@ function ExpenseDialogContent({
   const isValid =
     expenseDate && vendor.trim() && concept.trim() && numeric.baseAmount > 0
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!isValid) return
 
     const id = generateNextId(expenses, "exp")
@@ -164,6 +187,18 @@ function ExpenseDialogContent({
       taxRetention: applyIrpf ? numeric.irpfAmount : undefined,
       total: numeric.total,
       paymentDate: isPaid ? paymentDate : undefined,
+      filename: filename || undefined,
+    }
+
+    // Handle file attachment
+    if (selectedFile && filename) {
+      try {
+        const fileContent = await readFileAsArrayBuffer(selectedFile)
+        addAttachment(quarterId, filename, fileContent)
+      } catch (error) {
+        console.error("Failed to upload file:", error)
+        // Continue even if file upload fails
+      }
     }
 
     const nextExpenses = [...expenses, newExpense].sort((a, b) =>
@@ -246,6 +281,39 @@ function ExpenseDialogContent({
             value={concept}
             onChange={(e) => setConcept(e.target.value)}
           />
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="attachment">{t("expenses.attachFile")}</Label>
+          <div className="flex gap-2">
+            <Input
+              id="attachment"
+              type="file"
+              onChange={handleFileSelect}
+              className="cursor-pointer"
+              accept="image/*,.pdf,.doc,.docx"
+            />
+            {filename && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleRemoveFile}
+                className="shrink-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          {filename && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <File className="h-4 w-4" />
+              {filename}
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground">
+            {t("expenses.attachFileHelp")}
+          </p>
         </div>
 
         <div className="grid gap-2">

@@ -3,6 +3,12 @@
 import { GitHubStorageService } from "./github-storage"
 import { Storage } from "./storage-types"
 
+export interface EditingAttachment {
+  quarterId: string
+  filename: string
+  content: ArrayBuffer
+}
+
 /**
  * Lists available quarters in a storage
  */
@@ -56,17 +62,19 @@ export async function commitEditingFiles(
     fileName: string
     data: any
     sha?: string
-  }>
+  }>,
+  attachments: EditingAttachment[] = []
 ): Promise<void> {
   const service = new GitHubStorageService(storage.url)
 
   const uniqueQuarters = Array.from(
     new Set(editingFiles.map((f) => f.quarterId))
   )
+  const fileCount = editingFiles.length + attachments.length
   const message =
     uniqueQuarters.length === 1
-      ? `Update ${uniqueQuarters[0]} (${editingFiles.length} files)`
-      : `Update ${uniqueQuarters.length} quarters (${editingFiles.length} files)`
+      ? `Update ${uniqueQuarters[0]} (${fileCount} files)`
+      : `Update ${uniqueQuarters.length} quarters (${fileCount} files)`
 
   await service.commitMultipleFiles(
     editingFiles.map((file) => ({
@@ -74,6 +82,13 @@ export async function commitEditingFiles(
       fileName: `${file.fileName}.json`,
       content: file.data,
       sha: file.sha,
+      isBinary: false,
+    })),
+    attachments.map((att) => ({
+      quarterId: att.quarterId,
+      fileName: `expenses/${att.filename}`,
+      content: att.content,
+      isBinary: true as const,
     })),
     message
   )
