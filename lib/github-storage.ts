@@ -130,15 +130,22 @@ export class GitHubStorageService {
   }
 
   /**
-   * Commits multiple files in a single commit using Git Data API
+   * Commits multiple files (JSON and binary) in a single commit using Git Data API
    */
   async commitMultipleFiles(
-    files: Array<{
+    jsonFiles: Array<{
       quarterId: string
       fileName: string
       content: any
       sha?: string
+      isBinary: false
     }>,
+    binaryFiles: Array<{
+      quarterId: string
+      fileName: string
+      content: ArrayBuffer
+      isBinary: true
+    }> = [],
     message: string
   ): Promise<void> {
     try {
@@ -162,26 +169,61 @@ export class GitHubStorageService {
       })
       const baseTreeSha = commit.data.tree.sha
 
+      const allFiles = [
+        ...jsonFiles.map((file) => ({
+          ...file,
+          isBinary: false as const,
+        })),
+        ...binaryFiles.map((file) => ({
+          ...file,
+          isBinary: true as const,
+        })),
+      ]
+
       const tree = await Promise.all(
-        files.map(async (file) => {
+        allFiles.map(async (file) => {
           const filePath = this.dataPath
             ? `${this.dataPath}/${file.quarterId}/${file.fileName}`
             : `${file.quarterId}/${file.fileName}`
 
-          const blob = await this.octokit.rest.git.createBlob({
-            owner: this.owner,
-            repo: this.repo,
-            content: Buffer.from(
-              JSON.stringify(file.content, null, 2)
-            ).toString("base64"),
-            encoding: "base64",
-          })
+          let blobSha: string
+
+          if (file.isBinary) {
+            // For binary files, convert ArrayBuffer to base64 in chunks
+            const binaryFile = file as any
+            const uint8Array = new Uint8Array(binaryFile.content)
+            const chunkSize = 0x8000
+            let binaryString = ""
+            for (let i = 0; i < uint8Array.length; i += chunkSize) {
+              const chunk = uint8Array.subarray(i, i + chunkSize)
+              binaryString += String.fromCharCode(...chunk)
+            }
+            const base64Content = btoa(binaryString)
+
+            const blob = await this.octokit.rest.git.createBlob({
+              owner: this.owner,
+              repo: this.repo,
+              content: base64Content,
+              encoding: "base64",
+            })
+            blobSha = blob.data.sha
+          } else {
+            const blob = await this.octokit.rest.git.createBlob({
+              owner: this.owner,
+              repo: this.repo,
+              content: Buffer.from(
+                JSON.stringify(file.content, null, 2)
+              ).toString("base64"),
+              encoding: "base64",
+            })
+            blobSha = blob.data.sha
+          }
 
           return {
             path: filePath,
             mode: "100644" as const,
             type: "blob" as const,
-            sha: blob.data.sha,
+            sha: blobSha,
           }
         })
       )
@@ -209,9 +251,7 @@ export class GitHubStorageService {
       })
     } catch (error) {
       const err = error as any
-      throw new Error(
-        `Failed to commit multiple files: ${err.message || String(error)}`
-      )
+      throw new Error(`Failed to commit files: ${err.message || String(error)}`)
     }
   }
 }

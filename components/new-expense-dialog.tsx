@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, X } from "lucide-react"
+import { useRef, useState } from "react"
+import { Plus, X, File } from "lucide-react"
 import { formatCurrency } from "@/lib/ledger-utils"
 import { generateNextId } from "@/lib/id-utils"
+import { readFileAsArrayBuffer } from "@/lib/file-utils"
 import { useEditingState } from "@/lib/editing-state-context"
 import { useFileSha } from "@/lib/use-storage-data"
 import { Expense } from "@/lib/types"
@@ -118,6 +119,26 @@ function ExpenseDialogContent({
   )
   const [applyIrpf, setApplyIrpf] = useState(!!initialExpense?.taxRetention)
   const [isPaid, setIsPaid] = useState(!!initialExpense?.paymentDate)
+  const [filename, setFilename] = useState(initialExpense?.filename || "")
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const { addAttachment } = useEditingState()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setFilename(file.name)
+      setSelectedFile(file)
+    }
+  }
+
+  const handleRemoveFile = () => {
+    setFilename("")
+    setSelectedFile(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
 
   const addVatLine = () => {
     setVatLines((prev) => [
@@ -149,7 +170,7 @@ function ExpenseDialogContent({
   const isValid =
     expenseDate && vendor.trim() && concept.trim() && numeric.baseAmount > 0
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!isValid) return
 
     const id = generateNextId(expenses, "exp")
@@ -164,6 +185,18 @@ function ExpenseDialogContent({
       taxRetention: applyIrpf ? numeric.irpfAmount : undefined,
       total: numeric.total,
       paymentDate: isPaid ? paymentDate : undefined,
+      filename: filename || undefined,
+    }
+
+    // Handle file attachment
+    if (selectedFile && filename) {
+      try {
+        const fileContent = await readFileAsArrayBuffer(selectedFile)
+        addAttachment(quarterId, filename, fileContent)
+      } catch (error) {
+        console.error("Failed to upload file:", error)
+        // Continue even if file upload fails
+      }
     }
 
     const nextExpenses = [...expenses, newExpense].sort((a, b) =>
@@ -372,13 +405,52 @@ function ExpenseDialogContent({
           </div>
         </div>
       </div>
-      <DialogFooter>
-        <Button variant="outline" onClick={onCancel}>
-          {t("expenses.cancel")}
-        </Button>
-        <Button onClick={handleSubmit} disabled={!isValid}>
-          {t("expenses.createExpense")}
-        </Button>
+      <DialogFooter className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <Input
+            ref={fileInputRef}
+            id="attachment"
+            type="file"
+            onChange={handleFileSelect}
+            className="hidden"
+            accept="image/*,.pdf,.doc,.docx"
+          />
+          {!filename && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              className="gap-2"
+            >
+              <File className="h-4 w-4" />
+              {t("expenses.attachFile")}
+            </Button>
+          )}
+          {filename && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <File className="h-3.5 w-3.5" />
+              <span className="max-w-[180px] truncate">{filename}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={handleRemoveFile}
+                className="h-7 w-7"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={onCancel}>
+            {t("expenses.cancel")}
+          </Button>
+          <Button onClick={handleSubmit} disabled={!isValid}>
+            {t("expenses.createExpense")}
+          </Button>
+        </div>
       </DialogFooter>
     </>
   )

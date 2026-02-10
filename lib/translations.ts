@@ -89,6 +89,11 @@ export const translations = {
       deleteConfirmDesc:
         "¿Estás seguro de que deseas eliminar este gasto? Esta acción no se puede deshacer.",
       deleteButton: "Eliminar",
+      attachFile: "Adjuntar recibo",
+      attachFileHelp:
+        "Carga un archivo con el comprobante del gasto (PDF, JPG, PNG, etc)",
+      fileSelected: "Archivo seleccionado",
+      removeFile: "Eliminar archivo",
     },
     cashflow: {
       cashflow: "Flujo de caja",
@@ -234,6 +239,11 @@ export const translations = {
       deleteConfirmDesc:
         "Are you sure you want to delete this expense? This action cannot be undone.",
       deleteButton: "Delete",
+      attachFile: "Attach Receipt",
+      attachFileHelp:
+        "Upload a file with the expense receipt (PDF, JPG, PNG, etc)",
+      fileSelected: "File selected",
+      removeFile: "Remove file",
     },
     cashflow: {
       cashflow: "Cashflow",

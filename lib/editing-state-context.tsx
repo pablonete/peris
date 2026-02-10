@@ -16,8 +16,15 @@ interface EditingFile {
   sha?: string
 }
 
+interface EditingAttachment {
+  quarterId: string
+  filename: string
+  content: ArrayBuffer
+}
+
 interface EditingStateContextType {
   editingFiles: Map<string, EditingFile>
+  editingAttachments: Map<string, EditingAttachment>
   editingCount: number
   isCommitting: boolean
   error: string | null
@@ -31,6 +38,16 @@ interface EditingStateContextType {
     data: Invoice[] | Expense[] | CashflowFileData,
     sha?: string
   ) => void
+  addAttachment: (
+    quarterId: string,
+    filename: string,
+    content: ArrayBuffer
+  ) => void
+  getAttachment: (
+    quarterId: string,
+    filename: string
+  ) => EditingAttachment | undefined
+  removeAttachment: (quarterId: string, filename: string) => void
   createNewQuarter: (quarterId: string, companyName: string) => void
   clearAllEditing: () => void
   commitChanges: () => Promise<void>
@@ -54,6 +71,9 @@ export function EditingStateProvider({
   const [editingFiles, setEditingFiles] = useState<Map<string, EditingFile>>(
     new Map()
   )
+  const [editingAttachments, setEditingAttachments] = useState<
+    Map<string, EditingAttachment>
+  >(new Map())
   const [isCommitting, setIsCommitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -82,6 +102,41 @@ export function EditingStateProvider({
     })
   }
 
+  const getAttachmentKey = (quarterId: string, filename: string): string => {
+    return `${quarterId}/attachment/${filename}`
+  }
+
+  const addAttachment = (
+    quarterId: string,
+    filename: string,
+    content: ArrayBuffer
+  ) => {
+    setEditingAttachments((prev) => {
+      const newMap = new Map(prev)
+      newMap.set(getAttachmentKey(quarterId, filename), {
+        quarterId,
+        filename,
+        content,
+      })
+      return newMap
+    })
+  }
+
+  const getAttachment = (
+    quarterId: string,
+    filename: string
+  ): EditingAttachment | undefined => {
+    return editingAttachments.get(getAttachmentKey(quarterId, filename))
+  }
+
+  const removeAttachment = (quarterId: string, filename: string) => {
+    setEditingAttachments((prev) => {
+      const newMap = new Map(prev)
+      newMap.delete(getAttachmentKey(quarterId, filename))
+      return newMap
+    })
+  }
+
   const createNewQuarter = (quarterId: string, companyName: string) => {
     setEditingFile(quarterId, "invoices", [])
     setEditingFile(quarterId, "expenses", [])
@@ -94,6 +149,7 @@ export function EditingStateProvider({
 
   const clearAllEditing = () => {
     setEditingFiles(new Map())
+    setEditingAttachments(new Map())
   }
 
   const editingCount = editingFiles.size
@@ -104,7 +160,12 @@ export function EditingStateProvider({
 
     try {
       const filesToCommit = Array.from(editingFiles.values())
-      await commitEditingFiles(activeStorage, filesToCommit)
+      const attachmentsToCommit = Array.from(editingAttachments.values())
+      await commitEditingFiles(
+        activeStorage,
+        filesToCommit,
+        attachmentsToCommit
+      )
       clearAllEditing()
       await queryClient.invalidateQueries()
     } catch (err) {
@@ -119,11 +180,15 @@ export function EditingStateProvider({
     <EditingStateContext.Provider
       value={{
         editingFiles,
+        editingAttachments,
         editingCount,
         isCommitting,
         error,
         getEditingFile,
         setEditingFile,
+        addAttachment,
+        getAttachment,
+        removeAttachment,
         createNewQuarter,
         clearAllEditing,
         commitChanges,
