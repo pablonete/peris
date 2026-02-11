@@ -16,6 +16,7 @@ import { ErrorBanner } from "./error-banner"
 import { NewQuarterDialog } from "./new-quarter-dialog"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useState, useMemo, useEffect } from "react"
 
 export type ViewType = "invoices" | "expenses" | "cashflow"
 
@@ -34,6 +35,7 @@ export function LedgerSidebar({
   const router = useRouter()
   const { quarters, error: quartersError } = useStorageQuarters()
   const { getEditingFile } = useEditingState()
+  const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set())
 
   const viewItems: { key: ViewType; label: string; icon: typeof FileText }[] = [
     { key: "invoices", label: t("sidebar.invoices"), icon: FileText },
@@ -41,10 +43,53 @@ export function LedgerSidebar({
     { key: "cashflow", label: t("sidebar.cashflow"), icon: ArrowRightLeft },
   ]
 
+  const quartersByYear = useMemo(() => {
+    const grouped: Record<string, string[]> = {}
+    quarters.forEach((qId) => {
+      const [year] = qId.split(".")
+      if (!grouped[year]) grouped[year] = []
+      grouped[year].push(qId)
+    })
+    return grouped
+  }, [quarters])
+
+  const selectedYear = useMemo(() => {
+    if (!selectedQuarter) return null
+    return selectedQuarter.split(".")[0]
+  }, [selectedQuarter])
+
+  useEffect(() => {
+    if (selectedYear) {
+      setExpandedYears((prev) => new Set([...prev, selectedYear]))
+    }
+  }, [selectedYear])
+
   function formatQuarterLabel(qId: string): string {
     const [year, q] = qId.split(".")
     const quarterNum = q.replace("Q", "")
     return `${t(`months.${quarterNum}`)} ${year}`
+  }
+
+  function toggleYear(year: string) {
+    setExpandedYears((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(year)) {
+        newSet.delete(year)
+      } else {
+        newSet.add(year)
+      }
+      return newSet
+    })
+  }
+
+  function getYearEditStatus(year: string) {
+    const yearQuarters = quartersByYear[year] || []
+    return yearQuarters.some(
+      (qId) =>
+        !!getEditingFile(qId, "invoices") ||
+        !!getEditingFile(qId, "expenses") ||
+        !!getEditingFile(qId, "cashflow")
+    )
   }
 
   return (
@@ -80,84 +125,167 @@ export function LedgerSidebar({
           />
         )}
         <ul className="flex flex-col gap-1">
-          {quarters.map((qId) => {
-            const isExpanded = selectedQuarter === qId
-            const hasEdits =
-              !!getEditingFile(qId, "invoices") ||
-              !!getEditingFile(qId, "expenses") ||
-              !!getEditingFile(qId, "cashflow")
-            return (
-              <li key={qId}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    router.push(`/invoices?q=${qId}`)
-                  }}
-                  className={cn(
-                    "flex w-full items-center justify-between rounded-sm px-3 py-2.5 text-left text-sm transition-colors",
-                    isExpanded
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                  )}
-                >
-                  <span className="flex flex-col">
-                    <span className="flex items-center gap-2 font-mono text-xs font-semibold tracking-wider">
-                      {qId}
-                      {hasEdits && (
-                        <span
-                          className="h-2 w-2 rounded-full bg-green-600"
-                          aria-label="Has unsaved changes"
-                        />
-                      )}
-                    </span>
-                    <span className="text-[11px] text-sidebar-foreground/50">
-                      {formatQuarterLabel(qId)}
-                    </span>
-                  </span>
-                  <ChevronDown
-                    className={cn(
-                      "h-4 w-4 transition-transform",
-                      isExpanded && "rotate-180"
-                    )}
-                  />
-                </button>
+          {Object.keys(quartersByYear)
+            .sort()
+            .reverse()
+            .map((year) => {
+              const yearQuarters = quartersByYear[year]
+              const isYearExpanded = expandedYears.has(year)
+              const hasYearEdits = getYearEditStatus(year)
 
-                {/* Sub-items */}
-                {isExpanded && (
-                  <ul className="ml-3 mt-1 flex flex-col gap-0.5 border-l border-sidebar-border pl-3">
-                    {viewItems.map(({ key, label, icon: Icon }) => {
-                      const isActive =
-                        selectedView === key && selectedQuarter === qId
-                      const isEditing = !!getEditingFile(qId, key)
-                      return (
-                        <li key={key}>
-                          <Link
-                            href={`/${key}?q=${qId}`}
-                            onClick={onSidebarClose}
-                            className={cn(
-                              "flex items-center gap-2.5 rounded-sm px-3 py-2 text-left text-sm transition-colors",
-                              isActive
-                                ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
-                                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                            )}
-                          >
-                            <Icon className="h-4 w-4" />
-                            {label}
-                            {isEditing && (
-                              <span
-                                className="h-2 w-2 rounded-full bg-green-600"
-                                aria-label="Editing"
+              return (
+                <li key={year}>
+                  {/* Year header */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const firstQuarter = yearQuarters[0]
+                        router.push(`/invoices?q=${firstQuarter}`)
+                      }}
+                      className={cn(
+                        "flex flex-1 items-center justify-between rounded-sm px-3 py-2.5 text-left text-sm transition-colors",
+                        selectedYear === year
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                          : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                      )}
+                    >
+                      <span className="flex items-center gap-2 font-mono text-xs font-semibold tracking-wider">
+                        {year}
+                        {hasYearEdits && (
+                          <span
+                            className="h-2 w-2 rounded-full bg-green-600"
+                            aria-label="Has unsaved changes"
+                          />
+                        )}
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          "h-4 w-4 transition-transform",
+                          isYearExpanded && "rotate-180"
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleYear(year)
+                        }}
+                      />
+                    </button>
+
+                    {/* Quick quarter navigation buttons (when collapsed) */}
+                    {!isYearExpanded && (
+                      <div className="flex gap-0.5">
+                        {yearQuarters.map((qId) => {
+                          const [, q] = qId.split(".")
+                          const isSelected = selectedQuarter === qId
+                          return (
+                            <button
+                              key={qId}
+                              type="button"
+                              onClick={() => {
+                                router.push(`/invoices?q=${qId}`)
+                              }}
+                              className={cn(
+                                "rounded-sm px-1.5 py-1 text-[10px] font-medium transition-colors",
+                                isSelected
+                                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                  : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                              )}
+                            >
+                              {q}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Expanded quarters */}
+                  {isYearExpanded && (
+                    <ul className="ml-3 mt-1 flex flex-col gap-1">
+                      {yearQuarters.map((qId) => {
+                        const isExpanded = selectedQuarter === qId
+                        const hasEdits =
+                          !!getEditingFile(qId, "invoices") ||
+                          !!getEditingFile(qId, "expenses") ||
+                          !!getEditingFile(qId, "cashflow")
+                        return (
+                          <li key={qId}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                router.push(`/invoices?q=${qId}`)
+                              }}
+                              className={cn(
+                                "flex w-full items-center justify-between rounded-sm px-3 py-2.5 text-left text-sm transition-colors",
+                                isExpanded
+                                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                  : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                              )}
+                            >
+                              <span className="flex flex-col">
+                                <span className="flex items-center gap-2 font-mono text-xs font-semibold tracking-wider">
+                                  {qId}
+                                  {hasEdits && (
+                                    <span
+                                      className="h-2 w-2 rounded-full bg-green-600"
+                                      aria-label="Has unsaved changes"
+                                    />
+                                  )}
+                                </span>
+                                <span className="text-[11px] text-sidebar-foreground/50">
+                                  {formatQuarterLabel(qId)}
+                                </span>
+                              </span>
+                              <ChevronDown
+                                className={cn(
+                                  "h-4 w-4 transition-transform",
+                                  isExpanded && "rotate-180"
+                                )}
                               />
+                            </button>
+
+                            {/* Sub-items */}
+                            {isExpanded && (
+                              <ul className="ml-3 mt-1 flex flex-col gap-0.5 border-l border-sidebar-border pl-3">
+                                {viewItems.map(({ key, label, icon: Icon }) => {
+                                  const isActive =
+                                    selectedView === key &&
+                                    selectedQuarter === qId
+                                  const isEditing = !!getEditingFile(qId, key)
+                                  return (
+                                    <li key={key}>
+                                      <Link
+                                        href={`/${key}?q=${qId}`}
+                                        onClick={onSidebarClose}
+                                        className={cn(
+                                          "flex items-center gap-2.5 rounded-sm px-3 py-2 text-left text-sm transition-colors",
+                                          isActive
+                                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                                        )}
+                                      >
+                                        <Icon className="h-4 w-4" />
+                                        {label}
+                                        {isEditing && (
+                                          <span
+                                            className="h-2 w-2 rounded-full bg-green-600"
+                                            aria-label="Editing"
+                                          />
+                                        )}
+                                      </Link>
+                                    </li>
+                                  )
+                                })}
+                              </ul>
                             )}
-                          </Link>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                )}
-              </li>
-            )
-          })}
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                </li>
+              )
+            })}
         </ul>
       </nav>
 
