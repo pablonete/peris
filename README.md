@@ -5,6 +5,7 @@ A minimalist ledger book application for financial tracking based on GitHub repo
 ## Features
 
 - 📊 **Quarterly Organization** - Track finances by quarters (Q1-Q4)
+- 📁 **Collapsible Year Navigation** - Organize quarters by year with collapsible sidebar for easy navigation across many periods
 - 💰 **Invoice Management** - Record and monitor sent invoices with payment dates
 - 🧾 **Expense Tracking** - Log business expenses with VAT (multiple), IRPF (15%), payment dates, and the attached document
 - 💵 **Cashflow View** - Monitor bank balance and transaction flow over time with multi-bank support
@@ -209,7 +210,9 @@ pnpm dev
 ### Navigation
 
 - Use the **sidebar** to switch between quarters and views
-- Click on **quarter names** to expand and view available reports
+- **Years are grouped and collapsible** - Click on a year to select its first quarter, or click the chevron to expand/collapse the year
+- **Quick quarter buttons** - When a year is collapsed, use the inline Q1-Q4 buttons for fast navigation to any quarter
+- Click on **quarter names** to expand and view available reports (Invoices, Expenses, Cashflow)
 
 ### Language Toggle
 
