@@ -33,6 +33,10 @@ function getSortedYears(quartersByYear: Record<string, string[]>) {
   return Object.keys(quartersByYear).sort().reverse()
 }
 
+function extractYearFromQuarterId(qId: string): string {
+  return qId.split(".")[0]
+}
+
 export function LedgerSidebar({
   selectedQuarter,
   selectedView,
@@ -51,7 +55,9 @@ export function LedgerSidebar({
 
   const quartersByYear = groupQuartersByYear(quarters)
   const sortedYears = getSortedYears(quartersByYear)
-  const selectedYear = selectedQuarter ? selectedQuarter.split(".")[0] : null
+  const selectedYear = selectedQuarter
+    ? extractYearFromQuarterId(selectedQuarter)
+    : null
 
   function formatQuarterLabel(qId: string): string {
     const [year, q] = qId.split(".")
@@ -204,7 +210,7 @@ export function LedgerSidebar({
                                   href={`/${key}?q=${qId}`}
                                   onClick={onSidebarClose}
                                   className={cn(
-                                    "flex items-center justify-center rounded-sm p-1.5 transition-colors",
+                                    "relative flex items-center justify-center rounded-sm p-1.5 transition-colors",
                                     isActive
                                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
                                       : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
