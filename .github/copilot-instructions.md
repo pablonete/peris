@@ -23,6 +23,8 @@ This is Peris - a minimalist ledger book application for personal accounting and
 - Follow the ledger-inspired design aesthetic (serif fonts, minimal colors)
 - **Format code with Prettier (no semicolons)**: Run `pnpm format` before committing
 - **Code comments**: Set a high bar - only explain non-obvious logic or the "why", never describe what code obviously does. Self-explanatory code with clear variable/function names is preferred over comments.
+- **Avoid useMemo/useCallback**: This project uses React Compiler which automatically optimizes these patterns. Extract complex logic to separate functions instead.
+- **Extract logic to functions**: Keep component bodies clean by extracting grouping, filtering, and transformation logic to separate functions outside the component.
 
 ### Internationalization (i18n)
 
@@ -49,10 +51,11 @@ This is Peris - a minimalist ledger book application for personal accounting and
 - Keep commits focused and atomic
 - Update documentation before merging
 - **PR descriptions should be brief** - Ideally 4-5 lines max, focusing on what changed and why
+- **Extract learnings from PR feedback** - When receiving feedback, update these instructions with patterns and preferences to avoid similar issues in future PRs
 
 ## Key Files
 
-- `README.md` - Main documentation (update with features)
+- `README.md` - Main documentation (only update for significant features, not UI mechanics)
 - `lib/translations.ts` - All translatable strings
 - `lib/ledger-utils.ts` - Shared formatting helpers
 - `lib/use-storage-data.ts` - GitHub-backed data loader hook
@@ -60,6 +63,7 @@ This is Peris - a minimalist ledger book application for personal accounting and
 - `components/ledger-sidebar.tsx` - Main navigation
 - `components/error-banner.tsx` - Shared error display component
 - `app/layout.tsx` - Root layout with providers
+- `.gitignore` - Include build artifacts like `tsconfig.tsbuildinfo`
 
 ## Remember
 
