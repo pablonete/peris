@@ -18,6 +18,7 @@ import { ErrorBanner } from "@/components/error-banner"
 import { PaymentDateCell } from "@/components/payment-date-cell"
 import { AttachmentCell } from "@/components/attachment-cell"
 import { SummaryCard } from "@/components/summary-card"
+import { NewInvoiceDialog } from "@/components/new-invoice-dialog"
 import { useLanguage } from "@/lib/i18n-context"
 
 interface InvoicesViewProps {
@@ -54,23 +55,29 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
   const totalSubtotal = content.reduce((s, i) => s + i.subtotal, 0)
   const totalVat = content.reduce((s, i) => s + i.vat, 0)
   const totalAmount = content.reduce((s, i) => s + i.total, 0)
+  const hasCurrency = content.some((i) => i.currency)
 
   return (
     <div>
       <div className="mb-6 border-b-2 border-foreground/20 pb-4">
-        <h2 className="flex items-center gap-2 text-2xl font-bold tracking-wide text-foreground">
-          {t("invoices.sentInvoices")}
-          {isEditing && (
-            <span
-              className="h-2 w-2 rounded-full bg-green-600"
-              aria-label="Editing"
-            />
-          )}
-        </h2>
-        <p className="font-mono text-xs text-muted-foreground">
-          {quarterId} &middot; {activeStorage.name} &middot; {content.length}{" "}
-          {t("invoices.sentInvoices").toLowerCase()}
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="flex items-center gap-2 text-2xl font-bold tracking-wide text-foreground">
+              {t("invoices.sentInvoices")}
+              {isEditing && (
+                <span
+                  className="h-2 w-2 rounded-full bg-green-600"
+                  aria-label="Editing"
+                />
+              )}
+            </h2>
+            <p className="font-mono text-xs text-muted-foreground">
+              {quarterId} &middot; {activeStorage.name} &middot;{" "}
+              {content.length} {t("invoices.sentInvoices").toLowerCase()}
+            </p>
+          </div>
+          <NewInvoiceDialog quarterId={quarterId} invoices={content} />
+        </div>
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -115,6 +122,11 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-right">
                 {t("invoices.total")}
               </TableHead>
+              {hasCurrency && (
+                <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-center">
+                  {t("invoices.currency")}
+                </TableHead>
+              )}
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-center">
                 {t("invoices.paymentDate")}
               </TableHead>
@@ -153,6 +165,17 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
                 <TableCell className="font-mono text-sm font-semibold text-right">
                   {formatCurrency(inv.total)}
                 </TableCell>
+                {hasCurrency && (
+                  <TableCell className="text-center">
+                    {inv.currency ? (
+                      <div className="font-mono text-xs text-muted-foreground">
+                        {inv.currency.symbol} {inv.currency.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                )}
                 <TableCell className="text-center">
                   <PaymentDateCell paymentDate={inv.paymentDate} />
                 </TableCell>
@@ -173,6 +196,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
               <TableCell className="font-mono text-sm font-bold text-right">
                 {formatCurrency(totalAmount)}
               </TableCell>
+              {hasCurrency && <TableCell />}
               <TableCell />
             </TableRow>
           </TableFooter>
