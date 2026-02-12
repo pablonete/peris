@@ -1,9 +1,7 @@
 "use client"
 
 import { formatCurrency, formatDate } from "@/lib/ledger-utils"
-import { useStorageData } from "@/lib/use-storage-data"
-import { useStorage } from "@/lib/storage-context"
-import { useEditingState } from "@/lib/editing-state-context"
+import { useData } from "@/lib/data"
 import {
   Table,
   TableBody,
@@ -27,9 +25,8 @@ interface InvoicesViewProps {
 
 export function InvoicesView({ quarterId }: InvoicesViewProps) {
   const { t } = useLanguage()
-  const { activeStorage } = useStorage()
-  const { getEditingFile } = useEditingState()
-  const { content, isPending, error } = useStorageData(quarterId, "invoices")
+  const { activeStorage, getEditingFile, loadInvoices } = useData()
+  const { content, isPending, error, isEditing: isEditingFromHook } = loadInvoices(quarterId)
   const isEditing = !!getEditingFile(quarterId, "invoices")
 
   if (isPending) {

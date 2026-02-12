@@ -2,9 +2,7 @@
 
 import { useState } from "react"
 import { formatCurrency, formatDate } from "@/lib/ledger-utils"
-import { useStorageData } from "@/lib/use-storage-data"
-import { useStorage } from "@/lib/storage-context"
-import { useEditingState } from "@/lib/editing-state-context"
+import { useData } from "@/lib/data"
 import { Expense } from "@/lib/types"
 import {
   Table,
@@ -33,9 +31,8 @@ interface ExpensesViewProps {
 
 export function ExpensesView({ quarterId }: ExpensesViewProps) {
   const { t } = useLanguage()
-  const { activeStorage } = useStorage()
-  const { getEditingFile, setEditingFile } = useEditingState()
-  const { content, isPending, error } = useStorageData(quarterId, "expenses")
+  const { activeStorage, getEditingFile, setEditingFile, loadExpenses } = useData()
+  const { content, isPending, error } = loadExpenses(quarterId)
   const isEditing = !!getEditingFile(quarterId, "expenses")
   const [deleteAlert, setDeleteAlert] = useState<string | null>(null)
   const [duplicateExpense, setDuplicateExpense] = useState<Expense | null>(null)

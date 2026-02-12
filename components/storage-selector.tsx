@@ -1,8 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useStorage } from "@/lib/storage-context"
-import { useEditingState } from "@/lib/editing-state-context"
+import { useData } from "@/lib/data"
 import {
   Select,
   SelectContent,
@@ -16,9 +15,8 @@ import { useLanguage } from "@/lib/i18n-context"
 import { StorageModal } from "./storage-modal"
 
 export function StorageSelector() {
-  const { storages, activeStorage, setActiveStorage, removeStorage, isSample } =
-    useStorage()
-  const { clearAllEditing } = useEditingState()
+  const { storages, activeStorage, setActiveStorage, removeStorage, isSample, clearAllEditing } =
+    useData()
   const { t } = useLanguage()
   const [storageModalOpen, setStorageModalOpen] = useState(false)
 

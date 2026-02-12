@@ -5,8 +5,7 @@ import { Plus, X, File } from "lucide-react"
 import { formatCurrency } from "@/lib/ledger-utils"
 import { generateNextId } from "@/lib/id-utils"
 import { readFileAsArrayBuffer } from "@/lib/file-utils"
-import { useEditingState } from "@/lib/editing-state-context"
-import { useFileSha } from "@/lib/use-storage-data"
+import { useData } from "@/lib/data"
 import { Invoice } from "@/lib/types"
 import { useLanguage } from "@/lib/i18n-context"
 import {
@@ -58,9 +57,9 @@ function InvoiceFormContent({
   onCancel: () => void
 }) {
   const { t } = useLanguage()
-  const { getEditingFile, setEditingFile, addAttachment } = useEditingState()
+  const { getEditingFile, setEditingFile, addAttachment, getFileSha } = useData()
   const editingFile = getEditingFile(quarterId, "invoices")
-  const sha = useFileSha(quarterId, "invoices")
+  const sha = getFileSha(quarterId, "invoices")
   const uploadRef = useRef<HTMLInputElement>(null)
 
   const today = new Date().toISOString().slice(0, 10)

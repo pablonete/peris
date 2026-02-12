@@ -5,8 +5,7 @@ import { Plus, X, File } from "lucide-react"
 import { formatCurrency } from "@/lib/ledger-utils"
 import { generateNextId } from "@/lib/id-utils"
 import { readFileAsArrayBuffer } from "@/lib/file-utils"
-import { useEditingState } from "@/lib/editing-state-context"
-import { useFileSha } from "@/lib/use-storage-data"
+import { useData } from "@/lib/data"
 import { Expense } from "@/lib/types"
 import { useLanguage } from "@/lib/i18n-context"
 import {
@@ -95,9 +94,9 @@ function ExpenseDialogContent({
   onCancel,
 }: ExpenseDialogContentProps) {
   const { t } = useLanguage()
-  const { getEditingFile, setEditingFile } = useEditingState()
+  const { getEditingFile, setEditingFile, addAttachment, getFileSha } = useData()
   const editingFile = getEditingFile(quarterId, "expenses")
-  const fileSha = useFileSha(quarterId, "expenses")
+  const fileSha = getFileSha(quarterId, "expenses")
 
   const [expenseDate, setExpenseDate] = useState(
     initialExpense?.date || getTodayIsoDate()
@@ -121,7 +120,6 @@ function ExpenseDialogContent({
   const [isPaid, setIsPaid] = useState(!!initialExpense?.paymentDate)
   const [filename, setFilename] = useState(initialExpense?.filename || "")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const { addAttachment } = useEditingState()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {

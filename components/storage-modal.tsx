@@ -1,9 +1,8 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { useStorage } from "@/lib/storage-context"
-import { Storage } from "@/lib/storage-types"
-import { validateStorageAccess } from "@/lib/github-data"
+import { useData, Storage } from "@/lib/data"
+import { QuartersRepository } from "@/lib/data/repositories/quarters-repository"
 import { useLanguage } from "@/lib/i18n-context"
 import {
   Dialog,
@@ -24,7 +23,7 @@ interface StorageModalProps {
 
 export function StorageModal({ open, onOpenChange }: StorageModalProps) {
   const { t } = useLanguage()
-  const { storages, addStorage, setActiveStorage } = useStorage()
+  const { storages, addStorage, setActiveStorage } = useData()
   const [formData, setFormData] = useState({
     name: "",
     url: "",
@@ -53,7 +52,8 @@ export function StorageModal({ open, onOpenChange }: StorageModalProps) {
       url: formData.url,
     }
 
-    const result = await validateStorageAccess(storage)
+    const repo = new QuartersRepository(storage)
+    const result = await repo.validateAccess()
     setTesting(false)
 
     if (result.valid) {

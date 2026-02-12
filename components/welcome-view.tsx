@@ -1,7 +1,6 @@
 "use client"
 
-import { useStorageQuarters } from "@/lib/use-storage-quarters"
-import { useStorageData } from "@/lib/use-storage-data"
+import { useData } from "@/lib/data"
 import { formatCurrency } from "@/lib/ledger-utils"
 import type { ViewType } from "@/components/ledger-sidebar"
 import { useLanguage } from "@/lib/i18n-context"
@@ -16,9 +15,10 @@ interface QuarterCardProps {
 }
 
 function useQuarterSummary(qId: string) {
-  const invoicesQuery = useStorageData(qId, "invoices")
-  const expensesQuery = useStorageData(qId, "expenses")
-  const cashflowQuery = useStorageData(qId, "cashflow")
+  const { loadInvoices, loadExpenses, loadCashflow } = useData()
+  const invoicesQuery = loadInvoices(qId)
+  const expensesQuery = loadExpenses(qId)
+  const cashflowQuery = loadCashflow(qId)
 
   const loading =
     invoicesQuery.isPending ||
@@ -131,7 +131,7 @@ function QuarterCard({ qId, onNavigate }: QuarterCardProps) {
 
 export function WelcomeView({ onNavigate }: WelcomeViewProps) {
   const { t } = useLanguage()
-  const { quarters } = useStorageQuarters()
+  const { quarters } = useData()
   const hasQuarters = quarters.length > 0
 
   return (
