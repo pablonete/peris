@@ -15,8 +15,14 @@ import { useLanguage } from "@/lib/i18n-context"
 import { StorageModal } from "./storage-modal"
 
 export function StorageSelector() {
-  const { storages, activeStorage, setActiveStorage, removeStorage, isSample, clearAllEditing } =
-    useData()
+  const {
+    storages,
+    activeStorage,
+    setActiveStorage,
+    removeStorage,
+    isSample,
+    clearAllEditing,
+  } = useData()
   const { t } = useLanguage()
   const [storageModalOpen, setStorageModalOpen] = useState(false)
 

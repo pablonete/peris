@@ -94,7 +94,8 @@ function ExpenseDialogContent({
   onCancel,
 }: ExpenseDialogContentProps) {
   const { t } = useLanguage()
-  const { getEditingFile, setEditingFile, addAttachment, getFileSha } = useData()
+  const { getEditingFile, setEditingFile, addAttachment, getFileSha } =
+    useData()
   const editingFile = getEditingFile(quarterId, "expenses")
   const fileSha = getFileSha(quarterId, "expenses")
 

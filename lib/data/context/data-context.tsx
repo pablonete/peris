@@ -12,7 +12,10 @@ import { InvoicesRepository } from "../repositories/invoices-repository"
 import { ExpensesRepository } from "../repositories/expenses-repository"
 import { CashflowRepository } from "../repositories/cashflow-repository"
 import { Invoice, Expense } from "@/lib/types"
-import { CashflowFileData, GitHubStorageService } from "../infrastructure/github-storage"
+import {
+  CashflowFileData,
+  GitHubStorageService,
+} from "../infrastructure/github-storage"
 
 const SAMPLE_STORAGE: Storage = {
   name: "Sample Data",
@@ -49,25 +52,19 @@ interface DataContextType {
   quartersError: Error | null
 
   // Data loading
-  loadInvoices: (
-    quarterId: string
-  ) => {
+  loadInvoices: (quarterId: string) => {
     content: Invoice[] | null
     isPending: boolean
     error: Error | null
     isEditing: boolean
   }
-  loadExpenses: (
-    quarterId: string
-  ) => {
+  loadExpenses: (quarterId: string) => {
     content: Expense[] | null
     isPending: boolean
     error: Error | null
     isEditing: boolean
   }
-  loadCashflow: (
-    quarterId: string
-  ) => {
+  loadCashflow: (quarterId: string) => {
     content: CashflowFileData | null
     isPending: boolean
     error: Error | null
@@ -237,7 +234,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return {
       content: query.data?.data ?? null,
       isPending: query.isPending,
-      error: query.error || (query.data?.error ? new Error(query.data.error) : null),
+      error:
+        query.error || (query.data?.error ? new Error(query.data.error) : null),
       isEditing: false,
     }
   }
@@ -266,7 +264,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return {
       content: query.data?.data ?? null,
       isPending: query.isPending,
-      error: query.error || (query.data?.error ? new Error(query.data.error) : null),
+      error:
+        query.error || (query.data?.error ? new Error(query.data.error) : null),
       isEditing: false,
     }
   }
@@ -295,7 +294,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return {
       content: query.data?.data ?? null,
       isPending: query.isPending,
-      error: query.error || (query.data?.error ? new Error(query.data.error) : null),
+      error:
+        query.error || (query.data?.error ? new Error(query.data.error) : null),
       isEditing: false,
     }
   }
@@ -384,9 +384,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
       // Use the GitHubStorageService directly for committing
       const service = new GitHubStorageService(activeStorage.url)
-      
+
       // Prepare JSON files in the format expected by GitHubStorageService
-      const jsonFiles = filesToCommit.map(file => ({
+      const jsonFiles = filesToCommit.map((file) => ({
         quarterId: file.quarterId,
         fileName: file.fileName,
         content: file.data,
@@ -395,7 +395,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       }))
 
       // Prepare binary attachments
-      const binaryFiles = attachmentsToCommit.map(attachment => {
+      const binaryFiles = attachmentsToCommit.map((attachment) => {
         const fileType = attachment.filename.endsWith(".pdf")
           ? "expenses"
           : "invoices"

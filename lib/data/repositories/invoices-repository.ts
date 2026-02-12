@@ -26,10 +26,7 @@ export class InvoicesRepository {
   async load(quarterId: string): Promise<FileResult<Invoice[]>> {
     try {
       const service = new GitHubStorageService(this.storage.url)
-      const result = await service.fetchQuarterFile(
-        quarterId,
-        "invoices.json"
-      )
+      const result = await service.fetchQuarterFile(quarterId, "invoices.json")
 
       if (!result.data) {
         return { data: null, error: "File not found" }

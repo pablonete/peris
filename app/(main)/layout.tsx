@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react"
 import { LedgerSidebar, ViewType } from "@/components/ledger-sidebar"
 import { ErrorBanner } from "@/components/error-banner"
-import { useEditingState } from "@/lib/editing-state-context"
+import { useData } from "@/lib/data"
 import { useLanguage } from "@/lib/i18n-context"
 import { Menu, X } from "lucide-react"
 import Link from "next/link"
@@ -13,7 +13,7 @@ function MainLayoutInner({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const { error } = useEditingState()
+  const { commitError } = useData()
   const { t } = useLanguage()
 
   const selectedQuarter = searchParams.get("q") || ""
@@ -88,10 +88,10 @@ function MainLayoutInner({ children }: { children: React.ReactNode }) {
               paddingLeft: "1.5rem",
             }}
           >
-            {error && (
+            {commitError && (
               <ErrorBanner
                 title={t("storage.error.saving")}
-                message={error}
+                message={commitError}
                 className="mb-6"
               />
             )}

@@ -57,7 +57,8 @@ function InvoiceFormContent({
   onCancel: () => void
 }) {
   const { t } = useLanguage()
-  const { getEditingFile, setEditingFile, addAttachment, getFileSha } = useData()
+  const { getEditingFile, setEditingFile, addAttachment, getFileSha } =
+    useData()
   const editingFile = getEditingFile(quarterId, "invoices")
   const sha = getFileSha(quarterId, "invoices")
   const uploadRef = useRef<HTMLInputElement>(null)

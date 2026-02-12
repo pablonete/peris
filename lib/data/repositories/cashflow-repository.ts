@@ -1,6 +1,9 @@
 "use client"
 
-import { GitHubStorageService, CashflowFileData } from "../infrastructure/github-storage"
+import {
+  GitHubStorageService,
+  CashflowFileData,
+} from "../infrastructure/github-storage"
 import { Storage } from "../infrastructure/storage-types"
 
 export interface FileResult<T> {
