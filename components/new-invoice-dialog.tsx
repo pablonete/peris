@@ -30,7 +30,7 @@ interface NewInvoiceDialogProps {
 
 function useInvoiceForm() {
   const today = new Date().toISOString().slice(0, 10)
-  
+
   const [issueDate, setIssueDate] = useState(today)
   const [clientName, setClientName] = useState("")
   const [invoiceNumber, setInvoiceNumber] = useState("")
@@ -321,7 +321,9 @@ function InvoiceFormContent({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="inv-fx-total">{t("invoices.currencyTotal")}</Label>
+              <Label htmlFor="inv-fx-total">
+                {t("invoices.currencyTotal")}
+              </Label>
               <Input
                 id="inv-fx-total"
                 type="number"

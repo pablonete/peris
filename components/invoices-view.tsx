@@ -71,8 +71,8 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
               )}
             </h2>
             <p className="font-mono text-xs text-muted-foreground">
-              {quarterId} &middot; {activeStorage.name} &middot; {content.length}{" "}
-              {t("invoices.sentInvoices").toLowerCase()}
+              {quarterId} &middot; {activeStorage.name} &middot;{" "}
+              {content.length} {t("invoices.sentInvoices").toLowerCase()}
             </p>
           </div>
           <NewInvoiceDialog quarterId={quarterId} invoices={content} />
