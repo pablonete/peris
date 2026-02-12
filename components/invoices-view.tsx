@@ -55,6 +55,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
   const totalSubtotal = content.reduce((s, i) => s + i.subtotal, 0)
   const totalVat = content.reduce((s, i) => s + i.vat, 0)
   const totalAmount = content.reduce((s, i) => s + i.total, 0)
+  const hasCurrency = content.some((i) => i.currency)
 
   return (
     <div>
@@ -121,9 +122,11 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-right">
                 {t("invoices.total")}
               </TableHead>
-              <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-center">
-                {t("invoices.currency")}
-              </TableHead>
+              {hasCurrency && (
+                <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-center">
+                  {t("invoices.currency")}
+                </TableHead>
+              )}
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-center">
                 {t("invoices.paymentDate")}
               </TableHead>
@@ -162,15 +165,17 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
                 <TableCell className="font-mono text-sm font-semibold text-right">
                   {formatCurrency(inv.total)}
                 </TableCell>
-                <TableCell className="text-center">
-                  {inv.currency ? (
-                    <div className="font-mono text-xs text-muted-foreground">
-                      {inv.currency.symbol} {inv.currency.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground">\u2014</span>
-                  )}
-                </TableCell>
+                {hasCurrency && (
+                  <TableCell className="text-center">
+                    {inv.currency ? (
+                      <div className="font-mono text-xs text-muted-foreground">
+                        {inv.currency.symbol} {inv.currency.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                )}
                 <TableCell className="text-center">
                   <PaymentDateCell paymentDate={inv.paymentDate} />
                 </TableCell>
@@ -191,7 +196,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
               <TableCell className="font-mono text-sm font-bold text-right">
                 {formatCurrency(totalAmount)}
               </TableCell>
-              <TableCell />
+              {hasCurrency && <TableCell />}
               <TableCell />
             </TableRow>
           </TableFooter>

@@ -28,83 +28,21 @@ interface NewInvoiceDialogProps {
   invoices: Invoice[]
 }
 
-function useInvoiceForm() {
-  const today = new Date().toISOString().slice(0, 10)
-
-  const [issueDate, setIssueDate] = useState(today)
-  const [clientName, setClientName] = useState("")
-  const [invoiceNumber, setInvoiceNumber] = useState("")
-  const [serviceDescription, setServiceDescription] = useState("")
-  const [baseAmountStr, setBaseAmountStr] = useState("")
-  const [vatAmountStr, setVatAmountStr] = useState("")
-  const [collected, setCollected] = useState(false)
-  const [collectionDate, setCollectionDate] = useState("")
-  const [filename, setFilename] = useState("")
-  const [file, setFile] = useState<File | null>(null)
-  const [fxEnabled, setFxEnabled] = useState(false)
-  const [fxSymbol, setFxSymbol] = useState("")
-  const [fxRate, setFxRate] = useState("")
-  const [fxTotal, setFxTotal] = useState("")
-
-  const roundTwo = (n: number) => Math.round(n * 100) / 100
-
-  const baseAmount = (() => {
-    const val = Number.parseFloat(baseAmountStr)
-    return Number.isNaN(val) ? 0 : roundTwo(val)
-  })()
-
-  const vatAmount = (() => {
-    const val = Number.parseFloat(vatAmountStr)
-    return Number.isNaN(val) ? 0 : roundTwo(val)
-  })()
-
-  const totalAmount = roundTwo(baseAmount + vatAmount)
-
-  const valid =
-    issueDate &&
-    clientName.trim() &&
-    invoiceNumber.trim() &&
-    serviceDescription.trim() &&
-    baseAmount > 0
-
-  const toggleCollected = (checked: boolean) => {
-    setCollected(checked)
-    setCollectionDate(checked ? new Date().toISOString().slice(0, 10) : "")
-  }
-
-  return {
-    issueDate,
-    setIssueDate,
-    clientName,
-    setClientName,
-    invoiceNumber,
-    setInvoiceNumber,
-    serviceDescription,
-    setServiceDescription,
-    baseAmountStr,
-    setBaseAmountStr,
-    vatAmountStr,
-    setVatAmountStr,
-    collected,
-    toggleCollected,
-    collectionDate,
-    setCollectionDate,
-    filename,
-    setFilename,
-    file,
-    setFile,
-    fxEnabled,
-    setFxEnabled,
-    fxSymbol,
-    setFxSymbol,
-    fxRate,
-    setFxRate,
-    fxTotal,
-    setFxTotal,
-    baseAmount,
-    vatAmount,
-    totalAmount,
-    valid,
+interface InvoiceFormData {
+  date: string
+  client: string
+  number: string
+  concept: string
+  subtotal: string
+  vat: string
+  collected: boolean
+  paymentDate: string
+  filename: string
+  currencyEnabled: boolean
+  currency: {
+    symbol: string
+    rate: string
+    total: string
   }
 }
 
@@ -125,57 +63,102 @@ function InvoiceFormContent({
   const sha = useFileSha(quarterId, "invoices")
   const uploadRef = useRef<HTMLInputElement>(null)
 
-  const form = useInvoiceForm()
+  const today = new Date().toISOString().slice(0, 10)
+  const [invoice, setInvoice] = useState<InvoiceFormData>({
+    date: today,
+    client: "",
+    number: "",
+    concept: "",
+    subtotal: "",
+    vat: "",
+    collected: false,
+    paymentDate: "",
+    filename: "",
+    currencyEnabled: false,
+    currency: {
+      symbol: "",
+      rate: "",
+      total: "",
+    },
+  })
+  const [file, setFile] = useState<File | null>(null)
+
+  const roundTwo = (n: number) => Math.round(n * 100) / 100
+
+  const subtotalNum = roundTwo(Number.parseFloat(invoice.subtotal) || 0)
+  const vatNum = roundTwo(Number.parseFloat(invoice.vat) || 0)
+  const totalNum = roundTwo(subtotalNum + vatNum)
+
+  const isValid =
+    invoice.date &&
+    invoice.client.trim() &&
+    invoice.number.trim() &&
+    invoice.concept.trim() &&
+    subtotalNum > 0
+
+  const setCurrencyField = (
+    field: keyof InvoiceFormData["currency"],
+    value: string
+  ) => {
+    setInvoice({
+      ...invoice,
+      currency: { ...invoice.currency, [field]: value },
+    })
+  }
 
   const selectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const chosen = e.target.files?.[0]
     if (chosen) {
-      form.setFilename(chosen.name)
-      form.setFile(chosen)
+      setInvoice({ ...invoice, filename: chosen.name })
+      setFile(chosen)
     }
   }
 
   const clearFile = () => {
-    form.setFilename("")
-    form.setFile(null)
+    setInvoice({ ...invoice, filename: "" })
+    setFile(null)
     if (uploadRef.current) uploadRef.current.value = ""
   }
 
   const submit = async () => {
-    if (!form.valid) return
+    if (!isValid) return
 
     const id = generateNextId(invoices, "inv")
-    const roundTwo = (n: number) => Math.round(n * 100) / 100
 
     const record: Invoice = {
       id,
-      date: form.issueDate,
-      number: form.invoiceNumber.trim(),
-      client: form.clientName.trim(),
-      concept: form.serviceDescription.trim(),
-      subtotal: form.baseAmount,
-      vat: form.vatAmount,
-      total: form.totalAmount,
-      paymentDate: form.collected ? form.collectionDate : undefined,
-      filename: form.filename || undefined,
+      date: invoice.date,
+      number: invoice.number.trim(),
+      client: invoice.client.trim(),
+      concept: invoice.concept.trim(),
+      subtotal: subtotalNum,
+      vat: vatNum,
+      total: totalNum,
+      paymentDate: invoice.collected ? invoice.paymentDate : undefined,
+      filename: invoice.filename || undefined,
     }
 
-    if (form.fxEnabled && form.fxSymbol.trim() && form.fxRate && form.fxTotal) {
-      const rate = Number.parseFloat(form.fxRate)
-      const total = Number.parseFloat(form.fxTotal)
+    if (
+      invoice.currencyEnabled &&
+      invoice.currency.symbol.trim() &&
+      invoice.currency.rate &&
+      invoice.currency.total
+    ) {
+      const rate = Number.parseFloat(invoice.currency.rate)
+      const total = Number.parseFloat(invoice.currency.total)
       if (!Number.isNaN(rate) && !Number.isNaN(total)) {
         record.currency = {
-          symbol: form.fxSymbol.trim(),
+          symbol: invoice.currency.symbol.trim(),
           rate: roundTwo(rate),
           total: roundTwo(total),
         }
       }
     }
 
-    if (form.file && form.filename) {
+    if (file && invoice.filename) {
       try {
-        const buffer = await readFileAsArrayBuffer(form.file)
-        addAttachment(quarterId, form.filename, buffer)
+        const buffer = await readFileAsArrayBuffer(file)
+        addAttachment(quarterId, invoice.filename, buffer)
       } catch (e) {
         console.error("Attachment error:", e)
       }
@@ -202,27 +185,35 @@ function InvoiceFormContent({
             <Input
               id="inv-date"
               type="date"
-              value={form.issueDate}
-              onChange={(e) => form.setIssueDate(e.target.value)}
+              value={invoice.date}
+              onChange={(e) => setInvoice({ ...invoice, date: e.target.value })}
             />
           </div>
           <div className="grid">
             <div className="flex items-start gap-2">
               <Checkbox
                 id="inv-collected"
-                checked={form.collected}
-                onCheckedChange={(c) => form.toggleCollected(c === true)}
+                checked={invoice.collected}
+                onCheckedChange={(c) =>
+                  setInvoice({
+                    ...invoice,
+                    collected: c === true,
+                    paymentDate: c === true ? today : "",
+                  })
+                }
               />
               <Label htmlFor="inv-collected" className="text-sm">
                 {t("invoices.collected")}
               </Label>
             </div>
-            {form.collected && (
+            {invoice.collected && (
               <Input
                 id="inv-payment-date"
                 type="date"
-                value={form.collectionDate}
-                onChange={(e) => form.setCollectionDate(e.target.value)}
+                value={invoice.paymentDate}
+                onChange={(e) =>
+                  setInvoice({ ...invoice, paymentDate: e.target.value })
+                }
               />
             )}
           </div>
@@ -233,16 +224,16 @@ function InvoiceFormContent({
             <Label htmlFor="inv-client">{t("invoices.client")}</Label>
             <Input
               id="inv-client"
-              value={form.clientName}
-              onChange={(e) => form.setClientName(e.target.value)}
+              value={invoice.client}
+              onChange={(e) => setInvoice({ ...invoice, client: e.target.value })}
             />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="inv-number">{t("invoices.invoiceNumber")}</Label>
             <Input
               id="inv-number"
-              value={form.invoiceNumber}
-              onChange={(e) => form.setInvoiceNumber(e.target.value)}
+              value={invoice.number}
+              onChange={(e) => setInvoice({ ...invoice, number: e.target.value })}
             />
           </div>
         </div>
@@ -251,8 +242,8 @@ function InvoiceFormContent({
           <Label htmlFor="inv-concept">{t("invoices.concept")}</Label>
           <Input
             id="inv-concept"
-            value={form.serviceDescription}
-            onChange={(e) => form.setServiceDescription(e.target.value)}
+            value={invoice.concept}
+            onChange={(e) => setInvoice({ ...invoice, concept: e.target.value })}
           />
         </div>
 
@@ -265,8 +256,10 @@ function InvoiceFormContent({
               inputMode="decimal"
               min="0"
               step="0.01"
-              value={form.baseAmountStr}
-              onChange={(e) => form.setBaseAmountStr(e.target.value)}
+              value={invoice.subtotal}
+              onChange={(e) =>
+                setInvoice({ ...invoice, subtotal: e.target.value })
+              }
             />
           </div>
           <div className="grid gap-2">
@@ -277,94 +270,95 @@ function InvoiceFormContent({
               inputMode="decimal"
               min="0"
               step="0.01"
-              value={form.vatAmountStr}
-              onChange={(e) => form.setVatAmountStr(e.target.value)}
+              value={invoice.vat}
+              onChange={(e) => setInvoice({ ...invoice, vat: e.target.value })}
             />
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="inv-fx"
-            checked={form.fxEnabled}
-            onCheckedChange={(c) => form.setFxEnabled(c === true)}
-          />
-          <Label htmlFor="inv-fx" className="text-sm">
-            {t("invoices.currencyCheckbox")}
-          </Label>
-        </div>
-
-        {form.fxEnabled && (
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="grid gap-2">
-              <Label htmlFor="inv-fx-symbol">
-                {t("invoices.currencySymbol")}
-              </Label>
-              <Input
-                id="inv-fx-symbol"
-                value={form.fxSymbol}
-                onChange={(e) => form.setFxSymbol(e.target.value)}
-                placeholder="USD"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="inv-fx-rate">{t("invoices.currencyRate")}</Label>
-              <Input
-                id="inv-fx-rate"
-                type="number"
-                inputMode="decimal"
-                min="0"
-                step="0.01"
-                value={form.fxRate}
-                onChange={(e) => form.setFxRate(e.target.value)}
-                placeholder="0.74"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="inv-fx-total">
-                {t("invoices.currencyTotal")}
-              </Label>
-              <Input
-                id="inv-fx-total"
-                type="number"
-                inputMode="decimal"
-                min="0"
-                step="0.01"
-                value={form.fxTotal}
-                onChange={(e) => form.setFxTotal(e.target.value)}
-                placeholder="7051.99"
-              />
-            </div>
-          </div>
-        )}
-
         <div className="rounded-sm border border-border bg-secondary/20 px-4 py-3">
-          {form.vatAmount > 0 && (
+          {vatNum > 0 && (
             <>
               <div className="mb-2 flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">
                   {t("invoices.subtotal")}
                 </span>
-                <span className="font-mono">
-                  {formatCurrency(form.baseAmount)}
-                </span>
+                <span className="font-mono">{formatCurrency(subtotalNum)}</span>
               </div>
               <div className="mb-2 flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {t("invoices.vat")}
-                </span>
-                <span className="font-mono">
-                  {formatCurrency(form.vatAmount)}
-                </span>
+                <span className="text-muted-foreground">{t("invoices.vat")}</span>
+                <span className="font-mono">{formatCurrency(vatNum)}</span>
               </div>
             </>
           )}
           <div className="flex items-center justify-between text-sm font-semibold">
             <span>{t("invoices.total")}</span>
             <span className="font-mono text-[hsl(var(--ledger-green))]">
-              {formatCurrency(form.totalAmount)}
+              {formatCurrency(totalNum)}
             </span>
           </div>
+        </div>
+
+        <div className="border-t pt-4">
+          <div className="mb-3 flex items-center gap-2">
+            <Checkbox
+              id="inv-currency"
+              checked={invoice.currencyEnabled}
+              onCheckedChange={(c) =>
+                setInvoice({ ...invoice, currencyEnabled: c === true })
+              }
+            />
+            <Label htmlFor="inv-currency" className="text-sm">
+              {t("invoices.currencyCheckbox")}
+            </Label>
+          </div>
+
+          {invoice.currencyEnabled && (
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-2">
+                <Label htmlFor="inv-currency-symbol">
+                  {t("invoices.currencySymbol")}
+                </Label>
+                <Input
+                  id="inv-currency-symbol"
+                  value={invoice.currency.symbol}
+                  onChange={(e) => setCurrencyField("symbol", e.target.value)}
+                  placeholder="USD"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="inv-currency-rate">
+                  {t("invoices.currencyRate")}
+                </Label>
+                <Input
+                  id="inv-currency-rate"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.01"
+                  value={invoice.currency.rate}
+                  onChange={(e) => setCurrencyField("rate", e.target.value)}
+                  placeholder="0.74"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="inv-currency-total">
+                  {t("invoices.currencyTotal")}
+                </Label>
+                <Input
+                  id="inv-currency-total"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.01"
+                  value={invoice.currency.total}
+                  onChange={(e) => setCurrencyField("total", e.target.value)}
+                  placeholder="7051.99"
+                />
+              </div>
+            </div>
+          )}
+        </div>
         </div>
       </div>
       <DialogFooter className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -377,39 +371,34 @@ function InvoiceFormContent({
             className="hidden"
             accept="image/*,.pdf,.doc,.docx"
           />
-          {!form.filename && (
+          {invoice.filename ? (
+            <div className="flex items-center gap-2 rounded-md border border-border bg-secondary/50 px-3 py-1.5 text-xs">
+              <File className="h-3.5 w-3.5" />
+              <span className="max-w-[180px] truncate">{invoice.filename}</span>
+              <button
+                type="button"
+                onClick={clearFile}
+                className="ml-1 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => uploadRef.current?.click()}
-              className="gap-2"
             >
-              <File className="h-4 w-4" />
               {t("expenses.attachFile")}
             </Button>
-          )}
-          {form.filename && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <File className="h-3.5 w-3.5" />
-              <span className="max-w-[180px] truncate">{form.filename}</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={clearFile}
-                className="h-7 w-7"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
           )}
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={onCancel}>
             {t("invoices.cancel")}
           </Button>
-          <Button onClick={submit} disabled={!form.valid}>
+          <Button onClick={submit} disabled={!isValid}>
             {t("invoices.createInvoice")}
           </Button>
         </div>
