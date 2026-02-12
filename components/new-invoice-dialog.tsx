@@ -225,7 +225,9 @@ function InvoiceFormContent({
             <Input
               id="inv-client"
               value={invoice.client}
-              onChange={(e) => setInvoice({ ...invoice, client: e.target.value })}
+              onChange={(e) =>
+                setInvoice({ ...invoice, client: e.target.value })
+              }
             />
           </div>
           <div className="grid gap-2">
@@ -233,7 +235,9 @@ function InvoiceFormContent({
             <Input
               id="inv-number"
               value={invoice.number}
-              onChange={(e) => setInvoice({ ...invoice, number: e.target.value })}
+              onChange={(e) =>
+                setInvoice({ ...invoice, number: e.target.value })
+              }
             />
           </div>
         </div>
@@ -243,7 +247,9 @@ function InvoiceFormContent({
           <Input
             id="inv-concept"
             value={invoice.concept}
-            onChange={(e) => setInvoice({ ...invoice, concept: e.target.value })}
+            onChange={(e) =>
+              setInvoice({ ...invoice, concept: e.target.value })
+            }
           />
         </div>
 
@@ -286,7 +292,9 @@ function InvoiceFormContent({
                 <span className="font-mono">{formatCurrency(subtotalNum)}</span>
               </div>
               <div className="mb-2 flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">{t("invoices.vat")}</span>
+                <span className="text-muted-foreground">
+                  {t("invoices.vat")}
+                </span>
                 <span className="font-mono">{formatCurrency(vatNum)}</span>
               </div>
             </>
@@ -358,7 +366,6 @@ function InvoiceFormContent({
               </div>
             </div>
           )}
-        </div>
         </div>
       </div>
       <DialogFooter className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
