@@ -16,7 +16,7 @@ export interface VatItem {
 export interface InvoiceCurrency {
   /** Currency symbol (e.g., "USD", "GBP") */
   symbol: string
-  /** Exchange rate applied */
+  /** Exchange rate applied (foreign currency per EUR, e.g., 1.1 means 1 EUR = 1.1 USD) */
   rate: number
   /** Total amount in foreign currency */
   total: number
