@@ -11,6 +11,18 @@ export interface VatItem {
 }
 
 /**
+ * Represents currency information for invoices in foreign currency.
+ */
+export interface InvoiceCurrency {
+  /** Currency symbol (e.g., "USD", "GBP") */
+  symbol: string
+  /** Exchange rate applied */
+  rate: number
+  /** Total amount in foreign currency */
+  total: number
+}
+
+/**
  * Represents an invoice issued to a client.
  */
 export interface Invoice {
@@ -33,6 +45,8 @@ export interface Invoice {
   paymentDate?: string
   /** PDF filename stored in the quarter's invoices folder */
   filename?: string
+  /** Optional currency information for foreign currency invoices */
+  currency?: InvoiceCurrency
 }
 
 /**
