@@ -1,7 +1,6 @@
 "use client"
 import { cn } from "@/lib/utils"
-import { useStorageQuarters } from "@/lib/use-storage-quarters"
-import { useEditingState } from "@/lib/editing-state-context"
+import { useData } from "@/lib/data"
 import { FileText, Receipt, ArrowRightLeft, BookOpen } from "lucide-react"
 import { useLanguage } from "@/lib/i18n-context"
 import { StorageSelector } from "./storage-selector"
@@ -26,8 +25,7 @@ export function LedgerSidebar({
 }: LedgerSidebarProps) {
   const { language, setLanguage, t } = useLanguage()
   const router = useRouter()
-  const { quarters, error: quartersError } = useStorageQuarters()
-  const { getEditingFile } = useEditingState()
+  const { quarters, quartersError, getEditingFile } = useData()
 
   const viewItems: { key: ViewType; label: string; icon: typeof FileText }[] = [
     { key: "invoices", label: t("sidebar.invoices"), icon: FileText },
@@ -282,7 +280,7 @@ function SelectedQuarterRow({
   formatQuarterLabel: (qId: string) => string
   viewItems: { key: ViewType; label: string; icon: typeof FileText }[]
   selectedView: ViewType | null
-  getEditingFile: (qId: string, key: string) => any
+  getEditingFile: (qId: string, key: ViewType) => any
   onSidebarClose?: () => void
   t: (key: string) => string
 }) {
@@ -356,7 +354,7 @@ function NonSelectedQuarterRow({
   hasEdits: boolean
   formatQuarterLabel: (qId: string) => string
   viewItems: { key: ViewType; label: string; icon: typeof FileText }[]
-  getEditingFile: (qId: string, key: string) => any
+  getEditingFile: (qId: string, key: ViewType) => any
   router: ReturnType<typeof useRouter>
   t: (key: string) => string
 }) {

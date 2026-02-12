@@ -2,7 +2,7 @@
 
 import { Octokit } from "@octokit/rest"
 import { parseStorageUrl } from "./storage-types"
-import { QuarterData, Invoice, Expense, CashflowEntry } from "./types"
+import { QuarterData, Invoice, Expense, CashflowEntry } from "@/lib/types"
 
 export interface CashflowFileData {
   companyName: string

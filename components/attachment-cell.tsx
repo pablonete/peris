@@ -1,7 +1,7 @@
 import { Paperclip } from "lucide-react"
-import { getFileUrl } from "@/lib/storage-types"
+import { getFileUrl } from "@/lib/data/infrastructure/storage-types"
 import { useLanguage } from "@/lib/i18n-context"
-import { Storage } from "@/lib/storage-types"
+import { Storage } from "@/lib/data"
 import {
   Tooltip,
   TooltipContent,

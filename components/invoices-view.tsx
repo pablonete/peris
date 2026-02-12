@@ -1,9 +1,7 @@
 "use client"
 
 import { formatCurrency, formatDate } from "@/lib/ledger-utils"
-import { useStorageData } from "@/lib/use-storage-data"
-import { useStorage } from "@/lib/storage-context"
-import { useEditingState } from "@/lib/editing-state-context"
+import { useData } from "@/lib/data"
 import {
   Table,
   TableBody,
@@ -27,9 +25,13 @@ interface InvoicesViewProps {
 
 export function InvoicesView({ quarterId }: InvoicesViewProps) {
   const { t } = useLanguage()
-  const { activeStorage } = useStorage()
-  const { getEditingFile } = useEditingState()
-  const { content, isPending, error } = useStorageData(quarterId, "invoices")
+  const { activeStorage, getEditingFile, loadInvoices } = useData()
+  const {
+    content,
+    isPending,
+    error,
+    isEditing: isEditingFromHook,
+  } = loadInvoices(quarterId)
   const isEditing = !!getEditingFile(quarterId, "invoices")
 
   if (isPending) {
@@ -169,7 +171,11 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
                   <TableCell className="text-center">
                     {inv.currency ? (
                       <div className="font-mono text-xs text-muted-foreground">
-                        {inv.currency.symbol} {inv.currency.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {inv.currency.symbol}{" "}
+                        {inv.currency.total.toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </div>
                     ) : (
                       <span className="text-muted-foreground">—</span>

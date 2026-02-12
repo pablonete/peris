@@ -2,10 +2,7 @@
 
 import { useState } from "react"
 import { formatCurrency, formatDate } from "@/lib/ledger-utils"
-import { useStorage } from "@/lib/storage-context"
-import { useStorageData } from "@/lib/use-storage-data"
-import { useStorageQuarters } from "@/lib/use-storage-quarters"
-import { useEditingState } from "@/lib/editing-state-context"
+import { useData } from "@/lib/data"
 import {
   Table,
   TableBody,
@@ -33,10 +30,8 @@ export function CashflowView({
   onNavigateToQuarter,
 }: CashflowViewProps) {
   const { t } = useLanguage()
-  const { activeStorage } = useStorage()
-  const { quarters } = useStorageQuarters()
-  const { getEditingFile } = useEditingState()
-  const { content, isPending, error } = useStorageData(quarterId, "cashflow")
+  const { activeStorage, quarters, getEditingFile, loadCashflow } = useData()
+  const { content, isPending, error } = loadCashflow(quarterId)
   const isEditing = !!getEditingFile(quarterId, "cashflow")
 
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
