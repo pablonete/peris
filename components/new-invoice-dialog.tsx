@@ -1,8 +1,8 @@
 "use client"
 
-import { useRef, useState } from "react"
-import { Plus, X, File } from "lucide-react"
-import { formatCurrency } from "@/lib/ledger-utils"
+import { useRef, useState, useMemo } from "react"
+import { Plus, X, File, AlertCircle } from "lucide-react"
+import { formatCurrency, getQuarterFromDate } from "@/lib/ledger-utils"
 import { generateNextId } from "@/lib/id-utils"
 import { readFileAsArrayBuffer } from "@/lib/file-utils"
 import { useEditingState } from "@/lib/editing-state-context"
@@ -20,6 +20,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -62,6 +68,7 @@ function InvoiceFormContent({
   onSuccess,
   onCancel,
   targetQuarterId,
+  mode = "new",
 }: {
   quarterId: string
   invoices: Invoice[]
@@ -69,8 +76,11 @@ function InvoiceFormContent({
   onSuccess: () => void
   onCancel: () => void
   targetQuarterId?: string
+  mode?: "new" | "duplicate"
 }) {
   const { t } = useLanguage()
+  const router = useRouter()
+  const { quarters } = useStorageQuarters()
   const { getEditingFile, setEditingFile, addAttachment } = useEditingState()
   const editingFile = getEditingFile(quarterId, "invoices")
   const sha = useFileSha(quarterId, "invoices")
@@ -107,12 +117,23 @@ function InvoiceFormContent({
   const vatNum = roundTwo(Number.parseFloat(invoice.vat) || 0)
   const totalNum = roundTwo(subtotalNum + vatNum)
 
+  const calculatedTargetQuarter = useMemo(() => {
+    if (!invoice.date) return quarterId
+    return getQuarterFromDate(invoice.date)
+  }, [invoice.date, quarterId])
+
+  const targetQuarterSha = useFileSha(calculatedTargetQuarter, "invoices")
+
+  const isDifferentQuarter = calculatedTargetQuarter !== quarterId
+  const quarterExists = quarters.includes(calculatedTargetQuarter)
+
   const isValid =
     invoice.date &&
     invoice.client.trim() &&
     invoice.number.trim() &&
     invoice.concept.trim() &&
-    subtotalNum > 0
+    subtotalNum > 0 &&
+    quarterExists
 
   const setCurrencyField = (
     field: keyof InvoiceFormData["currency"],
@@ -141,16 +162,20 @@ function InvoiceFormContent({
   const submit = async () => {
     if (!isValid) return
 
-    const effectiveQuarterId = targetQuarterId || quarterId
-    const targetData = targetQuarterId
-      ? getEditingFile(targetQuarterId, "invoices")?.data
-      : undefined
-    const effectiveInvoices: Invoice[] = targetQuarterId
-      ? (Array.isArray(targetData) ? targetData : []) as Invoice[]
-      : invoices
-    const effectiveSha = targetQuarterId
-      ? getEditingFile(targetQuarterId, "invoices")?.sha ?? targetSha
-      : editingFile?.sha ?? sha
+    const effectiveQuarterId = calculatedTargetQuarter
+    const targetData =
+      calculatedTargetQuarter !== quarterId
+        ? getEditingFile(calculatedTargetQuarter, "invoices")?.data
+        : undefined
+    const effectiveInvoices: Invoice[] =
+      calculatedTargetQuarter !== quarterId
+        ? (Array.isArray(targetData) ? targetData : []) as Invoice[]
+        : invoices
+    const effectiveSha =
+      calculatedTargetQuarter !== quarterId
+        ? getEditingFile(calculatedTargetQuarter, "invoices")?.sha ??
+          targetQuarterSha
+        : editingFile?.sha ?? sha
 
     const id = generateNextId(effectiveInvoices, "inv")
 
@@ -197,25 +222,57 @@ function InvoiceFormContent({
       a.date.localeCompare(b.date)
     )
     setEditingFile(effectiveQuarterId, "invoices", updated, effectiveSha)
-    onSuccess()
+
+    if (isDifferentQuarter) {
+      onSuccess()
+      router.push(`/invoices?q=${effectiveQuarterId}`)
+    } else {
+      onSuccess()
+    }
   }
+
+  const dialogTitle =
+    mode === "duplicate"
+      ? t("invoices.duplicateInvoice")
+      : t("invoices.newInvoice")
 
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{t("invoices.newInvoice")}</DialogTitle>
-        <DialogDescription>{t("invoices.newInvoiceDesc")}</DialogDescription>
+        <DialogTitle>{dialogTitle}</DialogTitle>
+        {mode === "new" && (
+          <DialogDescription>{t("invoices.newInvoiceDesc")}</DialogDescription>
+        )}
       </DialogHeader>
       <div className="grid gap-4 py-2">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-2">
-            <Label htmlFor="inv-date">{t("invoices.invoiceDate")}</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="inv-date">{t("invoices.invoiceDate")}</Label>
+              {isDifferentQuarter && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <AlertCircle className="h-4 w-4 text-orange-600" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{t("invoices.differentQuarterWarning")}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
             <Input
               id="inv-date"
               type="date"
               value={invoice.date}
               onChange={(e) => setInvoice({ ...invoice, date: e.target.value })}
             />
+            {!quarterExists && invoice.date && (
+              <p className="text-sm text-red-600">
+                {t("invoices.quarterNotFound")}
+              </p>
+            )}
           </div>
           <div className="grid">
             <div className="flex items-start gap-2">
@@ -434,7 +491,9 @@ function InvoiceFormContent({
             {t("invoices.cancel")}
           </Button>
           <Button onClick={submit} disabled={!isValid}>
-            {t("invoices.createInvoice")}
+            {isDifferentQuarter
+              ? `${t("invoices.createInvoiceTo")} ${calculatedTargetQuarter}`
+              : t("invoices.createInvoice")}
           </Button>
         </div>
       </DialogFooter>
@@ -475,60 +534,15 @@ export function DuplicateInvoiceDialog({
   invoice,
   onClose,
 }: DuplicateInvoiceDialogProps) {
-  const { t } = useLanguage()
-  const router = useRouter()
-  const { quarters } = useStorageQuarters()
-  const [targetQuarter, setTargetQuarter] = useState(quarterId)
-  const [quarterError, setQuarterError] = useState<string | null>(null)
-
-  const validateQuarter = (quarter: string) => {
-    if (!quarter.trim()) {
-      setQuarterError(null)
-      return
-    }
-    if (!quarters.includes(quarter)) {
-      setQuarterError(t("invoices.quarterNotFound"))
-    } else {
-      setQuarterError(null)
-    }
-  }
-
-  const handleQuarterChange = (value: string) => {
-    setTargetQuarter(value)
-    validateQuarter(value)
-  }
-
-  const handleSuccess = () => {
-    onClose()
-    if (targetQuarter !== quarterId && !quarterError) {
-      router.push(`/invoices?q=${targetQuarter}`)
-    }
-  }
-
   return (
     <Dialog open={!!invoice} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[560px]">
-        <DialogHeader>
-          <DialogTitle>{t("invoices.duplicateInvoice")}</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-2 pb-4">
-          <Label htmlFor="target-quarter">{t("invoices.duplicateToQuarter")}</Label>
-          <Input
-            id="target-quarter"
-            value={targetQuarter}
-            onChange={(e) => handleQuarterChange(e.target.value)}
-            placeholder="2025.1Q"
-          />
-          {quarterError && (
-            <p className="text-sm text-red-600">{quarterError}</p>
-          )}
-        </div>
         <InvoiceFormContent
           quarterId={quarterId}
           invoices={invoices}
           initialInvoice={invoice}
-          targetQuarterId={targetQuarter !== quarterId && !quarterError ? targetQuarter : undefined}
-          onSuccess={handleSuccess}
+          mode="duplicate"
+          onSuccess={onClose}
           onCancel={onClose}
         />
       </DialogContent>

@@ -1,8 +1,8 @@
 "use client"
 
-import { useRef, useState } from "react"
-import { Plus, X, File } from "lucide-react"
-import { formatCurrency } from "@/lib/ledger-utils"
+import { useRef, useState, useMemo } from "react"
+import { Plus, X, File, AlertCircle } from "lucide-react"
+import { formatCurrency, getQuarterFromDate } from "@/lib/ledger-utils"
 import { generateNextId } from "@/lib/id-utils"
 import { readFileAsArrayBuffer } from "@/lib/file-utils"
 import { useEditingState } from "@/lib/editing-state-context"
@@ -20,6 +20,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -88,6 +94,7 @@ interface ExpenseDialogContentProps {
   onSuccess: () => void
   onCancel: () => void
   targetQuarterId?: string
+  mode?: "new" | "duplicate"
 }
 
 function ExpenseDialogContent({
@@ -97,8 +104,11 @@ function ExpenseDialogContent({
   onSuccess,
   onCancel,
   targetQuarterId,
+  mode = "new",
 }: ExpenseDialogContentProps) {
   const { t } = useLanguage()
+  const router = useRouter()
+  const { quarters } = useStorageQuarters()
   const { getEditingFile, setEditingFile } = useEditingState()
   const editingFile = getEditingFile(quarterId, "expenses")
   const fileSha = useFileSha(quarterId, "expenses")
@@ -172,22 +182,40 @@ function ExpenseDialogContent({
 
   const numeric = getNumeric(vatLines, applyIrpf)
 
+  const calculatedTargetQuarter = useMemo(() => {
+    if (!expenseDate) return quarterId
+    return getQuarterFromDate(expenseDate)
+  }, [expenseDate, quarterId])
+
+  const targetQuarterSha = useFileSha(calculatedTargetQuarter, "expenses")
+
+  const isDifferentQuarter = calculatedTargetQuarter !== quarterId
+  const quarterExists = quarters.includes(calculatedTargetQuarter)
+
   const isValid =
-    expenseDate && vendor.trim() && concept.trim() && numeric.baseAmount > 0
+    expenseDate &&
+    vendor.trim() &&
+    concept.trim() &&
+    numeric.baseAmount > 0 &&
+    quarterExists
 
   const handleSubmit = async () => {
     if (!isValid) return
 
-    const effectiveQuarterId = targetQuarterId || quarterId
-    const targetData = targetQuarterId
-      ? getEditingFile(targetQuarterId, "expenses")?.data
-      : undefined
-    const effectiveExpenses: Expense[] = targetQuarterId
-      ? (Array.isArray(targetData) ? targetData : []) as Expense[]
-      : expenses
-    const effectiveSha = targetQuarterId
-      ? getEditingFile(targetQuarterId, "expenses")?.sha ?? targetSha
-      : editingFile?.sha ?? fileSha
+    const effectiveQuarterId = calculatedTargetQuarter
+    const targetData =
+      calculatedTargetQuarter !== quarterId
+        ? getEditingFile(calculatedTargetQuarter, "expenses")?.data
+        : undefined
+    const effectiveExpenses: Expense[] =
+      calculatedTargetQuarter !== quarterId
+        ? (Array.isArray(targetData) ? targetData : []) as Expense[]
+        : expenses
+    const effectiveSha =
+      calculatedTargetQuarter !== quarterId
+        ? getEditingFile(calculatedTargetQuarter, "expenses")?.sha ??
+          targetQuarterSha
+        : editingFile?.sha ?? fileSha
 
     const id = generateNextId(effectiveExpenses, "exp")
 
@@ -219,25 +247,57 @@ function ExpenseDialogContent({
       a.date.localeCompare(b.date)
     )
     setEditingFile(effectiveQuarterId, "expenses", nextExpenses, effectiveSha)
-    onSuccess()
+
+    if (isDifferentQuarter) {
+      onSuccess()
+      router.push(`/expenses?q=${effectiveQuarterId}`)
+    } else {
+      onSuccess()
+    }
   }
+
+  const dialogTitle =
+    mode === "duplicate"
+      ? t("expenses.duplicateExpense")
+      : t("expenses.newExpense")
 
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{t("expenses.newExpense")}</DialogTitle>
-        <DialogDescription>{t("expenses.newExpenseDesc")}</DialogDescription>
+        <DialogTitle>{dialogTitle}</DialogTitle>
+        {mode === "new" && (
+          <DialogDescription>{t("expenses.newExpenseDesc")}</DialogDescription>
+        )}
       </DialogHeader>
       <div className="grid gap-4 py-2">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-2">
-            <Label htmlFor="expense-date">{t("expenses.expenseDate")}</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="expense-date">{t("expenses.expenseDate")}</Label>
+              {isDifferentQuarter && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <AlertCircle className="h-4 w-4 text-orange-600" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{t("expenses.differentQuarterWarning")}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
             <Input
               id="expense-date"
               type="date"
               value={expenseDate}
               onChange={(e) => setExpenseDate(e.target.value)}
             />
+            {!quarterExists && expenseDate && (
+              <p className="text-sm text-red-600">
+                {t("expenses.quarterNotFound")}
+              </p>
+            )}
           </div>
           <div className="grid">
             <div className="flex items-start gap-2">
@@ -463,7 +523,9 @@ function ExpenseDialogContent({
             {t("expenses.cancel")}
           </Button>
           <Button onClick={handleSubmit} disabled={!isValid}>
-            {t("expenses.createExpense")}
+            {isDifferentQuarter
+              ? `${t("expenses.createExpenseTo")} ${calculatedTargetQuarter}`
+              : t("expenses.createExpense")}
           </Button>
         </div>
       </DialogFooter>
@@ -504,60 +566,15 @@ export function DuplicateExpenseDialog({
   expense,
   onClose,
 }: DuplicateExpenseDialogProps) {
-  const { t } = useLanguage()
-  const router = useRouter()
-  const { quarters } = useStorageQuarters()
-  const [targetQuarter, setTargetQuarter] = useState(quarterId)
-  const [quarterError, setQuarterError] = useState<string | null>(null)
-
-  const validateQuarter = (quarter: string) => {
-    if (!quarter.trim()) {
-      setQuarterError(null)
-      return
-    }
-    if (!quarters.includes(quarter)) {
-      setQuarterError(t("expenses.quarterNotFound"))
-    } else {
-      setQuarterError(null)
-    }
-  }
-
-  const handleQuarterChange = (value: string) => {
-    setTargetQuarter(value)
-    validateQuarter(value)
-  }
-
-  const handleSuccess = () => {
-    onClose()
-    if (targetQuarter !== quarterId && !quarterError) {
-      router.push(`/expenses?q=${targetQuarter}`)
-    }
-  }
-
   return (
     <Dialog open={!!expense} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[560px]">
-        <DialogHeader>
-          <DialogTitle>{t("expenses.duplicateExpense")}</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-2 pb-4">
-          <Label htmlFor="target-quarter">{t("expenses.duplicateToQuarter")}</Label>
-          <Input
-            id="target-quarter"
-            value={targetQuarter}
-            onChange={(e) => handleQuarterChange(e.target.value)}
-            placeholder="2025.1Q"
-          />
-          {quarterError && (
-            <p className="text-sm text-red-600">{quarterError}</p>
-          )}
-        </div>
         <ExpenseDialogContent
           quarterId={quarterId}
           expenses={expenses}
           initialExpense={expense}
-          targetQuarterId={targetQuarter !== quarterId && !quarterError ? targetQuarter : undefined}
-          onSuccess={handleSuccess}
+          mode="duplicate"
+          onSuccess={onClose}
           onCancel={onClose}
         />
       </DialogContent>

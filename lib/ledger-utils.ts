@@ -14,3 +14,11 @@ export function formatDate(dateStr: string): string {
     year: "numeric",
   })
 }
+
+export function getQuarterFromDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  const year = date.getFullYear()
+  const month = date.getMonth() + 1
+  const quarter = Math.ceil(month / 3)
+  return `${year}.${quarter}Q`
+}
