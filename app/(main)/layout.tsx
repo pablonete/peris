@@ -9,8 +9,15 @@ import { Menu, X } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 
-function MainLayoutInner({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+function LayoutContent({
+  children,
+  sidebarOpen,
+  setSidebarOpen,
+}: {
+  children: React.ReactNode
+  sidebarOpen: boolean
+  setSidebarOpen: (open: boolean) => void
+}) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { error } = useEditingState()
@@ -108,9 +115,13 @@ export default function MainLayout({
 }: {
   children: React.ReactNode
 }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
   return (
-    <Suspense>
-      <MainLayoutInner>{children}</MainLayoutInner>
+    <Suspense fallback={<div className="flex h-screen bg-background" />}>
+      <LayoutContent sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
+        {children}
+      </LayoutContent>
     </Suspense>
   )
 }

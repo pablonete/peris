@@ -20,18 +20,14 @@ interface StorageContextType {
 const StorageContext = createContext<StorageContextType | undefined>(undefined)
 
 export function StorageProvider({ children }: { children: React.ReactNode }) {
-  const [userStorages, setUserStorages] = useState<Storage[]>([])
-  const [activeStorageName, setActiveStorageName] = useState<string>(
-    SAMPLE_STORAGE.name
-  )
-
-  useEffect(() => {
+  const [userStorages, setUserStorages] = useState<Storage[]>(() => {
     const config = loadStorageConfig()
-    if (config) {
-      setUserStorages(config.storages.length > 0 ? config.storages : [])
-      setActiveStorageName(config.activeStorageName || SAMPLE_STORAGE.name)
-    }
-  }, [])
+    return config && config.storages.length > 0 ? config.storages : []
+  })
+  const [activeStorageName, setActiveStorageName] = useState<string>(() => {
+    const config = loadStorageConfig()
+    return config?.activeStorageName || SAMPLE_STORAGE.name
+  })
 
   useEffect(() => {
     const config: StorageConfig = {

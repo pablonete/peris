@@ -374,7 +374,7 @@ function ExpenseDialogContent({
               </div>
               {numeric.vatItems.map((item, idx) => (
                 <div
-                  key={idx}
+                  key={`${item.rate}-${item.subtotal}`}
                   className="mb-2 flex items-center justify-between text-sm"
                 >
                   <span className="text-muted-foreground">

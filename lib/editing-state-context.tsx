@@ -170,10 +170,10 @@ export function EditingStateProvider({
       await queryClient.invalidateQueries()
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
-      throw err
-    } finally {
       setIsCommitting(false)
+      throw err
     }
+    setIsCommitting(false)
   }
 
   return (
