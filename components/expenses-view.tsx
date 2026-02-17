@@ -94,7 +94,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
             {t("expenses.expenses")}
             {isEditing && (
               <span
-                className="h-2 w-2 rounded-full bg-green-600"
+                className="h-2 w-2 rounded-full bg-[hsl(var(--ledger-blue))]"
                 aria-label="Editing"
               />
             )}
@@ -227,7 +227,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                     {formatCurrency(exp.total)}
                   </TableCell>
                   <TableCell className="text-center">
-                    <PaymentDateCell paymentDate={exp.paymentDate} />
+                    <PaymentDateCell paymentDate={exp.paymentDate} variant="expense" />
                   </TableCell>
                   <TableCell className="text-center">
                     <ExpenseRowActions

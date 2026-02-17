@@ -97,7 +97,7 @@ export function CashflowView({
           {t("cashflow.cashflow")}
           {isEditing && (
             <span
-              className="h-2 w-2 rounded-full bg-green-600"
+              className="h-2 w-2 rounded-full bg-[hsl(var(--ledger-blue))]"
               aria-label="Editing"
             />
           )}

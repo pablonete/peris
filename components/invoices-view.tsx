@@ -78,7 +78,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
               {t("invoices.sentInvoices")}
               {isEditing && (
                 <span
-                  className="h-2 w-2 rounded-full bg-green-600"
+                  className="h-2 w-2 rounded-full bg-[hsl(var(--ledger-blue))]"
                   aria-label="Editing"
                 />
               )}
@@ -182,7 +182,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
                   <TableCell className="font-mono text-xs text-right text-muted-foreground">
                     {inv.vat > 0 ? formatCurrency(inv.vat) : "\u2014"}
                   </TableCell>
-                  <TableCell className="font-mono text-sm font-semibold text-right">
+                  <TableCell className="font-mono text-sm font-semibold text-right text-[hsl(var(--ledger-green))]">
                     {formatCurrency(inv.total)}
                   </TableCell>
                   {hasCurrency && (
@@ -225,7 +225,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
               <TableCell className="font-mono text-xs font-semibold text-right">
                 {formatCurrency(totalVat)}
               </TableCell>
-              <TableCell className="font-mono text-sm font-bold text-right">
+              <TableCell className="font-mono text-sm font-bold text-right text-[hsl(var(--ledger-green))]">
                 {formatCurrency(totalAmount)}
               </TableCell>
               {hasCurrency && <TableCell />}
