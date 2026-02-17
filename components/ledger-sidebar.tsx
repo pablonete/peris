@@ -111,42 +111,45 @@ export function LedgerSidebar({
             return (
               <li key={year}>
                 <ul className="flex flex-col gap-1">
-                  {yearQuarters.map((qId) => {
-                    const isQuarterSelected = selectedQuarter === qId
-                    const hasEdits =
-                      !!getEditingFile(qId, "invoices") ||
-                      !!getEditingFile(qId, "expenses") ||
-                      !!getEditingFile(qId, "cashflow")
+                  {yearQuarters
+                    .slice()
+                    .reverse()
+                    .map((qId) => {
+                      const isQuarterSelected = selectedQuarter === qId
+                      const hasEdits =
+                        !!getEditingFile(qId, "invoices") ||
+                        !!getEditingFile(qId, "expenses") ||
+                        !!getEditingFile(qId, "cashflow")
 
-                    if (isQuarterSelected) {
+                      if (isQuarterSelected) {
+                        return (
+                          <SelectedQuarterRow
+                            key={qId}
+                            quarterId={qId}
+                            hasEdits={hasEdits}
+                            formatQuarterLabel={formatQuarterLabel}
+                            viewItems={viewItems}
+                            selectedView={selectedView}
+                            getEditingFile={getEditingFile}
+                            onSidebarClose={onSidebarClose}
+                            t={t}
+                          />
+                        )
+                      }
+
                       return (
-                        <SelectedQuarterRow
+                        <NonSelectedQuarterRow
                           key={qId}
                           quarterId={qId}
                           hasEdits={hasEdits}
                           formatQuarterLabel={formatQuarterLabel}
                           viewItems={viewItems}
-                          selectedView={selectedView}
                           getEditingFile={getEditingFile}
-                          onSidebarClose={onSidebarClose}
+                          router={router}
                           t={t}
                         />
                       )
-                    }
-
-                    return (
-                      <NonSelectedQuarterRow
-                        key={qId}
-                        quarterId={qId}
-                        hasEdits={hasEdits}
-                        formatQuarterLabel={formatQuarterLabel}
-                        viewItems={viewItems}
-                        getEditingFile={getEditingFile}
-                        router={router}
-                        t={t}
-                      />
-                    )
-                  })}
+                    })}
                 </ul>
               </li>
             )
@@ -227,9 +230,7 @@ function CollapsedYearRow({
         <button
           type="button"
           onClick={() => {
-            const firstQuarter =
-              quarters.find((q) => q.endsWith(".Q1")) || quarters[0]
-            router.push(`/invoices?q=${firstQuarter}`)
+            router.push(`/invoices?q=${quarters[0]}`)
           }}
           className="flex flex-1 items-center gap-2 px-3 py-2.5 text-left text-sm transition-colors text-sidebar-foreground/80"
         >
