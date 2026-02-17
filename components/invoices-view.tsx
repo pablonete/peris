@@ -169,7 +169,11 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
                   <TableCell className="text-center">
                     {inv.currency ? (
                       <div className="font-mono text-xs text-muted-foreground">
-                        {inv.currency.symbol} {inv.currency.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {inv.currency.symbol}{" "}
+                        {inv.currency.total.toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </div>
                     ) : (
                       <span className="text-muted-foreground">—</span>

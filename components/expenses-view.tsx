@@ -1,11 +1,13 @@
 "use client"
 
 import { useState } from "react"
+import { ChevronDown, ChevronUp } from "lucide-react"
 import { formatCurrency, formatDate } from "@/lib/ledger-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useStorage } from "@/lib/storage-context"
 import { useEditingState } from "@/lib/editing-state-context"
 import { Expense } from "@/lib/types"
+import { getVatSubtotals } from "@/lib/vat-subtotals"
 import {
   Table,
   TableBody,
@@ -26,6 +28,7 @@ import {
 import { ExpenseRowActions } from "@/components/expense-row-actions"
 import { DeleteExpenseAlert } from "@/components/delete-expense-alert"
 import { useLanguage } from "@/lib/i18n-context"
+import { Button } from "@/components/ui/button"
 
 interface ExpensesViewProps {
   quarterId: string
@@ -39,6 +42,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
   const isEditing = !!getEditingFile(quarterId, "expenses")
   const [deleteAlert, setDeleteAlert] = useState<string | null>(null)
   const [duplicateExpense, setDuplicateExpense] = useState<Expense | null>(null)
+  const [showVatSubtotals, setShowVatSubtotals] = useState(false)
 
   if (isPending) {
     return (
@@ -72,6 +76,8 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
   const pendingExpenses = expenses
     .filter((e) => e.paymentDate == null)
     .reduce((s, e) => s + e.total, 0)
+
+  const vatSubtotals = getVatSubtotals(expenses)
 
   const handleDeleteExpense = (id: string) => {
     const nextExpenses = expenses.filter((e) => e.id !== id)
@@ -250,8 +256,49 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                 {formatCurrency(totalExpensesAmount)}
               </TableCell>
               <TableCell />
-              <TableCell />
+              <TableCell className="text-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowVatSubtotals(!showVatSubtotals)}
+                  className="h-6 px-2 text-[10px] font-mono"
+                >
+                  {showVatSubtotals ? (
+                    <ChevronUp className="h-3 w-3 mr-1" />
+                  ) : (
+                    <ChevronDown className="h-3 w-3 mr-1" />
+                  )}
+                  {t("expenses.vatSubtotal")}
+                </Button>
+              </TableCell>
             </TableRow>
+            {showVatSubtotals &&
+              vatSubtotals.map((subtotal) => (
+                <TableRow
+                  key={subtotal.rate}
+                  className="border-t border-dashed border-border/30 bg-secondary/10 hover:bg-secondary/10"
+                >
+                  <TableCell
+                    colSpan={5}
+                    className="font-mono text-[10px] text-muted-foreground/60 py-2"
+                  >
+                    {t("expenses.vatSubtotal")} {subtotal.rate}% (
+                    {subtotal.count} {t("expenses.items")})
+                  </TableCell>
+                  <TableCell className="font-mono text-[10px] text-right py-2">
+                    {formatCurrency(subtotal.subtotal)}
+                  </TableCell>
+                  <TableCell className="font-mono text-[10px] text-right py-2">
+                    {formatCurrency(subtotal.vat)}
+                  </TableCell>
+                  <TableCell className="py-2" />
+                  <TableCell className="font-mono text-[10px] text-right py-2">
+                    {formatCurrency(subtotal.total)}
+                  </TableCell>
+                  <TableCell className="py-2" />
+                  <TableCell className="py-2" />
+                </TableRow>
+              ))}
           </TableFooter>
         </Table>
       </div>
