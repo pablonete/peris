@@ -13,3 +13,6 @@ next-env.d.ts
 .DS_Store
 /out
 tsconfig.tsbuildinfo
+
+# Test coverage
+coverage/
