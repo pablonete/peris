@@ -9,6 +9,8 @@ import { useEditingState } from "@/lib/editing-state-context"
 import { useFileSha } from "@/lib/use-storage-data"
 import { Invoice } from "@/lib/types"
 import { useLanguage } from "@/lib/i18n-context"
+import { useStorageQuarters } from "@/lib/use-storage-quarters"
+import { useRouter } from "next/navigation"
 import {
   Dialog,
   DialogContent,
@@ -59,17 +61,20 @@ function InvoiceFormContent({
   initialInvoice,
   onSuccess,
   onCancel,
+  targetQuarterId,
 }: {
   quarterId: string
   invoices: Invoice[]
   initialInvoice?: Invoice | null
   onSuccess: () => void
   onCancel: () => void
+  targetQuarterId?: string
 }) {
   const { t } = useLanguage()
   const { getEditingFile, setEditingFile, addAttachment } = useEditingState()
   const editingFile = getEditingFile(quarterId, "invoices")
   const sha = useFileSha(quarterId, "invoices")
+  const targetSha = useFileSha(targetQuarterId || quarterId, "invoices")
   const uploadRef = useRef<HTMLInputElement>(null)
 
   const today = new Date().toISOString().slice(0, 10)
@@ -136,7 +141,18 @@ function InvoiceFormContent({
   const submit = async () => {
     if (!isValid) return
 
-    const id = generateNextId(invoices, "inv")
+    const effectiveQuarterId = targetQuarterId || quarterId
+    const targetData = targetQuarterId
+      ? getEditingFile(targetQuarterId, "invoices")?.data
+      : undefined
+    const effectiveInvoices: Invoice[] = targetQuarterId
+      ? (Array.isArray(targetData) ? targetData : []) as Invoice[]
+      : invoices
+    const effectiveSha = targetQuarterId
+      ? getEditingFile(targetQuarterId, "invoices")?.sha ?? targetSha
+      : editingFile?.sha ?? sha
+
+    const id = generateNextId(effectiveInvoices, "inv")
 
     const record: Invoice = {
       id,
@@ -171,17 +187,16 @@ function InvoiceFormContent({
     if (file && invoice.filename) {
       try {
         const buffer = await readFileAsArrayBuffer(file)
-        addAttachment(quarterId, invoice.filename, buffer)
+        addAttachment(effectiveQuarterId, invoice.filename, buffer)
       } catch (e) {
         console.error("Attachment error:", e)
       }
     }
 
-    const updated = [...invoices, record].sort((a, b) =>
+    const updated = [...effectiveInvoices, record].sort((a, b) =>
       a.date.localeCompare(b.date)
     )
-    const currentSha = editingFile?.sha ?? sha
-    setEditingFile(quarterId, "invoices", updated, currentSha)
+    setEditingFile(effectiveQuarterId, "invoices", updated, effectiveSha)
     onSuccess()
   }
 
@@ -460,14 +475,60 @@ export function DuplicateInvoiceDialog({
   invoice,
   onClose,
 }: DuplicateInvoiceDialogProps) {
+  const { t } = useLanguage()
+  const router = useRouter()
+  const { quarters } = useStorageQuarters()
+  const [targetQuarter, setTargetQuarter] = useState(quarterId)
+  const [quarterError, setQuarterError] = useState<string | null>(null)
+
+  const validateQuarter = (quarter: string) => {
+    if (!quarter.trim()) {
+      setQuarterError(null)
+      return
+    }
+    if (!quarters.includes(quarter)) {
+      setQuarterError(t("invoices.quarterNotFound"))
+    } else {
+      setQuarterError(null)
+    }
+  }
+
+  const handleQuarterChange = (value: string) => {
+    setTargetQuarter(value)
+    validateQuarter(value)
+  }
+
+  const handleSuccess = () => {
+    onClose()
+    if (targetQuarter !== quarterId && !quarterError) {
+      router.push(`/invoices?q=${targetQuarter}`)
+    }
+  }
+
   return (
     <Dialog open={!!invoice} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[560px]">
+        <DialogHeader>
+          <DialogTitle>{t("invoices.duplicateInvoice")}</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-2 pb-4">
+          <Label htmlFor="target-quarter">{t("invoices.duplicateToQuarter")}</Label>
+          <Input
+            id="target-quarter"
+            value={targetQuarter}
+            onChange={(e) => handleQuarterChange(e.target.value)}
+            placeholder="2025.1Q"
+          />
+          {quarterError && (
+            <p className="text-sm text-red-600">{quarterError}</p>
+          )}
+        </div>
         <InvoiceFormContent
           quarterId={quarterId}
           invoices={invoices}
           initialInvoice={invoice}
-          onSuccess={onClose}
+          targetQuarterId={targetQuarter !== quarterId && !quarterError ? targetQuarter : undefined}
+          onSuccess={handleSuccess}
           onCancel={onClose}
         />
       </DialogContent>

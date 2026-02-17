@@ -72,6 +72,9 @@ export const translations = {
       currencyTotal: "Total en moneda extranjera",
       emptyState: "No se encontraron facturas.",
       duplicate: "Duplicar",
+      duplicateInvoice: "Duplicar factura",
+      duplicateToQuarter: "Duplicar al trimestre",
+      quarterNotFound: "El trimestre no existe",
       delete: "Eliminar",
       deleteConfirmTitle: "Eliminar factura",
       deleteConfirmDesc:
@@ -105,6 +108,9 @@ export const translations = {
       paid: "Pagado",
       pending: "Pendiente",
       duplicate: "Duplicar",
+      duplicateExpense: "Duplicar gasto",
+      duplicateToQuarter: "Duplicar al trimestre",
+      quarterNotFound: "El trimestre no existe",
       delete: "Eliminar",
       deleteConfirmTitle: "Eliminar gasto",
       deleteConfirmDesc:
@@ -245,6 +251,9 @@ export const translations = {
       currencyTotal: "Total in foreign currency",
       emptyState: "No invoices found.",
       duplicate: "Duplicate",
+      duplicateInvoice: "Duplicate invoice",
+      duplicateToQuarter: "Duplicate to quarter",
+      quarterNotFound: "Quarter does not exist",
       delete: "Delete",
       deleteConfirmTitle: "Delete invoice",
       deleteConfirmDesc:
@@ -278,6 +287,9 @@ export const translations = {
       paid: "Paid",
       pending: "Pending",
       duplicate: "Duplicate",
+      duplicateExpense: "Duplicate expense",
+      duplicateToQuarter: "Duplicate to quarter",
+      quarterNotFound: "Quarter does not exist",
       delete: "Delete",
       deleteConfirmTitle: "Delete expense",
       deleteConfirmDesc:

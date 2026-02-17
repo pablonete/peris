@@ -9,6 +9,8 @@ import { useEditingState } from "@/lib/editing-state-context"
 import { useFileSha } from "@/lib/use-storage-data"
 import { Expense } from "@/lib/types"
 import { useLanguage } from "@/lib/i18n-context"
+import { useStorageQuarters } from "@/lib/use-storage-quarters"
+import { useRouter } from "next/navigation"
 import {
   Dialog,
   DialogContent,
@@ -85,6 +87,7 @@ interface ExpenseDialogContentProps {
   initialExpense?: Expense | null
   onSuccess: () => void
   onCancel: () => void
+  targetQuarterId?: string
 }
 
 function ExpenseDialogContent({
@@ -93,11 +96,13 @@ function ExpenseDialogContent({
   initialExpense,
   onSuccess,
   onCancel,
+  targetQuarterId,
 }: ExpenseDialogContentProps) {
   const { t } = useLanguage()
   const { getEditingFile, setEditingFile } = useEditingState()
   const editingFile = getEditingFile(quarterId, "expenses")
   const fileSha = useFileSha(quarterId, "expenses")
+  const targetSha = useFileSha(targetQuarterId || quarterId, "expenses")
 
   const [expenseDate, setExpenseDate] = useState(
     initialExpense?.date || getTodayIsoDate()
@@ -173,7 +178,18 @@ function ExpenseDialogContent({
   const handleSubmit = async () => {
     if (!isValid) return
 
-    const id = generateNextId(expenses, "exp")
+    const effectiveQuarterId = targetQuarterId || quarterId
+    const targetData = targetQuarterId
+      ? getEditingFile(targetQuarterId, "expenses")?.data
+      : undefined
+    const effectiveExpenses: Expense[] = targetQuarterId
+      ? (Array.isArray(targetData) ? targetData : []) as Expense[]
+      : expenses
+    const effectiveSha = targetQuarterId
+      ? getEditingFile(targetQuarterId, "expenses")?.sha ?? targetSha
+      : editingFile?.sha ?? fileSha
+
+    const id = generateNextId(effectiveExpenses, "exp")
 
     const newExpense: Expense = {
       id,
@@ -192,18 +208,17 @@ function ExpenseDialogContent({
     if (selectedFile && filename) {
       try {
         const fileContent = await readFileAsArrayBuffer(selectedFile)
-        addAttachment(quarterId, filename, fileContent)
+        addAttachment(effectiveQuarterId, filename, fileContent)
       } catch (error) {
         console.error("Failed to upload file:", error)
         // Continue even if file upload fails
       }
     }
 
-    const nextExpenses = [...expenses, newExpense].sort((a, b) =>
+    const nextExpenses = [...effectiveExpenses, newExpense].sort((a, b) =>
       a.date.localeCompare(b.date)
     )
-    const nextSha = editingFile?.sha ?? fileSha
-    setEditingFile(quarterId, "expenses", nextExpenses, nextSha)
+    setEditingFile(effectiveQuarterId, "expenses", nextExpenses, effectiveSha)
     onSuccess()
   }
 
@@ -489,14 +504,60 @@ export function DuplicateExpenseDialog({
   expense,
   onClose,
 }: DuplicateExpenseDialogProps) {
+  const { t } = useLanguage()
+  const router = useRouter()
+  const { quarters } = useStorageQuarters()
+  const [targetQuarter, setTargetQuarter] = useState(quarterId)
+  const [quarterError, setQuarterError] = useState<string | null>(null)
+
+  const validateQuarter = (quarter: string) => {
+    if (!quarter.trim()) {
+      setQuarterError(null)
+      return
+    }
+    if (!quarters.includes(quarter)) {
+      setQuarterError(t("expenses.quarterNotFound"))
+    } else {
+      setQuarterError(null)
+    }
+  }
+
+  const handleQuarterChange = (value: string) => {
+    setTargetQuarter(value)
+    validateQuarter(value)
+  }
+
+  const handleSuccess = () => {
+    onClose()
+    if (targetQuarter !== quarterId && !quarterError) {
+      router.push(`/expenses?q=${targetQuarter}`)
+    }
+  }
+
   return (
     <Dialog open={!!expense} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[560px]">
+        <DialogHeader>
+          <DialogTitle>{t("expenses.duplicateExpense")}</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-2 pb-4">
+          <Label htmlFor="target-quarter">{t("expenses.duplicateToQuarter")}</Label>
+          <Input
+            id="target-quarter"
+            value={targetQuarter}
+            onChange={(e) => handleQuarterChange(e.target.value)}
+            placeholder="2025.1Q"
+          />
+          {quarterError && (
+            <p className="text-sm text-red-600">{quarterError}</p>
+          )}
+        </div>
         <ExpenseDialogContent
           quarterId={quarterId}
           expenses={expenses}
           initialExpense={expense}
-          onSuccess={onClose}
+          targetQuarterId={targetQuarter !== quarterId && !quarterError ? targetQuarter : undefined}
+          onSuccess={handleSuccess}
           onCancel={onClose}
         />
       </DialogContent>
