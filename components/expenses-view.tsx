@@ -1,11 +1,13 @@
 "use client"
 
 import { useState } from "react"
+import { ChevronDown, ChevronUp } from "lucide-react"
 import { formatCurrency, formatDate } from "@/lib/ledger-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useStorage } from "@/lib/storage-context"
 import { useEditingState } from "@/lib/editing-state-context"
 import { Expense } from "@/lib/types"
+import { getVatSubtotals } from "@/lib/vat-subtotals"
 import {
   Table,
   TableBody,
@@ -26,6 +28,7 @@ import {
 import { ExpenseRowActions } from "@/components/expense-row-actions"
 import { DeleteExpenseAlert } from "@/components/delete-expense-alert"
 import { useLanguage } from "@/lib/i18n-context"
+import { Button } from "@/components/ui/button"
 
 interface ExpensesViewProps {
   quarterId: string
@@ -39,6 +42,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
   const isEditing = !!getEditingFile(quarterId, "expenses")
   const [deleteAlert, setDeleteAlert] = useState<string | null>(null)
   const [duplicateExpense, setDuplicateExpense] = useState<Expense | null>(null)
+  const [showVatSubtotals, setShowVatSubtotals] = useState(false)
 
   if (isPending) {
     return (
@@ -252,36 +256,49 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                 {formatCurrency(totalExpensesAmount)}
               </TableCell>
               <TableCell />
-              <TableCell />
-            </TableRow>
-            {vatSubtotals.map((subtotal) => (
-              <TableRow
-                key={subtotal.rate}
-                className="border-t border-dashed border-border/30 bg-secondary/10 hover:bg-secondary/10"
-              >
-                <TableCell
-                  colSpan={5}
-                  className="font-mono text-[10px] text-muted-foreground/60"
+              <TableCell className="text-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowVatSubtotals(!showVatSubtotals)}
+                  className="h-6 px-2 text-[10px] font-mono"
                 >
-                  {t("expenses.vatSubtotal")} {subtotal.rate}% ({subtotal.count}{" "}
-                  {t("expenses.items")})
-                </TableCell>
-                <TableCell className="font-mono text-[10px] text-right text-muted-foreground/60">
-                  {formatCurrency(subtotal.subtotal)}
-                </TableCell>
-                <TableCell className="font-mono text-[10px] text-right text-muted-foreground/60">
-                  {formatCurrency(subtotal.vat)}
-                </TableCell>
-                <TableCell className="font-mono text-[10px] text-right text-muted-foreground/60">
-                  {formatCurrency(subtotal.taxRetention)}
-                </TableCell>
-                <TableCell className="font-mono text-[10px] text-right text-muted-foreground/60">
-                  {formatCurrency(subtotal.total)}
-                </TableCell>
-                <TableCell />
-                <TableCell />
-              </TableRow>
-            ))}
+                  {showVatSubtotals ? (
+                    <ChevronUp className="h-3 w-3 mr-1" />
+                  ) : (
+                    <ChevronDown className="h-3 w-3 mr-1" />
+                  )}
+                  {t("expenses.vatSubtotal")}
+                </Button>
+              </TableCell>
+            </TableRow>
+            {showVatSubtotals &&
+              vatSubtotals.map((subtotal) => (
+                <TableRow
+                  key={subtotal.rate}
+                  className="border-t border-dashed border-border/30 bg-secondary/10 hover:bg-secondary/10"
+                >
+                  <TableCell
+                    colSpan={5}
+                    className="font-mono text-[10px] text-muted-foreground/60 py-2"
+                  >
+                    {t("expenses.vatSubtotal")} {subtotal.rate}% (
+                    {subtotal.count} {t("expenses.items")})
+                  </TableCell>
+                  <TableCell className="font-mono text-[10px] text-right py-2">
+                    {formatCurrency(subtotal.subtotal)}
+                  </TableCell>
+                  <TableCell className="font-mono text-[10px] text-right py-2">
+                    {formatCurrency(subtotal.vat)}
+                  </TableCell>
+                  <TableCell className="py-2" />
+                  <TableCell className="font-mono text-[10px] text-right py-2">
+                    {formatCurrency(subtotal.total)}
+                  </TableCell>
+                  <TableCell className="py-2" />
+                  <TableCell className="py-2" />
+                </TableRow>
+              ))}
           </TableFooter>
         </Table>
       </div>
@@ -300,61 +317,4 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
       />
     </div>
   )
-}
-
-function getVatSubtotals(expenses: Expense[]) {
-  const subtotalsMap = new Map<
-    number,
-    {
-      expenseIds: Set<string>
-      subtotal: number
-      vat: number
-      taxRetention: number
-      total: number
-    }
-  >()
-
-  expenses.forEach((expense) => {
-    const expenseSubtotalSum = expense.vat.reduce(
-      (sum, v) => sum + v.subtotal,
-      0
-    )
-    const expenseTaxRetention = expense.taxRetention || 0
-
-    expense.vat.forEach((vatItem) => {
-      const existing = subtotalsMap.get(vatItem.rate) || {
-        expenseIds: new Set<string>(),
-        subtotal: 0,
-        vat: 0,
-        taxRetention: 0,
-        total: 0,
-      }
-
-      const vatItemProportion =
-        expenseSubtotalSum > 0 ? vatItem.subtotal / expenseSubtotalSum : 0
-      const proportionalTaxRetention = expenseTaxRetention * vatItemProportion
-      const proportionalTotal =
-        vatItem.subtotal + vatItem.amount - proportionalTaxRetention
-
-      existing.expenseIds.add(expense.id)
-      subtotalsMap.set(vatItem.rate, {
-        expenseIds: existing.expenseIds,
-        subtotal: existing.subtotal + vatItem.subtotal,
-        vat: existing.vat + vatItem.amount,
-        taxRetention: existing.taxRetention + proportionalTaxRetention,
-        total: existing.total + proportionalTotal,
-      })
-    })
-  })
-
-  return Array.from(subtotalsMap.entries())
-    .sort(([a], [b]) => b - a)
-    .map(([rate, data]) => ({
-      rate,
-      count: data.expenseIds.size,
-      subtotal: data.subtotal,
-      vat: data.vat,
-      taxRetention: data.taxRetention,
-      total: data.total,
-    }))
 }
