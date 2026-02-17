@@ -68,7 +68,6 @@ function InvoiceFormContent({
   onSuccess,
   onCancel,
   targetQuarterId,
-  mode = "new",
 }: {
   quarterId: string
   invoices: Invoice[]
@@ -76,7 +75,6 @@ function InvoiceFormContent({
   onSuccess: () => void
   onCancel: () => void
   targetQuarterId?: string
-  mode?: "new" | "duplicate"
 }) {
   const { t } = useLanguage()
   const router = useRouter()
@@ -86,6 +84,8 @@ function InvoiceFormContent({
   const sha = useFileSha(quarterId, "invoices")
   const targetSha = useFileSha(targetQuarterId || quarterId, "invoices")
   const uploadRef = useRef<HTMLInputElement>(null)
+
+  const isDuplicate = !!initialInvoice
 
   const today = new Date().toISOString().slice(0, 10)
   const [invoice, setInvoice] = useState<InvoiceFormData>({
@@ -223,24 +223,22 @@ function InvoiceFormContent({
     )
     setEditingFile(effectiveQuarterId, "invoices", updated, effectiveSha)
 
+    onSuccess()
+
     if (isDifferentQuarter) {
-      onSuccess()
       router.push(`/invoices?q=${effectiveQuarterId}`)
-    } else {
-      onSuccess()
     }
   }
 
-  const dialogTitle =
-    mode === "duplicate"
-      ? t("invoices.duplicateInvoice")
-      : t("invoices.newInvoice")
+  const dialogTitle = isDuplicate
+    ? t("invoices.duplicateInvoice")
+    : t("invoices.newInvoice")
 
   return (
     <>
       <DialogHeader>
         <DialogTitle>{dialogTitle}</DialogTitle>
-        {mode === "new" && (
+        {!isDuplicate && (
           <DialogDescription>{t("invoices.newInvoiceDesc")}</DialogDescription>
         )}
       </DialogHeader>
@@ -249,14 +247,22 @@ function InvoiceFormContent({
           <div className="grid gap-2">
             <div className="flex items-center gap-2">
               <Label htmlFor="inv-date">{t("invoices.invoiceDate")}</Label>
-              {isDifferentQuarter && (
+              {(isDifferentQuarter || !quarterExists) && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <AlertCircle className="h-4 w-4 text-orange-600" />
+                      <AlertCircle
+                        className={`h-4 w-4 ${
+                          !quarterExists ? "text-red-600" : "text-orange-600"
+                        }`}
+                      />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{t("invoices.differentQuarterWarning")}</p>
+                      <p>
+                        {!quarterExists
+                          ? t("invoices.quarterNotFound")
+                          : t("invoices.differentQuarterWarning")}
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -268,11 +274,6 @@ function InvoiceFormContent({
               value={invoice.date}
               onChange={(e) => setInvoice({ ...invoice, date: e.target.value })}
             />
-            {!quarterExists && invoice.date && (
-              <p className="text-sm text-red-600">
-                {t("invoices.quarterNotFound")}
-              </p>
-            )}
           </div>
           <div className="grid">
             <div className="flex items-start gap-2">
@@ -541,7 +542,6 @@ export function DuplicateInvoiceDialog({
           quarterId={quarterId}
           invoices={invoices}
           initialInvoice={invoice}
-          mode="duplicate"
           onSuccess={onClose}
           onCancel={onClose}
         />

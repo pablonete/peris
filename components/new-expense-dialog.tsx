@@ -94,7 +94,6 @@ interface ExpenseDialogContentProps {
   onSuccess: () => void
   onCancel: () => void
   targetQuarterId?: string
-  mode?: "new" | "duplicate"
 }
 
 function ExpenseDialogContent({
@@ -104,7 +103,6 @@ function ExpenseDialogContent({
   onSuccess,
   onCancel,
   targetQuarterId,
-  mode = "new",
 }: ExpenseDialogContentProps) {
   const { t } = useLanguage()
   const router = useRouter()
@@ -113,6 +111,8 @@ function ExpenseDialogContent({
   const editingFile = getEditingFile(quarterId, "expenses")
   const fileSha = useFileSha(quarterId, "expenses")
   const targetSha = useFileSha(targetQuarterId || quarterId, "expenses")
+
+  const isDuplicate = !!initialExpense
 
   const [expenseDate, setExpenseDate] = useState(
     initialExpense?.date || getTodayIsoDate()
@@ -248,24 +248,22 @@ function ExpenseDialogContent({
     )
     setEditingFile(effectiveQuarterId, "expenses", nextExpenses, effectiveSha)
 
+    onSuccess()
+
     if (isDifferentQuarter) {
-      onSuccess()
       router.push(`/expenses?q=${effectiveQuarterId}`)
-    } else {
-      onSuccess()
     }
   }
 
-  const dialogTitle =
-    mode === "duplicate"
-      ? t("expenses.duplicateExpense")
-      : t("expenses.newExpense")
+  const dialogTitle = isDuplicate
+    ? t("expenses.duplicateExpense")
+    : t("expenses.newExpense")
 
   return (
     <>
       <DialogHeader>
         <DialogTitle>{dialogTitle}</DialogTitle>
-        {mode === "new" && (
+        {!isDuplicate && (
           <DialogDescription>{t("expenses.newExpenseDesc")}</DialogDescription>
         )}
       </DialogHeader>
@@ -274,14 +272,22 @@ function ExpenseDialogContent({
           <div className="grid gap-2">
             <div className="flex items-center gap-2">
               <Label htmlFor="expense-date">{t("expenses.expenseDate")}</Label>
-              {isDifferentQuarter && (
+              {(isDifferentQuarter || !quarterExists) && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <AlertCircle className="h-4 w-4 text-orange-600" />
+                      <AlertCircle
+                        className={`h-4 w-4 ${
+                          !quarterExists ? "text-red-600" : "text-orange-600"
+                        }`}
+                      />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{t("expenses.differentQuarterWarning")}</p>
+                      <p>
+                        {!quarterExists
+                          ? t("expenses.quarterNotFound")
+                          : t("expenses.differentQuarterWarning")}
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -293,11 +299,6 @@ function ExpenseDialogContent({
               value={expenseDate}
               onChange={(e) => setExpenseDate(e.target.value)}
             />
-            {!quarterExists && expenseDate && (
-              <p className="text-sm text-red-600">
-                {t("expenses.quarterNotFound")}
-              </p>
-            )}
           </div>
           <div className="grid">
             <div className="flex items-start gap-2">
@@ -573,7 +574,6 @@ export function DuplicateExpenseDialog({
           quarterId={quarterId}
           expenses={expenses}
           initialExpense={expense}
-          mode="duplicate"
           onSuccess={onClose}
           onCancel={onClose}
         />
