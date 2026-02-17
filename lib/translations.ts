@@ -71,6 +71,12 @@ export const translations = {
       currencyRate: "Tasa de cambio",
       currencyTotal: "Total en moneda extranjera",
       emptyState: "No se encontraron facturas.",
+      duplicate: "Duplicar",
+      delete: "Eliminar",
+      deleteConfirmTitle: "Eliminar factura",
+      deleteConfirmDesc:
+        "¿Estás seguro de que deseas eliminar esta factura? Esta acción no se puede deshacer.",
+      deleteButton: "Eliminar",
     },
     expenses: {
       expenses: "Gastos",
@@ -238,6 +244,12 @@ export const translations = {
       currencyRate: "Exchange rate",
       currencyTotal: "Total in foreign currency",
       emptyState: "No invoices found.",
+      duplicate: "Duplicate",
+      delete: "Delete",
+      deleteConfirmTitle: "Delete invoice",
+      deleteConfirmDesc:
+        "Are you sure you want to delete this invoice? This action cannot be undone.",
+      deleteButton: "Delete",
     },
     expenses: {
       expenses: "Expenses",
