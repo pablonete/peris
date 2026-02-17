@@ -20,6 +20,7 @@ import { ErrorBanner } from "@/components/error-banner"
 import { PaymentDateCell } from "@/components/payment-date-cell"
 import { AttachmentCell } from "@/components/attachment-cell"
 import { SummaryCard } from "@/components/summary-card"
+import { EditingIndicator } from "@/components/editing-indicator"
 import {
   NewInvoiceDialog,
   DuplicateInvoiceDialog,
@@ -76,12 +77,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
           <div>
             <h2 className="flex items-center gap-2 text-2xl font-bold tracking-wide text-foreground">
               {t("invoices.sentInvoices")}
-              {isEditing && (
-                <span
-                  className="h-2 w-2 rounded-full bg-green-600"
-                  aria-label="Editing"
-                />
-              )}
+              <EditingIndicator isEditing={isEditing} />
             </h2>
             <p className="font-mono text-xs text-muted-foreground">
               {quarterId} &middot; {activeStorage.name} &middot;{" "}
@@ -182,7 +178,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
                   <TableCell className="font-mono text-xs text-right text-muted-foreground">
                     {inv.vat > 0 ? formatCurrency(inv.vat) : "\u2014"}
                   </TableCell>
-                  <TableCell className="font-mono text-sm font-semibold text-right">
+                  <TableCell className="font-mono text-sm font-semibold text-right text-[hsl(var(--ledger-green))]">
                     {formatCurrency(inv.total)}
                   </TableCell>
                   {hasCurrency && (
@@ -201,7 +197,10 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
                     </TableCell>
                   )}
                   <TableCell className="text-center">
-                    <PaymentDateCell paymentDate={inv.paymentDate} />
+                    <PaymentDateCell
+                      paymentDate={inv.paymentDate}
+                      variant="invoice"
+                    />
                   </TableCell>
                   <TableCell className="text-center">
                     <InvoiceRowActions
@@ -225,7 +224,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
               <TableCell className="font-mono text-xs font-semibold text-right">
                 {formatCurrency(totalVat)}
               </TableCell>
-              <TableCell className="font-mono text-sm font-bold text-right">
+              <TableCell className="font-mono text-sm font-bold text-right text-[hsl(var(--ledger-green))]">
                 {formatCurrency(totalAmount)}
               </TableCell>
               {hasCurrency && <TableCell />}

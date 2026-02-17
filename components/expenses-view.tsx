@@ -21,6 +21,7 @@ import { PaymentDateCell } from "@/components/payment-date-cell"
 import { AttachmentCell } from "@/components/attachment-cell"
 import { ErrorBanner } from "@/components/error-banner"
 import { SummaryCard } from "@/components/summary-card"
+import { EditingIndicator } from "@/components/editing-indicator"
 import {
   NewExpenseDialog,
   DuplicateExpenseDialog,
@@ -92,12 +93,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 text-2xl font-bold tracking-wide text-foreground">
             {t("expenses.expenses")}
-            {isEditing && (
-              <span
-                className="h-2 w-2 rounded-full bg-green-600"
-                aria-label="Editing"
-              />
-            )}
+            <EditingIndicator isEditing={isEditing} />
           </h2>
           <NewExpenseDialog quarterId={quarterId} expenses={expenses} />
         </div>
@@ -227,7 +223,10 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                     {formatCurrency(exp.total)}
                   </TableCell>
                   <TableCell className="text-center">
-                    <PaymentDateCell paymentDate={exp.paymentDate} />
+                    <PaymentDateCell
+                      paymentDate={exp.paymentDate}
+                      variant="expense"
+                    />
                   </TableCell>
                   <TableCell className="text-center">
                     <ExpenseRowActions

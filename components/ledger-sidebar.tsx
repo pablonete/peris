@@ -239,7 +239,7 @@ function CollapsedYearRow({
           </span>
           {hasEdits && (
             <span
-              className="h-2 w-2 rounded-full bg-green-600"
+              className="h-2 w-2 rounded-full bg-[hsl(var(--ledger-blue))]"
               aria-label="Has unsaved changes"
             />
           )}
@@ -283,7 +283,7 @@ function SelectedQuarterRow({
   formatQuarterLabel: (qId: string) => string
   viewItems: { key: ViewType; label: string; icon: typeof FileText }[]
   selectedView: ViewType | null
-  getEditingFile: (qId: string, key: string) => any
+  getEditingFile: ReturnType<typeof useEditingState>["getEditingFile"]
   onSidebarClose?: () => void
   t: (key: string) => string
 }) {
@@ -298,7 +298,7 @@ function SelectedQuarterRow({
             {quarterId}
             {hasEdits && (
               <span
-                className="h-2 w-2 rounded-full bg-green-600"
+                className="h-2 w-2 rounded-full bg-[hsl(var(--ledger-blue))]"
                 aria-label="Has unsaved changes"
               />
             )}
@@ -330,7 +330,7 @@ function SelectedQuarterRow({
                 {label}
                 {isEditing && (
                   <span
-                    className="h-2 w-2 rounded-full bg-green-600"
+                    className="h-2 w-2 rounded-full bg-[hsl(var(--ledger-blue))]"
                     aria-label="Editing"
                   />
                 )}
@@ -357,7 +357,7 @@ function NonSelectedQuarterRow({
   hasEdits: boolean
   formatQuarterLabel: (qId: string) => string
   viewItems: { key: ViewType; label: string; icon: typeof FileText }[]
-  getEditingFile: (qId: string, key: string) => any
+  getEditingFile: ReturnType<typeof useEditingState>["getEditingFile"]
   router: ReturnType<typeof useRouter>
   t: (key: string) => string
 }) {
@@ -402,7 +402,7 @@ function NonSelectedQuarterRow({
                 <Icon className="h-4 w-4" />
                 {isEditing && (
                   <span
-                    className="absolute -mt-2 -mr-2 h-1.5 w-1.5 rounded-full bg-green-600"
+                    className="absolute -mt-2 -mr-2 h-1.5 w-1.5 rounded-full bg-[hsl(var(--ledger-blue))]"
                     aria-label="Editing"
                   />
                 )}

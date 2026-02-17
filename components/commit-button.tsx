@@ -19,7 +19,7 @@ export function CommitButton() {
       <Button
         onClick={commitChanges}
         disabled={isCommitting}
-        className="w-full bg-green-600 hover:bg-green-700 text-white"
+        className="w-full bg-[hsl(var(--ledger-blue))] hover:bg-[hsl(var(--ledger-blue))]/90 text-white"
         size="sm"
       >
         {isCommitting ? (

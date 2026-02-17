@@ -19,6 +19,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ErrorBanner } from "@/components/error-banner"
 import { CashflowBankFilter } from "@/components/cashflow-bank-filter"
 import { SummaryCard } from "@/components/summary-card"
+import { EditingIndicator } from "@/components/editing-indicator"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/i18n-context"
 import { FileText, Receipt } from "lucide-react"
@@ -95,12 +96,7 @@ export function CashflowView({
       <div className="mb-6 border-b-2 border-foreground/20 pb-4">
         <h2 className="flex items-center gap-2 text-2xl font-bold tracking-wide text-foreground">
           {t("cashflow.cashflow")}
-          {isEditing && (
-            <span
-              className="h-2 w-2 rounded-full bg-green-600"
-              aria-label="Editing"
-            />
-          )}
+          <EditingIndicator isEditing={isEditing} />
         </h2>
         <p className="font-mono text-xs text-muted-foreground">
           {quarterId} &middot; {activeStorage.name} &middot; {entries.length}{" "}
