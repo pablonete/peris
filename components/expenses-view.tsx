@@ -306,7 +306,7 @@ function getVatSubtotals(expenses: Expense[]) {
   const subtotalsMap = new Map<
     number,
     {
-      count: number
+      expenseIds: Set<string>
       subtotal: number
       vat: number
       taxRetention: number
@@ -315,27 +315,30 @@ function getVatSubtotals(expenses: Expense[]) {
   >()
 
   expenses.forEach((expense) => {
+    const expenseSubtotalSum = expense.vat.reduce(
+      (sum, v) => sum + v.subtotal,
+      0
+    )
+    const expenseTaxRetention = expense.taxRetention || 0
+
     expense.vat.forEach((vatItem) => {
       const existing = subtotalsMap.get(vatItem.rate) || {
-        count: 0,
+        expenseIds: new Set<string>(),
         subtotal: 0,
         vat: 0,
         taxRetention: 0,
         total: 0,
       }
 
-      const expenseTaxRetention = expense.taxRetention || 0
       const vatItemProportion =
-        expense.vat.reduce((sum, v) => sum + v.subtotal, 0) > 0
-          ? vatItem.subtotal /
-            expense.vat.reduce((sum, v) => sum + v.subtotal, 0)
-          : 0
+        expenseSubtotalSum > 0 ? vatItem.subtotal / expenseSubtotalSum : 0
       const proportionalTaxRetention = expenseTaxRetention * vatItemProportion
       const proportionalTotal =
         vatItem.subtotal + vatItem.amount - proportionalTaxRetention
 
+      existing.expenseIds.add(expense.id)
       subtotalsMap.set(vatItem.rate, {
-        count: existing.count + 1,
+        expenseIds: existing.expenseIds,
         subtotal: existing.subtotal + vatItem.subtotal,
         vat: existing.vat + vatItem.amount,
         taxRetention: existing.taxRetention + proportionalTaxRetention,
@@ -346,5 +349,12 @@ function getVatSubtotals(expenses: Expense[]) {
 
   return Array.from(subtotalsMap.entries())
     .sort(([a], [b]) => b - a)
-    .map(([rate, data]) => ({ rate, ...data }))
+    .map(([rate, data]) => ({
+      rate,
+      count: data.expenseIds.size,
+      subtotal: data.subtotal,
+      vat: data.vat,
+      taxRetention: data.taxRetention,
+      total: data.total,
+    }))
 }
