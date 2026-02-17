@@ -1,9 +1,11 @@
 "use client"
 
+import { useState } from "react"
 import { formatCurrency, formatDate } from "@/lib/ledger-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useStorage } from "@/lib/storage-context"
 import { useEditingState } from "@/lib/editing-state-context"
+import { Invoice } from "@/lib/types"
 import {
   Table,
   TableBody,
@@ -18,7 +20,12 @@ import { ErrorBanner } from "@/components/error-banner"
 import { PaymentDateCell } from "@/components/payment-date-cell"
 import { AttachmentCell } from "@/components/attachment-cell"
 import { SummaryCard } from "@/components/summary-card"
-import { NewInvoiceDialog } from "@/components/new-invoice-dialog"
+import {
+  NewInvoiceDialog,
+  DuplicateInvoiceDialog,
+} from "@/components/new-invoice-dialog"
+import { InvoiceRowActions } from "@/components/invoice-row-actions"
+import { DeleteInvoiceAlert } from "@/components/delete-invoice-alert"
 import { useLanguage } from "@/lib/i18n-context"
 
 interface InvoicesViewProps {
@@ -28,9 +35,11 @@ interface InvoicesViewProps {
 export function InvoicesView({ quarterId }: InvoicesViewProps) {
   const { t } = useLanguage()
   const { activeStorage } = useStorage()
-  const { getEditingFile } = useEditingState()
+  const { getEditingFile, setEditingFile } = useEditingState()
   const { content, isPending, error } = useStorageData(quarterId, "invoices")
   const isEditing = !!getEditingFile(quarterId, "invoices")
+  const [deleteAlert, setDeleteAlert] = useState<string | null>(null)
+  const [duplicateInvoice, setDuplicateInvoice] = useState<Invoice | null>(null)
 
   if (isPending) {
     return (
@@ -52,6 +61,13 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
   const totalVat = content.reduce((s, i) => s + i.vat, 0)
   const totalAmount = content.reduce((s, i) => s + i.total, 0)
   const hasCurrency = content.some((i) => i.currency)
+
+  const handleDeleteInvoice = (id: string) => {
+    const nextInvoices = content.filter((i) => i.id !== id)
+    const editingFile = getEditingFile(quarterId, "invoices")
+    setEditingFile(quarterId, "invoices", nextInvoices, editingFile?.sha)
+    setDeleteAlert(null)
+  }
 
   return (
     <div>
@@ -126,12 +142,13 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-center">
                 {t("invoices.paymentDate")}
               </TableHead>
+              <TableHead className="w-[40px] text-center" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {content.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="py-6 text-center">
+                <TableCell colSpan={10} className="py-6 text-center">
                   {t("invoices.emptyState")}
                 </TableCell>
               </TableRow>
@@ -186,6 +203,13 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
                   <TableCell className="text-center">
                     <PaymentDateCell paymentDate={inv.paymentDate} />
                   </TableCell>
+                  <TableCell className="text-center">
+                    <InvoiceRowActions
+                      invoice={inv}
+                      onDuplicate={setDuplicateInvoice}
+                      onDelete={setDeleteAlert}
+                    />
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -206,10 +230,24 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
               </TableCell>
               {hasCurrency && <TableCell />}
               <TableCell />
+              <TableCell />
             </TableRow>
           </TableFooter>
         </Table>
       </div>
+
+      <DeleteInvoiceAlert
+        invoiceId={deleteAlert}
+        onClose={() => setDeleteAlert(null)}
+        onConfirm={handleDeleteInvoice}
+      />
+
+      <DuplicateInvoiceDialog
+        quarterId={quarterId}
+        invoices={content}
+        invoice={duplicateInvoice}
+        onClose={() => setDuplicateInvoice(null)}
+      />
     </div>
   )
 }

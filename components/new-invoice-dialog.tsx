@@ -28,6 +28,13 @@ interface NewInvoiceDialogProps {
   invoices: Invoice[]
 }
 
+interface DuplicateInvoiceDialogProps {
+  quarterId: string
+  invoices: Invoice[]
+  invoice: Invoice | null
+  onClose: () => void
+}
+
 interface InvoiceFormData {
   date: string
   client: string
@@ -49,11 +56,13 @@ interface InvoiceFormData {
 function InvoiceFormContent({
   quarterId,
   invoices,
+  initialInvoice,
   onSuccess,
   onCancel,
 }: {
   quarterId: string
   invoices: Invoice[]
+  initialInvoice?: Invoice | null
   onSuccess: () => void
   onCancel: () => void
 }) {
@@ -65,20 +74,24 @@ function InvoiceFormContent({
 
   const today = new Date().toISOString().slice(0, 10)
   const [invoice, setInvoice] = useState<InvoiceFormData>({
-    date: today,
-    client: "",
-    number: "",
-    concept: "",
-    subtotal: "",
-    vat: "",
-    collected: false,
-    paymentDate: "",
+    date: initialInvoice?.date || today,
+    client: initialInvoice?.client || "",
+    number: initialInvoice?.number || "",
+    concept: initialInvoice?.concept || "",
+    subtotal: initialInvoice ? String(initialInvoice.subtotal) : "",
+    vat: initialInvoice ? String(initialInvoice.vat) : "",
+    collected: !!initialInvoice?.paymentDate,
+    paymentDate: initialInvoice?.paymentDate || "",
     filename: "",
-    currencyEnabled: false,
+    currencyEnabled: !!initialInvoice?.currency,
     currency: {
-      symbol: "",
-      rate: "",
-      total: "",
+      symbol: initialInvoice?.currency?.symbol || "",
+      rate: initialInvoice?.currency
+        ? String(initialInvoice.currency.rate)
+        : "",
+      total: initialInvoice?.currency
+        ? String(initialInvoice.currency.total)
+        : "",
     },
   })
   const [file, setFile] = useState<File | null>(null)
@@ -435,6 +448,27 @@ export function NewInvoiceDialog({
           invoices={invoices}
           onSuccess={() => setOpen(false)}
           onCancel={() => setOpen(false)}
+        />
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+export function DuplicateInvoiceDialog({
+  quarterId,
+  invoices,
+  invoice,
+  onClose,
+}: DuplicateInvoiceDialogProps) {
+  return (
+    <Dialog open={!!invoice} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[560px]">
+        <InvoiceFormContent
+          quarterId={quarterId}
+          invoices={invoices}
+          initialInvoice={invoice}
+          onSuccess={onClose}
+          onCancel={onClose}
         />
       </DialogContent>
     </Dialog>
