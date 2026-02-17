@@ -108,6 +108,8 @@ export const translations = {
         "Carga un archivo con el comprobante del gasto (PDF, JPG, PNG, etc)",
       fileSelected: "Archivo seleccionado",
       removeFile: "Eliminar archivo",
+      vatSubtotal: "IVA",
+      items: "items",
     },
     cashflow: {
       cashflow: "Flujo de caja",
@@ -272,6 +274,8 @@ export const translations = {
         "Upload a file with the expense receipt (PDF, JPG, PNG, etc)",
       fileSelected: "File selected",
       removeFile: "Remove file",
+      vatSubtotal: "VAT",
+      items: "items",
     },
     cashflow: {
       cashflow: "Cashflow",

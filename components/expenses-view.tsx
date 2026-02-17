@@ -73,6 +73,8 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
     .filter((e) => e.paymentDate == null)
     .reduce((s, e) => s + e.total, 0)
 
+  const vatSubtotals = getVatSubtotals(expenses)
+
   const handleDeleteExpense = (id: string) => {
     const nextExpenses = expenses.filter((e) => e.id !== id)
     const editingFile = getEditingFile(quarterId, "expenses")
@@ -252,6 +254,34 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
               <TableCell />
               <TableCell />
             </TableRow>
+            {vatSubtotals.map((subtotal) => (
+              <TableRow
+                key={subtotal.rate}
+                className="border-t border-dashed border-border/30 bg-secondary/10 hover:bg-secondary/10"
+              >
+                <TableCell
+                  colSpan={5}
+                  className="font-mono text-[10px] text-muted-foreground/60"
+                >
+                  {t("expenses.vatSubtotal")} {subtotal.rate}% ({subtotal.count}{" "}
+                  {t("expenses.items")})
+                </TableCell>
+                <TableCell className="font-mono text-[10px] text-right text-muted-foreground/60">
+                  {formatCurrency(subtotal.subtotal)}
+                </TableCell>
+                <TableCell className="font-mono text-[10px] text-right text-muted-foreground/60">
+                  {formatCurrency(subtotal.vat)}
+                </TableCell>
+                <TableCell className="font-mono text-[10px] text-right text-muted-foreground/60">
+                  {formatCurrency(subtotal.taxRetention)}
+                </TableCell>
+                <TableCell className="font-mono text-[10px] text-right text-muted-foreground/60">
+                  {formatCurrency(subtotal.total)}
+                </TableCell>
+                <TableCell />
+                <TableCell />
+              </TableRow>
+            ))}
           </TableFooter>
         </Table>
       </div>
@@ -270,4 +300,51 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
       />
     </div>
   )
+}
+
+function getVatSubtotals(expenses: Expense[]) {
+  const subtotalsMap = new Map<
+    number,
+    {
+      count: number
+      subtotal: number
+      vat: number
+      taxRetention: number
+      total: number
+    }
+  >()
+
+  expenses.forEach((expense) => {
+    expense.vat.forEach((vatItem) => {
+      const existing = subtotalsMap.get(vatItem.rate) || {
+        count: 0,
+        subtotal: 0,
+        vat: 0,
+        taxRetention: 0,
+        total: 0,
+      }
+
+      const expenseTaxRetention = expense.taxRetention || 0
+      const vatItemProportion =
+        expense.vat.reduce((sum, v) => sum + v.subtotal, 0) > 0
+          ? vatItem.subtotal /
+            expense.vat.reduce((sum, v) => sum + v.subtotal, 0)
+          : 0
+      const proportionalTaxRetention = expenseTaxRetention * vatItemProportion
+      const proportionalTotal =
+        vatItem.subtotal + vatItem.amount - proportionalTaxRetention
+
+      subtotalsMap.set(vatItem.rate, {
+        count: existing.count + 1,
+        subtotal: existing.subtotal + vatItem.subtotal,
+        vat: existing.vat + vatItem.amount,
+        taxRetention: existing.taxRetention + proportionalTaxRetention,
+        total: existing.total + proportionalTotal,
+      })
+    })
+  })
+
+  return Array.from(subtotalsMap.entries())
+    .sort(([a], [b]) => b - a)
+    .map(([rate, data]) => ({ rate, ...data }))
 }
