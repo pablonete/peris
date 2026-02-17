@@ -233,7 +233,7 @@ function CollapsedYearRow({
         <button
           type="button"
           onClick={() => {
-            router.push(`/invoices?q=${quarters[quarters.length - 1]}`)
+            router.push(`/invoices?q=${quarters[0]}`)
           }}
           className="flex flex-1 items-center gap-2 px-3 py-2.5 text-left text-sm transition-colors text-sidebar-foreground/80"
         >
