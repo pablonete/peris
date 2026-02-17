@@ -209,13 +209,13 @@ function ExpenseDialogContent({
         : undefined
     const effectiveExpenses: Expense[] =
       calculatedTargetQuarter !== quarterId
-        ? (Array.isArray(targetData) ? targetData : []) as Expense[]
+        ? ((Array.isArray(targetData) ? targetData : []) as Expense[])
         : expenses
     const effectiveSha =
       calculatedTargetQuarter !== quarterId
-        ? getEditingFile(calculatedTargetQuarter, "expenses")?.sha ??
-          targetQuarterSha
-        : editingFile?.sha ?? fileSha
+        ? (getEditingFile(calculatedTargetQuarter, "expenses")?.sha ??
+          targetQuarterSha)
+        : (editingFile?.sha ?? fileSha)
 
     const id = generateNextId(effectiveExpenses, "exp")
 
@@ -263,9 +263,6 @@ function ExpenseDialogContent({
     <>
       <DialogHeader>
         <DialogTitle>{dialogTitle}</DialogTitle>
-        {!isDuplicate && (
-          <DialogDescription>{t("expenses.newExpenseDesc")}</DialogDescription>
-        )}
       </DialogHeader>
       <div className="grid gap-4 py-2">
         <div className="grid gap-4 sm:grid-cols-2">

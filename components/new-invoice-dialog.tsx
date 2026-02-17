@@ -169,13 +169,13 @@ function InvoiceFormContent({
         : undefined
     const effectiveInvoices: Invoice[] =
       calculatedTargetQuarter !== quarterId
-        ? (Array.isArray(targetData) ? targetData : []) as Invoice[]
+        ? ((Array.isArray(targetData) ? targetData : []) as Invoice[])
         : invoices
     const effectiveSha =
       calculatedTargetQuarter !== quarterId
-        ? getEditingFile(calculatedTargetQuarter, "invoices")?.sha ??
-          targetQuarterSha
-        : editingFile?.sha ?? sha
+        ? (getEditingFile(calculatedTargetQuarter, "invoices")?.sha ??
+          targetQuarterSha)
+        : (editingFile?.sha ?? sha)
 
     const id = generateNextId(effectiveInvoices, "inv")
 
@@ -238,9 +238,6 @@ function InvoiceFormContent({
     <>
       <DialogHeader>
         <DialogTitle>{dialogTitle}</DialogTitle>
-        {!isDuplicate && (
-          <DialogDescription>{t("invoices.newInvoiceDesc")}</DialogDescription>
-        )}
       </DialogHeader>
       <div className="grid gap-4 py-2">
         <div className="grid gap-4 sm:grid-cols-2">

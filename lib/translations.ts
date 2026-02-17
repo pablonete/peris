@@ -58,7 +58,6 @@ export const translations = {
       total: "Total",
       currency: "Moneda",
       newInvoice: "Nueva factura",
-      newInvoiceDesc: "Agrega una nueva factura al trimestre.",
       invoiceDate: "Fecha de factura",
       invoiceNumber: "Nº Factura",
       concept: "Concepto",
@@ -66,7 +65,8 @@ export const translations = {
       vat: "IVA",
       createInvoice: "Crear factura",
       createInvoiceTo: "Crear factura en",
-      differentQuarterWarning: "Esta fecha corresponde a un trimestre diferente",
+      differentQuarterWarning:
+        "Esta fecha corresponde a un trimestre diferente",
       cancel: "Cancelar",
       currencyCheckbox: "Factura en otra moneda",
       currencySymbol: "Símbolo (USD, GBP...)",
@@ -85,7 +85,6 @@ export const translations = {
     expenses: {
       expenses: "Gastos",
       newExpense: "Nuevo gasto",
-      newExpenseDesc: "Agrega un nuevo gasto al trimestre.",
       totalExpenses: "Total de gastos",
       expenseDate: "Fecha del gasto",
       paymentDate: "Fecha de pago",
@@ -103,7 +102,8 @@ export const translations = {
       total: "Total",
       createExpense: "Crear gasto",
       createExpenseTo: "Crear gasto en",
-      differentQuarterWarning: "Esta fecha corresponde a un trimestre diferente",
+      differentQuarterWarning:
+        "Esta fecha corresponde a un trimestre diferente",
       cancel: "Cancelar",
       emptyState: "No se encontraron gastos.",
       description: "Descripción",
@@ -239,7 +239,6 @@ export const translations = {
       total: "Total",
       currency: "Currency",
       newInvoice: "New Invoice",
-      newInvoiceDesc: "Add a new invoice entry for this quarter.",
       invoiceDate: "Invoice date",
       invoiceNumber: "Invoice No.",
       concept: "Concept",
@@ -266,7 +265,6 @@ export const translations = {
     expenses: {
       expenses: "Expenses",
       newExpense: "New Expense",
-      newExpenseDesc: "Add a new expense entry for this quarter.",
       totalExpenses: "Total expenses",
       expenseDate: "Expense date",
       paymentDate: "Payment date",
