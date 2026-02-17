@@ -70,6 +70,7 @@ export const translations = {
       currencySymbol: "Símbolo (USD, GBP...)",
       currencyRate: "Tasa de cambio",
       currencyTotal: "Total en moneda extranjera",
+      emptyState: "No se encontraron facturas.",
     },
     expenses: {
       expenses: "Gastos",
@@ -236,6 +237,7 @@ export const translations = {
       currencySymbol: "Symbol (USD, GBP...)",
       currencyRate: "Exchange rate",
       currencyTotal: "Total in foreign currency",
+      emptyState: "No invoices found.",
     },
     expenses: {
       expenses: "Expenses",

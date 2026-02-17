@@ -44,12 +44,8 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
     return <ErrorBanner title={t("sidebar.invoices")} message={error.message} />
   }
 
-  if (!content || content.length === 0) {
-    return (
-      <Alert>
-        <AlertDescription>No invoices found</AlertDescription>
-      </Alert>
-    )
+  if (!content) {
+    return null
   }
 
   const totalSubtotal = content.reduce((s, i) => s + i.subtotal, 0)
@@ -133,58 +129,66 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {content.map((inv) => (
-              <TableRow
-                key={inv.id}
-                className="border-b border-dashed border-[hsl(var(--ledger-line))] hover:bg-secondary/50"
-              >
-                <TableCell className="font-mono text-xs">
-                  {formatDate(inv.date)}
-                </TableCell>
-                <TableCell className="font-mono text-xs font-semibold">
-                  {inv.number}
-                </TableCell>
-                <TableCell className="text-sm">{inv.client}</TableCell>
-                <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
-                  {inv.concept}
-                </TableCell>
-                <TableCell className="text-center">
-                  <AttachmentCell
-                    storage={activeStorage}
-                    quarterId={quarterId}
-                    type="invoices"
-                    filename={inv.filename}
-                  />
-                </TableCell>
-                <TableCell className="font-mono text-xs text-right">
-                  {formatCurrency(inv.subtotal)}
-                </TableCell>
-                <TableCell className="font-mono text-xs text-right text-muted-foreground">
-                  {inv.vat > 0 ? formatCurrency(inv.vat) : "\u2014"}
-                </TableCell>
-                <TableCell className="font-mono text-sm font-semibold text-right">
-                  {formatCurrency(inv.total)}
-                </TableCell>
-                {hasCurrency && (
-                  <TableCell className="text-center">
-                    {inv.currency ? (
-                      <div className="font-mono text-xs text-muted-foreground">
-                        {inv.currency.symbol}{" "}
-                        {inv.currency.total.toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                )}
-                <TableCell className="text-center">
-                  <PaymentDateCell paymentDate={inv.paymentDate} />
+            {content.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={9} className="py-6 text-center">
+                  {t("invoices.emptyState")}
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              content.map((inv) => (
+                <TableRow
+                  key={inv.id}
+                  className="border-b border-dashed border-[hsl(var(--ledger-line))] hover:bg-secondary/50"
+                >
+                  <TableCell className="font-mono text-xs">
+                    {formatDate(inv.date)}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs font-semibold">
+                    {inv.number}
+                  </TableCell>
+                  <TableCell className="text-sm">{inv.client}</TableCell>
+                  <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
+                    {inv.concept}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <AttachmentCell
+                      storage={activeStorage}
+                      quarterId={quarterId}
+                      type="invoices"
+                      filename={inv.filename}
+                    />
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-right">
+                    {formatCurrency(inv.subtotal)}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-right text-muted-foreground">
+                    {inv.vat > 0 ? formatCurrency(inv.vat) : "\u2014"}
+                  </TableCell>
+                  <TableCell className="font-mono text-sm font-semibold text-right">
+                    {formatCurrency(inv.total)}
+                  </TableCell>
+                  {hasCurrency && (
+                    <TableCell className="text-center">
+                      {inv.currency ? (
+                        <div className="font-mono text-xs text-muted-foreground">
+                          {inv.currency.symbol}{" "}
+                          {inv.currency.total.toLocaleString("en-US", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                  )}
+                  <TableCell className="text-center">
+                    <PaymentDateCell paymentDate={inv.paymentDate} />
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
           <TableFooter>
             <TableRow className="border-t-2 border-foreground/20 bg-secondary/30 hover:bg-secondary/30">
