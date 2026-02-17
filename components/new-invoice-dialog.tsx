@@ -1,14 +1,16 @@
 "use client"
 
-import { useRef, useState } from "react"
-import { Plus, X, File } from "lucide-react"
-import { formatCurrency } from "@/lib/ledger-utils"
+import { useRef, useState, useMemo } from "react"
+import { Plus, X, File, AlertCircle } from "lucide-react"
+import { formatCurrency, getQuarterFromDate } from "@/lib/ledger-utils"
 import { generateNextId } from "@/lib/id-utils"
 import { readFileAsArrayBuffer } from "@/lib/file-utils"
 import { useEditingState } from "@/lib/editing-state-context"
 import { useFileSha } from "@/lib/use-storage-data"
 import { Invoice } from "@/lib/types"
 import { useLanguage } from "@/lib/i18n-context"
+import { useStorageQuarters } from "@/lib/use-storage-quarters"
+import { useRouter } from "next/navigation"
 import {
   Dialog,
   DialogContent,
@@ -18,6 +20,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -59,18 +67,25 @@ function InvoiceFormContent({
   initialInvoice,
   onSuccess,
   onCancel,
+  targetQuarterId,
 }: {
   quarterId: string
   invoices: Invoice[]
   initialInvoice?: Invoice | null
   onSuccess: () => void
   onCancel: () => void
+  targetQuarterId?: string
 }) {
   const { t } = useLanguage()
+  const router = useRouter()
+  const { quarters } = useStorageQuarters()
   const { getEditingFile, setEditingFile, addAttachment } = useEditingState()
   const editingFile = getEditingFile(quarterId, "invoices")
   const sha = useFileSha(quarterId, "invoices")
+  const targetSha = useFileSha(targetQuarterId || quarterId, "invoices")
   const uploadRef = useRef<HTMLInputElement>(null)
+
+  const isDuplicate = !!initialInvoice
 
   const today = new Date().toISOString().slice(0, 10)
   const [invoice, setInvoice] = useState<InvoiceFormData>({
@@ -102,12 +117,23 @@ function InvoiceFormContent({
   const vatNum = roundTwo(Number.parseFloat(invoice.vat) || 0)
   const totalNum = roundTwo(subtotalNum + vatNum)
 
+  const calculatedTargetQuarter = useMemo(() => {
+    if (!invoice.date) return quarterId
+    return getQuarterFromDate(invoice.date)
+  }, [invoice.date, quarterId])
+
+  const targetQuarterSha = useFileSha(calculatedTargetQuarter, "invoices")
+
+  const isDifferentQuarter = calculatedTargetQuarter !== quarterId
+  const quarterExists = quarters.includes(calculatedTargetQuarter)
+
   const isValid =
     invoice.date &&
     invoice.client.trim() &&
     invoice.number.trim() &&
     invoice.concept.trim() &&
-    subtotalNum > 0
+    subtotalNum > 0 &&
+    quarterExists
 
   const setCurrencyField = (
     field: keyof InvoiceFormData["currency"],
@@ -136,7 +162,22 @@ function InvoiceFormContent({
   const submit = async () => {
     if (!isValid) return
 
-    const id = generateNextId(invoices, "inv")
+    const effectiveQuarterId = calculatedTargetQuarter
+    const targetData =
+      calculatedTargetQuarter !== quarterId
+        ? getEditingFile(calculatedTargetQuarter, "invoices")?.data
+        : undefined
+    const effectiveInvoices: Invoice[] =
+      calculatedTargetQuarter !== quarterId
+        ? ((Array.isArray(targetData) ? targetData : []) as Invoice[])
+        : invoices
+    const effectiveSha =
+      calculatedTargetQuarter !== quarterId
+        ? (getEditingFile(calculatedTargetQuarter, "invoices")?.sha ??
+          targetQuarterSha)
+        : (editingFile?.sha ?? sha)
+
+    const id = generateNextId(effectiveInvoices, "inv")
 
     const record: Invoice = {
       id,
@@ -171,30 +212,59 @@ function InvoiceFormContent({
     if (file && invoice.filename) {
       try {
         const buffer = await readFileAsArrayBuffer(file)
-        addAttachment(quarterId, invoice.filename, buffer)
+        addAttachment(effectiveQuarterId, invoice.filename, buffer)
       } catch (e) {
         console.error("Attachment error:", e)
       }
     }
 
-    const updated = [...invoices, record].sort((a, b) =>
+    const updated = [...effectiveInvoices, record].sort((a, b) =>
       a.date.localeCompare(b.date)
     )
-    const currentSha = editingFile?.sha ?? sha
-    setEditingFile(quarterId, "invoices", updated, currentSha)
+    setEditingFile(effectiveQuarterId, "invoices", updated, effectiveSha)
+
     onSuccess()
+
+    if (isDifferentQuarter) {
+      router.push(`/invoices?q=${effectiveQuarterId}`)
+    }
   }
+
+  const dialogTitle = isDuplicate
+    ? t("invoices.duplicateInvoice")
+    : t("invoices.newInvoice")
 
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{t("invoices.newInvoice")}</DialogTitle>
-        <DialogDescription>{t("invoices.newInvoiceDesc")}</DialogDescription>
+        <DialogTitle>{dialogTitle}</DialogTitle>
       </DialogHeader>
       <div className="grid gap-4 py-2">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-2">
-            <Label htmlFor="inv-date">{t("invoices.invoiceDate")}</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="inv-date">{t("invoices.invoiceDate")}</Label>
+              {(isDifferentQuarter || !quarterExists) && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <AlertCircle
+                        className={`h-4 w-4 ${
+                          !quarterExists ? "text-red-600" : "text-orange-600"
+                        }`}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        {!quarterExists
+                          ? t("invoices.quarterNotFound")
+                          : t("invoices.differentQuarterWarning")}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
             <Input
               id="inv-date"
               type="date"
@@ -419,7 +489,9 @@ function InvoiceFormContent({
             {t("invoices.cancel")}
           </Button>
           <Button onClick={submit} disabled={!isValid}>
-            {t("invoices.createInvoice")}
+            {isDifferentQuarter
+              ? `${t("invoices.createInvoiceTo")} ${calculatedTargetQuarter}`
+              : t("invoices.createInvoice")}
           </Button>
         </div>
       </DialogFooter>
