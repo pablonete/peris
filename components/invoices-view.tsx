@@ -20,6 +20,7 @@ import { ErrorBanner } from "@/components/error-banner"
 import { PaymentDateCell } from "@/components/payment-date-cell"
 import { AttachmentCell } from "@/components/attachment-cell"
 import { SummaryCard } from "@/components/summary-card"
+import { EditingIndicator } from "@/components/editing-indicator"
 import {
   NewInvoiceDialog,
   DuplicateInvoiceDialog,
@@ -76,12 +77,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
           <div>
             <h2 className="flex items-center gap-2 text-2xl font-bold tracking-wide text-foreground">
               {t("invoices.sentInvoices")}
-              {isEditing && (
-                <span
-                  className="h-2 w-2 rounded-full bg-[hsl(var(--ledger-blue))]"
-                  aria-label="Editing"
-                />
-              )}
+              <EditingIndicator isEditing={isEditing} />
             </h2>
             <p className="font-mono text-xs text-muted-foreground">
               {quarterId} &middot; {activeStorage.name} &middot;{" "}
@@ -201,7 +197,10 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
                     </TableCell>
                   )}
                   <TableCell className="text-center">
-                    <PaymentDateCell paymentDate={inv.paymentDate} />
+                    <PaymentDateCell
+                      paymentDate={inv.paymentDate}
+                      variant="invoice"
+                    />
                   </TableCell>
                   <TableCell className="text-center">
                     <InvoiceRowActions

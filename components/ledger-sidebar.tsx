@@ -314,12 +314,6 @@ function SelectedQuarterRow({
         {viewItems.map(({ key, label, icon: Icon }) => {
           const isActive = selectedView === key
           const isEditing = !!getEditingFile(quarterId, key)
-          const iconColor =
-            key === "invoices"
-              ? "text-[hsl(var(--ledger-green))]"
-              : key === "expenses"
-                ? "text-[hsl(var(--ledger-red))]"
-                : ""
           return (
             <li key={key}>
               <Link
@@ -332,7 +326,7 @@ function SelectedQuarterRow({
                     : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
                 )}
               >
-                <Icon className={cn("h-4 w-4", iconColor)} />
+                <Icon className="h-4 w-4" />
                 {label}
                 {isEditing && (
                   <span
@@ -395,12 +389,6 @@ function NonSelectedQuarterRow({
         <div className="flex gap-0.5 pr-3">
           {viewItems.map(({ key, icon: Icon }) => {
             const isEditing = !!getEditingFile(quarterId, key)
-            const iconColor =
-              key === "invoices"
-                ? "text-[hsl(var(--ledger-green))]"
-                : key === "expenses"
-                  ? "text-[hsl(var(--ledger-red))]"
-                  : "text-sidebar-foreground/50"
             return (
               <button
                 key={key}
@@ -408,10 +396,10 @@ function NonSelectedQuarterRow({
                 onClick={() => {
                   router.push(`/${key}?q=${quarterId}`)
                 }}
-                className="relative flex items-center justify-center rounded-sm p-1.5 transition-colors hover:text-sidebar-accent-foreground"
+                className="relative flex items-center justify-center rounded-sm p-1.5 transition-colors text-sidebar-foreground/50 hover:text-sidebar-accent-foreground"
                 title={t(`sidebar.${key}`)}
               >
-                <Icon className={cn("h-4 w-4", iconColor)} />
+                <Icon className="h-4 w-4" />
                 {isEditing && (
                   <span
                     className="absolute -mt-2 -mr-2 h-1.5 w-1.5 rounded-full bg-[hsl(var(--ledger-blue))]"

@@ -6,12 +6,12 @@ import { useLanguage } from "@/lib/i18n-context"
 
 interface PaymentDateCellProps {
   paymentDate: string | null | undefined
-  variant?: "invoice" | "expense"
+  variant: "invoice" | "expense"
 }
 
 export function PaymentDateCell({
   paymentDate,
-  variant = "invoice",
+  variant,
 }: PaymentDateCellProps) {
   const { t } = useLanguage()
 
