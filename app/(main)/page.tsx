@@ -1,15 +1,12 @@
-"use client"
+import type { Metadata } from "next"
+import WelcomePageContent from "./content"
 
-import { WelcomeView } from "@/components/welcome-view"
-import { useRouter } from "next/navigation"
-import type { ViewType } from "@/components/ledger-sidebar"
+export const metadata: Metadata = {
+  title: "Peris",
+  description:
+    "A minimalist ledger book application for personal financial tracking",
+}
 
 export default function WelcomePage() {
-  const router = useRouter()
-
-  function handleNavigate(quarter: string, view: ViewType) {
-    router.push(`/${view}?q=${quarter}`)
-  }
-
-  return <WelcomeView onNavigate={handleNavigate} />
+  return <WelcomePageContent />
 }

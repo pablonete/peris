@@ -190,7 +190,9 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                     {exp.vat.length > 0 ? (
                       <div className="flex flex-col gap-1">
                         {exp.vat.map((vat, idx) => (
-                          <div key={idx}>{formatCurrency(vat.subtotal)}</div>
+                          <div key={`${vat.rate}-${vat.subtotal}`}>
+                            {formatCurrency(vat.subtotal)}
+                          </div>
                         ))}
                       </div>
                     ) : (
@@ -202,7 +204,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                       <div className="flex flex-col gap-1">
                         {exp.vat.map((vat, idx) => (
                           <div
-                            key={idx}
+                            key={`${vat.rate}-${vat.subtotal}`}
                             className="flex items-baseline justify-end gap-1"
                           >
                             <span className="text-[9px] text-muted-foreground/60">
