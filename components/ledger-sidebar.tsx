@@ -199,9 +199,6 @@ function groupQuartersByYear(quarters: string[]) {
     if (!grouped[year]) grouped[year] = []
     grouped[year].push(qId)
   })
-  Object.keys(grouped).forEach((year) => {
-    grouped[year].sort()
-  })
   return grouped
 }
 
