@@ -196,6 +196,10 @@ function groupQuartersByYear(quarters: string[]) {
     if (!grouped[year]) grouped[year] = []
     grouped[year].push(qId)
   })
+  // Sort quarters within each year in descending order (4Q, 3Q, 2Q, 1Q)
+  Object.keys(grouped).forEach((year) => {
+    grouped[year].sort().reverse()
+  })
   return grouped
 }
 
@@ -227,9 +231,8 @@ function CollapsedYearRow({
         <button
           type="button"
           onClick={() => {
-            const firstQuarter =
-              quarters.find((q) => q.endsWith(".Q1")) || quarters[0]
-            router.push(`/invoices?q=${firstQuarter}`)
+            // Navigate to most recent quarter (first in descending order)
+            router.push(`/invoices?q=${quarters[0]}`)
           }}
           className="flex flex-1 items-center gap-2 px-3 py-2.5 text-left text-sm transition-colors text-sidebar-foreground/80"
         >
