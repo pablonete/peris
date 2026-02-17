@@ -283,7 +283,7 @@ function SelectedQuarterRow({
   formatQuarterLabel: (qId: string) => string
   viewItems: { key: ViewType; label: string; icon: typeof FileText }[]
   selectedView: ViewType | null
-  getEditingFile: (qId: string, key: string) => any
+  getEditingFile: ReturnType<typeof useEditingState>["getEditingFile"]
   onSidebarClose?: () => void
   t: (key: string) => string
 }) {
@@ -363,7 +363,7 @@ function NonSelectedQuarterRow({
   hasEdits: boolean
   formatQuarterLabel: (qId: string) => string
   viewItems: { key: ViewType; label: string; icon: typeof FileText }[]
-  getEditingFile: (qId: string, key: string) => any
+  getEditingFile: ReturnType<typeof useEditingState>["getEditingFile"]
   router: ReturnType<typeof useRouter>
   t: (key: string) => string
 }) {

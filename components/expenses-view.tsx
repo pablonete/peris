@@ -227,7 +227,10 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                     {formatCurrency(exp.total)}
                   </TableCell>
                   <TableCell className="text-center">
-                    <PaymentDateCell paymentDate={exp.paymentDate} variant="expense" />
+                    <PaymentDateCell
+                      paymentDate={exp.paymentDate}
+                      variant="expense"
+                    />
                   </TableCell>
                   <TableCell className="text-center">
                     <ExpenseRowActions
