@@ -173,6 +173,7 @@ finances/
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
 - [Radix UI](https://www.radix-ui.com/) - Accessible component primitives
 - [Recharts](https://recharts.org/) - Data visualization
+- [Vitest](https://vitest.dev/) - Unit testing framework
 
 ## Getting Started
 
@@ -227,10 +228,15 @@ Switch between Spanish and English using the **ES | EN** toggle at the bottom of
 ### Available Scripts
 
 ```bash
-pnpm dev      # Start development server
-pnpm build    # Build for production
-pnpm start    # Start production server
-pnpm lint     # Run ESLint
+pnpm dev            # Start development server
+pnpm build          # Build for production
+pnpm start          # Start production server
+pnpm lint           # Run ESLint
+pnpm format         # Format code with Prettier
+pnpm test           # Run tests in watch mode
+pnpm test:run       # Run tests once
+pnpm test:ui        # Run tests with UI
+pnpm test:coverage  # Run tests with coverage report
 ```
 
 ### Project Structure

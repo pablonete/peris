@@ -12,11 +12,7 @@ describe("SummaryCard", () => {
 
   it("should apply custom className to value", () => {
     render(
-      <SummaryCard
-        label="Expenses"
-        value={500}
-        valueClassName="text-red-500"
-      />
+      <SummaryCard label="Expenses" value={500} valueClassName="text-red-500" />
     )
 
     const valueElement = screen.getByText(/500,00/)

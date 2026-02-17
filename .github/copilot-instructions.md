@@ -27,6 +27,20 @@ This is Peris - a minimalist ledger book application for personal accounting and
 - **Avoid useMemo/useCallback**: This project uses React Compiler which automatically optimizes these patterns. Extract complex logic to separate functions instead.
 - **Extract logic to functions**: Keep component bodies clean by extracting grouping, filtering, and transformation logic to separate functions outside the component.
 
+### Testing Guidelines
+
+- **Test framework**: Use Vitest for all tests
+- **Test files**: Place test files next to the code they test with `.test.ts` or `.test.tsx` extension
+- **What to test**: Focus on business logic, utility functions, and component behavior
+  - **DO test**: Pure functions, calculations, data transformations, component rendering logic
+  - **DO NOT test**: Implementation details, complex integration with contexts (unless creating test wrappers), trivial code
+- **Test quality**: Only write meaningful tests that validate real behavior and pay back maintenance effort
+  - Prefer testing actual behavior over implementation details
+  - Use descriptive test names that explain what is being tested
+  - Keep tests simple and focused on one thing
+- **Running tests**: Use `pnpm test` for watch mode, `pnpm test:run` for CI, `pnpm test:coverage` for coverage reports
+- **Test providers**: Use `TestProviders` from `test/test-utils.tsx` when components need i18n context
+
 ### Internationalization (i18n)
 
 - All user-facing strings must be translatable

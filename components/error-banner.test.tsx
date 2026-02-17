@@ -21,11 +21,7 @@ describe("ErrorBanner", () => {
 
   it("should apply custom className", () => {
     const { container } = render(
-      <ErrorBanner
-        title="Error"
-        message="Message"
-        className="custom-class"
-      />
+      <ErrorBanner title="Error" message="Message" className="custom-class" />
     )
 
     const alert = container.querySelector(".custom-class")
