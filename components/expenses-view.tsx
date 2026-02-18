@@ -28,6 +28,7 @@ import {
 } from "@/components/new-expense-dialog"
 import { ExpenseRowActions } from "@/components/expense-row-actions"
 import { DeleteExpenseAlert } from "@/components/delete-expense-alert"
+import { LinkOrphanFileDialog } from "@/components/link-orphan-file-dialog"
 import { useLanguage } from "@/lib/i18n-context"
 import { Button } from "@/components/ui/button"
 
@@ -43,6 +44,9 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
   const isEditing = !!getEditingFile(quarterId, "expenses")
   const [deleteAlert, setDeleteAlert] = useState<string | null>(null)
   const [duplicateExpense, setDuplicateExpense] = useState<Expense | null>(null)
+  const [linkOrphanExpense, setLinkOrphanExpense] = useState<Expense | null>(
+    null
+  )
   const [showVatSubtotals, setShowVatSubtotals] = useState(false)
 
   if (isPending) {
@@ -85,6 +89,17 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
     const editingFile = getEditingFile(quarterId, "expenses")
     setEditingFile(quarterId, "expenses", nextExpenses, editingFile?.sha)
     setDeleteAlert(null)
+  }
+
+  const handleLinkOrphan = (filename: string) => {
+    if (!linkOrphanExpense) return
+
+    const nextExpenses = expenses.map((e) =>
+      e.id === linkOrphanExpense.id ? { ...e, filename } : e
+    )
+    const editingFile = getEditingFile(quarterId, "expenses")
+    setEditingFile(quarterId, "expenses", nextExpenses, editingFile?.sha)
+    setLinkOrphanExpense(null)
   }
 
   return (
@@ -233,6 +248,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                       expense={exp}
                       onDuplicate={setDuplicateExpense}
                       onDelete={setDeleteAlert}
+                      onLinkOrphan={setLinkOrphanExpense}
                     />
                   </TableCell>
                 </TableRow>
@@ -315,6 +331,15 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
         expenses={expenses}
         expense={duplicateExpense}
         onClose={() => setDuplicateExpense(null)}
+      />
+
+      <LinkOrphanFileDialog
+        open={!!linkOrphanExpense}
+        onClose={() => setLinkOrphanExpense(null)}
+        onLink={handleLinkOrphan}
+        quarterId={quarterId}
+        type="expenses"
+        linkedItems={expenses}
       />
     </div>
   )

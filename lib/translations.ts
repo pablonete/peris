@@ -81,6 +81,11 @@ export const translations = {
       deleteConfirmDesc:
         "¿Estás seguro de que deseas eliminar esta factura? Esta acción no se puede deshacer.",
       deleteButton: "Eliminar",
+      linkOrphan: "Enlazar con archivo huérfano...",
+      linkOrphanDesc:
+        "Selecciona un archivo PDF existente en la carpeta de facturas que no está enlazado a ninguna factura.",
+      noOrphanFiles: "No hay archivos huérfanos disponibles.",
+      linkFile: "Enlazar archivo",
     },
     expenses: {
       expenses: "Gastos",
@@ -125,6 +130,12 @@ export const translations = {
       removeFile: "Eliminar archivo",
       vatSubtotal: "IVA",
       items: "items",
+      linkOrphan: "Enlazar con archivo huérfano...",
+      linkOrphanDesc:
+        "Selecciona un archivo PDF existente en la carpeta de gastos que no está enlazado a ningún gasto.",
+      noOrphanFiles: "No hay archivos huérfanos disponibles.",
+      linkFile: "Enlazar archivo",
+      loading: "Cargando...",
     },
     cashflow: {
       cashflow: "Flujo de caja",
@@ -261,6 +272,11 @@ export const translations = {
       deleteConfirmDesc:
         "Are you sure you want to delete this invoice? This action cannot be undone.",
       deleteButton: "Delete",
+      linkOrphan: "Link with orphan file...",
+      linkOrphanDesc:
+        "Select an existing PDF file in the invoices folder that is not linked to any invoice.",
+      noOrphanFiles: "No orphan files available.",
+      linkFile: "Link file",
     },
     expenses: {
       expenses: "Expenses",
@@ -304,6 +320,12 @@ export const translations = {
       removeFile: "Remove file",
       vatSubtotal: "VAT",
       items: "items",
+      linkOrphan: "Link with orphan file...",
+      linkOrphanDesc:
+        "Select an existing PDF file in the expenses folder that is not linked to any expense.",
+      noOrphanFiles: "No orphan files available.",
+      linkFile: "Link file",
+      loading: "Loading...",
     },
     cashflow: {
       cashflow: "Cashflow",

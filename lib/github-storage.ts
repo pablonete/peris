@@ -85,6 +85,41 @@ export class GitHubStorageService {
   }
 
   /**
+   * Lists all files in a specific folder within a quarter
+   */
+  async listFilesInFolder(
+    quarterId: string,
+    folderType: "invoices" | "expenses"
+  ): Promise<string[]> {
+    const folderPath = this.dataPath
+      ? `${this.dataPath}/${quarterId}/${folderType}`
+      : `${quarterId}/${folderType}`
+
+    try {
+      const response = await this.octokit.rest.repos.getContent({
+        owner: this.owner,
+        repo: this.repo,
+        path: folderPath,
+      })
+
+      if (!Array.isArray(response.data)) {
+        return []
+      }
+
+      return response.data
+        .filter((item) => (item as any).type === "file")
+        .map((item) => (item as any).name)
+    } catch (error) {
+      const err = error as any
+      if (err.status === 404) {
+        return []
+      }
+      console.error(`Error listing files in ${folderPath}:`, error)
+      return []
+    }
+  }
+
+  /**
    * Fetches a file from the quarter folder
    */
   async fetchQuarterFile(

@@ -27,6 +27,7 @@ import {
 } from "@/components/new-invoice-dialog"
 import { InvoiceRowActions } from "@/components/invoice-row-actions"
 import { DeleteInvoiceAlert } from "@/components/delete-invoice-alert"
+import { LinkOrphanFileDialog } from "@/components/link-orphan-file-dialog"
 import { useLanguage } from "@/lib/i18n-context"
 
 interface InvoicesViewProps {
@@ -41,6 +42,9 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
   const isEditing = !!getEditingFile(quarterId, "invoices")
   const [deleteAlert, setDeleteAlert] = useState<string | null>(null)
   const [duplicateInvoice, setDuplicateInvoice] = useState<Invoice | null>(null)
+  const [linkOrphanInvoice, setLinkOrphanInvoice] = useState<Invoice | null>(
+    null
+  )
 
   if (isPending) {
     return (
@@ -68,6 +72,17 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
     const editingFile = getEditingFile(quarterId, "invoices")
     setEditingFile(quarterId, "invoices", nextInvoices, editingFile?.sha)
     setDeleteAlert(null)
+  }
+
+  const handleLinkOrphan = (filename: string) => {
+    if (!linkOrphanInvoice) return
+
+    const nextInvoices = content.map((i) =>
+      i.id === linkOrphanInvoice.id ? { ...i, filename } : i
+    )
+    const editingFile = getEditingFile(quarterId, "invoices")
+    setEditingFile(quarterId, "invoices", nextInvoices, editingFile?.sha)
+    setLinkOrphanInvoice(null)
   }
 
   return (
@@ -207,6 +222,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
                       invoice={inv}
                       onDuplicate={setDuplicateInvoice}
                       onDelete={setDeleteAlert}
+                      onLinkOrphan={setLinkOrphanInvoice}
                     />
                   </TableCell>
                 </TableRow>
@@ -246,6 +262,15 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
         invoices={content}
         invoice={duplicateInvoice}
         onClose={() => setDuplicateInvoice(null)}
+      />
+
+      <LinkOrphanFileDialog
+        open={!!linkOrphanInvoice}
+        onClose={() => setLinkOrphanInvoice(null)}
+        onLink={handleLinkOrphan}
+        quarterId={quarterId}
+        type="invoices"
+        linkedItems={content}
       />
     </div>
   )
