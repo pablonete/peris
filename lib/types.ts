@@ -87,7 +87,7 @@ export interface CashflowEntry {
   /** Bank name (e.g., "Unicaja", "Revolut") */
   bankName?: string
   /** Sequential bank movement number within the quarter */
-  bankSequence: number
+  bankSequence?: number
   /** Income amount if this is an income transaction */
   income?: number
   /** Optional link to an invoice from the same quarter */
@@ -110,6 +110,4 @@ export interface QuarterData {
   invoices: Invoice[]
   expenses: Expense[]
   cashflow: CashflowEntry[]
-  /** Opening balance carried over from the previous quarter for the cashflow */
-  carryOver: number
 }

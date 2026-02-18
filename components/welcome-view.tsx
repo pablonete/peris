@@ -42,16 +42,19 @@ function useQuarterSummary(qId: string) {
     (sum, exp) => sum + exp.total,
     0
   )
-  const closingBalance =
-    cashflowQuery.content.entries[cashflowQuery.content.entries.length - 1]
-      ?.balance ?? cashflowQuery.content.carryOver
+  const entries = cashflowQuery.content.entries
+  const openingBalance =
+    entries.length > 0
+      ? entries[0].balance - (entries[0].income ?? 0) + (entries[0].expense ?? 0)
+      : 0
+  const closingBalance = entries[entries.length - 1]?.balance ?? openingBalance
   const net = totalInvoiced - totalExpenses
 
   return {
     totalInvoiced,
     totalExpenses,
     closingBalance,
-    carryOver: cashflowQuery.content.carryOver,
+    openingBalance,
     net,
   }
 }
@@ -99,7 +102,7 @@ function QuarterCard({ qId, onNavigate }: QuarterCardProps) {
             {t("welcome.opening")}
           </p>
           <p className="font-mono text-sm text-foreground">
-            {formatCurrency(summary.carryOver)}
+            {formatCurrency(summary.openingBalance)}
           </p>
         </div>
         <div>

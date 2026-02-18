@@ -142,7 +142,6 @@ export function EditingStateProvider({
     setEditingFile(quarterId, "expenses", [])
     setEditingFile(quarterId, "cashflow", {
       companyName,
-      carryOver: 0,
       entries: [],
     })
   }
