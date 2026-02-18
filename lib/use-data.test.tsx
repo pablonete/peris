@@ -1,33 +1,12 @@
 import { describe, it, expect } from "vitest"
 import { renderHook } from "@testing-library/react"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { ReactNode } from "react"
 import { useData } from "./use-data"
-import { StorageProvider } from "./storage-context"
-import { EditingStateProvider } from "./editing-state-context"
-
-function TestWrapper({ children }: { children: ReactNode }) {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  })
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <StorageProvider>
-        <EditingStateProvider>{children}</EditingStateProvider>
-      </StorageProvider>
-    </QueryClientProvider>
-  )
-}
+import { DataTestProviders } from "@/test/test-utils"
 
 describe("useData", () => {
   it("returns expected properties", () => {
     const { result } = renderHook(() => useData(), {
-      wrapper: TestWrapper,
+      wrapper: DataTestProviders,
     })
 
     expect(result.current).toHaveProperty("activeStorage")
@@ -43,7 +22,7 @@ describe("useData", () => {
 
   it("returns default companyName from sample storage", () => {
     const { result } = renderHook(() => useData(), {
-      wrapper: TestWrapper,
+      wrapper: DataTestProviders,
     })
 
     expect(result.current.companyName).toBe("Sample Data")
@@ -51,7 +30,7 @@ describe("useData", () => {
 
   it("isDirtyFile returns false when no files are being edited", () => {
     const { result } = renderHook(() => useData(), {
-      wrapper: TestWrapper,
+      wrapper: DataTestProviders,
     })
 
     expect(result.current.isDirtyFile("2025.1Q", "invoices")).toBe(false)
@@ -59,7 +38,7 @@ describe("useData", () => {
 
   it("getFileUrl returns correct URL format", () => {
     const { result } = renderHook(() => useData(), {
-      wrapper: TestWrapper,
+      wrapper: DataTestProviders,
     })
 
     const url = result.current.getFileUrl("2025.1Q", "invoices", "test.pdf")
