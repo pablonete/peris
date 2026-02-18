@@ -86,7 +86,7 @@ export interface CashflowEntry {
   concept: string
   /** Bank name (e.g., "Unicaja", "Revolut") */
   bankName?: string
-  /** Sequential bank movement number within the quarter */
+  /** Sequential bank movement number within the quarter, empty for carry over */
   bankSequence?: number
   /** Income amount if this is an income transaction */
   income?: number

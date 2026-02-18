@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { formatCurrency, formatDate } from "@/lib/ledger-utils"
+import { getCashflowPreviousBalance } from "@/lib/cashflow-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useData } from "@/lib/use-data"
 import {
@@ -83,12 +84,7 @@ export function CashflowView({
 
   const totalIncome = filteredEntries.reduce((s, e) => s + (e.income ?? 0), 0)
   const totalExpense = filteredEntries.reduce((s, e) => s + (e.expense ?? 0), 0)
-  const openingBalance =
-    filteredEntries.length > 0
-      ? filteredEntries[0].balance -
-        (filteredEntries[0].income ?? 0) +
-        (filteredEntries[0].expense ?? 0)
-      : 0
+  const openingBalance = getCashflowPreviousBalance(filteredEntries)
   const closingBalance =
     filteredEntries[filteredEntries.length - 1]?.balance ?? openingBalance
 
