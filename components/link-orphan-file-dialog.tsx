@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Link2 } from "lucide-react"
 import { useLanguage } from "@/lib/i18n-context"
-import { useStorage } from "@/lib/storage-context"
+import { useData } from "@/lib/use-data"
 import { getOrphanFiles } from "@/lib/orphan-files"
 import { Invoice, Expense } from "@/lib/types"
 import {
@@ -35,7 +35,7 @@ export function LinkOrphanFileDialog({
   linkedItems,
 }: LinkOrphanFileDialogProps) {
   const { t } = useLanguage()
-  const { activeStorage } = useStorage()
+  const { activeStorage } = useData()
   const [orphanFiles, setOrphanFiles] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedFile, setSelectedFile] = useState<string | null>(null)

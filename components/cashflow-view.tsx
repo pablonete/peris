@@ -2,10 +2,8 @@
 
 import { useState } from "react"
 import { formatCurrency, formatDate } from "@/lib/ledger-utils"
-import { useStorage } from "@/lib/storage-context"
 import { useStorageData } from "@/lib/use-storage-data"
-import { useStorageQuarters } from "@/lib/use-storage-quarters"
-import { useEditingState } from "@/lib/editing-state-context"
+import { useData } from "@/lib/use-data"
 import {
   Table,
   TableBody,
@@ -34,11 +32,9 @@ export function CashflowView({
   onNavigateToQuarter,
 }: CashflowViewProps) {
   const { t } = useLanguage()
-  const { activeStorage } = useStorage()
-  const { quarters } = useStorageQuarters()
-  const { getEditingFile } = useEditingState()
+  const { activeStorage, companyName, quarters, isDirtyFile } = useData()
   const { content, isPending, error } = useStorageData(quarterId, "cashflow")
-  const isEditing = !!getEditingFile(quarterId, "cashflow")
+  const isEditing = isDirtyFile(quarterId, "cashflow")
 
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
   const entries = content?.entries ?? []
@@ -99,7 +95,7 @@ export function CashflowView({
           <EditingIndicator isEditing={isEditing} />
         </h2>
         <p className="font-mono text-xs text-muted-foreground">
-          {quarterId} &middot; {activeStorage.name} &middot; {entries.length}{" "}
+          {quarterId} &middot; {companyName} &middot; {entries.length}{" "}
           {t("cashflow.movements")}
         </p>
       </div>

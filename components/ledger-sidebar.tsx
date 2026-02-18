@@ -1,7 +1,6 @@
 "use client"
 import { cn } from "@/lib/utils"
-import { useStorageQuarters } from "@/lib/use-storage-quarters"
-import { useEditingState } from "@/lib/editing-state-context"
+import { useData } from "@/lib/use-data"
 import { FileText, Receipt, ArrowRightLeft, BookOpen } from "lucide-react"
 import { useLanguage } from "@/lib/i18n-context"
 import { StorageSelector } from "./storage-selector"
@@ -26,8 +25,7 @@ export function LedgerSidebar({
 }: LedgerSidebarProps) {
   const { language, setLanguage, t } = useLanguage()
   const router = useRouter()
-  const { quarters, error: quartersError } = useStorageQuarters()
-  const { getEditingFile } = useEditingState()
+  const { quarters, quartersError, isDirtyFile, getEditingFile } = useData()
 
   const viewItems: { key: ViewType; label: string; icon: typeof FileText }[] = [
     { key: "invoices", label: t("sidebar.invoices"), icon: FileText },
@@ -51,9 +49,9 @@ export function LedgerSidebar({
     const yearQuarters = quartersByYear[year] || []
     return yearQuarters.some(
       (qId) =>
-        !!getEditingFile(qId, "invoices") ||
-        !!getEditingFile(qId, "expenses") ||
-        !!getEditingFile(qId, "cashflow")
+        isDirtyFile(qId, "invoices") ||
+        isDirtyFile(qId, "expenses") ||
+        isDirtyFile(qId, "cashflow")
     )
   }
 
@@ -283,7 +281,7 @@ function SelectedQuarterRow({
   formatQuarterLabel: (qId: string) => string
   viewItems: { key: ViewType; label: string; icon: typeof FileText }[]
   selectedView: ViewType | null
-  getEditingFile: ReturnType<typeof useEditingState>["getEditingFile"]
+  getEditingFile: ReturnType<typeof useData>["getEditingFile"]
   onSidebarClose?: () => void
   t: (key: string) => string
 }) {
@@ -357,7 +355,7 @@ function NonSelectedQuarterRow({
   hasEdits: boolean
   formatQuarterLabel: (qId: string) => string
   viewItems: { key: ViewType; label: string; icon: typeof FileText }[]
-  getEditingFile: ReturnType<typeof useEditingState>["getEditingFile"]
+  getEditingFile: ReturnType<typeof useData>["getEditingFile"]
   router: ReturnType<typeof useRouter>
   t: (key: string) => string
 }) {

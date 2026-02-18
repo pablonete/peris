@@ -5,11 +5,10 @@ import { Plus, X, File, AlertCircle } from "lucide-react"
 import { formatCurrency, getQuarterFromDate } from "@/lib/ledger-utils"
 import { generateNextId } from "@/lib/id-utils"
 import { readFileAsArrayBuffer } from "@/lib/file-utils"
-import { useEditingState } from "@/lib/editing-state-context"
+import { useData } from "@/lib/use-data"
 import { useFileSha } from "@/lib/use-storage-data"
 import { Invoice } from "@/lib/types"
 import { useLanguage } from "@/lib/i18n-context"
-import { useStorageQuarters } from "@/lib/use-storage-quarters"
 import { useRouter } from "next/navigation"
 import {
   Dialog,
@@ -78,8 +77,7 @@ function InvoiceFormContent({
 }) {
   const { t } = useLanguage()
   const router = useRouter()
-  const { quarters } = useStorageQuarters()
-  const { getEditingFile, setEditingFile, addAttachment } = useEditingState()
+  const { quarters, getEditingFile, setEditingFile, addAttachment } = useData()
   const editingFile = getEditingFile(quarterId, "invoices")
   const sha = useFileSha(quarterId, "invoices")
   const targetSha = useFileSha(targetQuarterId || quarterId, "invoices")

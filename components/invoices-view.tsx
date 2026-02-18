@@ -3,8 +3,7 @@
 import { useState } from "react"
 import { formatCurrency, formatDate } from "@/lib/ledger-utils"
 import { useStorageData } from "@/lib/use-storage-data"
-import { useStorage } from "@/lib/storage-context"
-import { useEditingState } from "@/lib/editing-state-context"
+import { useData } from "@/lib/use-data"
 import { Invoice } from "@/lib/types"
 import {
   Table,
@@ -36,10 +35,9 @@ interface InvoicesViewProps {
 
 export function InvoicesView({ quarterId }: InvoicesViewProps) {
   const { t } = useLanguage()
-  const { activeStorage } = useStorage()
-  const { getEditingFile, setEditingFile } = useEditingState()
+  const { activeStorage, companyName, getFileUrl, isDirtyFile, getEditingFile, setEditingFile } = useData()
   const { content, isPending, error } = useStorageData(quarterId, "invoices")
-  const isEditing = !!getEditingFile(quarterId, "invoices")
+  const isEditing = isDirtyFile(quarterId, "invoices")
   const [deleteAlert, setDeleteAlert] = useState<string | null>(null)
   const [duplicateInvoice, setDuplicateInvoice] = useState<Invoice | null>(null)
   const [linkOrphanInvoice, setLinkOrphanInvoice] = useState<Invoice | null>(
@@ -95,7 +93,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
               <EditingIndicator isEditing={isEditing} />
             </h2>
             <p className="font-mono text-xs text-muted-foreground">
-              {quarterId} &middot; {activeStorage.name} &middot;{" "}
+              {quarterId} &middot; {companyName} &middot;{" "}
               {content.length} {t("invoices.sentInvoices").toLowerCase()}
             </p>
           </div>

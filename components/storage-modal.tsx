@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { useStorage } from "@/lib/storage-context"
+import { useData } from "@/lib/use-data"
 import { Storage } from "@/lib/storage-types"
 import { validateStorageAccess } from "@/lib/github-data"
 import { useLanguage } from "@/lib/i18n-context"
@@ -24,7 +24,7 @@ interface StorageModalProps {
 
 export function StorageModal({ open, onOpenChange }: StorageModalProps) {
   const { t } = useLanguage()
-  const { storages, addStorage, setActiveStorage } = useStorage()
+  const { storages, addStorage, setActiveStorage } = useData()
   const [formData, setFormData] = useState({
     name: "",
     url: "",

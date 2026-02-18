@@ -2,13 +2,13 @@
 
 import { Save, Loader2 } from "lucide-react"
 import { useLanguage } from "@/lib/i18n-context"
-import { useEditingState } from "@/lib/editing-state-context"
+import { useData } from "@/lib/use-data"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
 export function CommitButton() {
   const { t } = useLanguage()
-  const { editingCount, isCommitting, commitChanges } = useEditingState()
+  const { editingCount, isCommitting, commitChanges } = useData()
 
   if (editingCount === 0) {
     return null
