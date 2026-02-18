@@ -114,6 +114,8 @@ function InvoiceFormContent({
   const [file, setFile] = useState<File | null>(null)
   const lastVatChangeRef = useRef(false)
 
+  const roundTwo = (n: number) => Math.round(n * 100) / 100
+
   // Auto-calculate VAT when subtotal or vatRate changes (but not when VAT is changed manually)
   useEffect(() => {
     if (lastVatChangeRef.current) {
@@ -128,9 +130,7 @@ function InvoiceFormContent({
     if (invoice.vat !== String(calculatedVat)) {
       setInvoice((prev) => ({ ...prev, vat: String(calculatedVat) }))
     }
-  }, [invoice.subtotal, invoice.vatRate])
-
-  const roundTwo = (n: number) => Math.round(n * 100) / 100
+  }, [invoice.subtotal, invoice.vatRate, invoice.vat])
 
   const subtotalNum = roundTwo(Number.parseFloat(invoice.subtotal) || 0)
   const vatNum = roundTwo(Number.parseFloat(invoice.vat) || 0)
