@@ -196,7 +196,9 @@ function InvoiceFormContent({
       client: invoice.client.trim(),
       concept: invoice.concept.trim(),
       subtotal: subtotalNum,
-      vatRate: invoice.vatRate ? roundTwo(Number.parseFloat(invoice.vatRate)) : undefined,
+      vatRate: invoice.vatRate
+        ? roundTwo(Number.parseFloat(invoice.vatRate))
+        : undefined,
       vat: vatNum,
       total: totalNum,
       paymentDate: invoice.collected ? invoice.paymentDate : undefined,
@@ -347,22 +349,24 @@ function InvoiceFormContent({
           />
         </div>
 
-        <div className="grid gap-2">
-          <Label htmlFor="inv-subtotal">{t("invoices.subtotal")}</Label>
-          <Input
-            id="inv-subtotal"
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="0.01"
-            value={invoice.subtotal}
-            onChange={(e) =>
-              setInvoiceAndCalculateVat({ ...invoice, subtotal: e.target.value })
-            }
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-2">
+            <Label htmlFor="inv-subtotal">{t("invoices.subtotal")}</Label>
+            <Input
+              id="inv-subtotal"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.01"
+              value={invoice.subtotal}
+              onChange={(e) =>
+                setInvoiceAndCalculateVat({
+                  ...invoice,
+                  subtotal: e.target.value,
+                })
+              }
+            />
+          </div>
           <div className="grid gap-2">
             <Label htmlFor="inv-vat-rate">{t("invoices.vatRate")}</Label>
             <Input
@@ -373,7 +377,10 @@ function InvoiceFormContent({
               step="0.01"
               value={invoice.vatRate}
               onChange={(e) =>
-                setInvoiceAndCalculateVat({ ...invoice, vatRate: e.target.value })
+                setInvoiceAndCalculateVat({
+                  ...invoice,
+                  vatRate: e.target.value,
+                })
               }
             />
           </div>
