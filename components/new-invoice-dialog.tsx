@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useMemo, useEffect } from "react"
+import { useRef, useState, useMemo } from "react"
 import { Plus, X, File, AlertCircle } from "lucide-react"
 import { formatCurrency, getQuarterFromDate } from "@/lib/ledger-utils"
 import { generateNextId } from "@/lib/id-utils"
@@ -112,25 +112,16 @@ function InvoiceFormContent({
     },
   })
   const [file, setFile] = useState<File | null>(null)
-  const lastVatChangeRef = useRef(false)
 
   const roundTwo = (n: number) => Math.round(n * 100) / 100
 
-  // Auto-calculate VAT when subtotal or vatRate changes (but not when VAT is changed manually)
-  useEffect(() => {
-    if (lastVatChangeRef.current) {
-      lastVatChangeRef.current = false
-      return
-    }
-
-    const subtotal = Number.parseFloat(invoice.subtotal) || 0
-    const vatRate = Number.parseFloat(invoice.vatRate) || 0
+  const setInvoiceAndCalculateVat = (updatedInvoice: InvoiceFormData) => {
+    const subtotal = Number.parseFloat(updatedInvoice.subtotal) || 0
+    const vatRate = Number.parseFloat(updatedInvoice.vatRate) || 0
     const calculatedVat = roundTwo((subtotal * vatRate) / 100)
 
-    if (invoice.vat !== String(calculatedVat)) {
-      setInvoice((prev) => ({ ...prev, vat: String(calculatedVat) }))
-    }
-  }, [invoice.subtotal, invoice.vatRate, invoice.vat])
+    setInvoice({ ...updatedInvoice, vat: String(calculatedVat) })
+  }
 
   const subtotalNum = roundTwo(Number.parseFloat(invoice.subtotal) || 0)
   const vatNum = roundTwo(Number.parseFloat(invoice.vat) || 0)
@@ -366,7 +357,7 @@ function InvoiceFormContent({
             step="0.01"
             value={invoice.subtotal}
             onChange={(e) =>
-              setInvoice({ ...invoice, subtotal: e.target.value })
+              setInvoiceAndCalculateVat({ ...invoice, subtotal: e.target.value })
             }
           />
         </div>
@@ -382,7 +373,7 @@ function InvoiceFormContent({
               step="0.01"
               value={invoice.vatRate}
               onChange={(e) =>
-                setInvoice({ ...invoice, vatRate: e.target.value })
+                setInvoiceAndCalculateVat({ ...invoice, vatRate: e.target.value })
               }
             />
           </div>
@@ -395,10 +386,7 @@ function InvoiceFormContent({
               min="0"
               step="0.01"
               value={invoice.vat}
-              onChange={(e) => {
-                lastVatChangeRef.current = true
-                setInvoice({ ...invoice, vat: e.target.value })
-              }}
+              onChange={(e) => setInvoice({ ...invoice, vat: e.target.value })}
             />
           </div>
         </div>
