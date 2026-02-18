@@ -278,7 +278,7 @@ export function CashflowView({
                 {formatCurrency(totalExpense)}
               </TableCell>
               <TableCell className="font-mono text-sm font-bold text-right">
-                {formatCurrency(closingBalance)}
+                {formatCurrency(actualClosingBalance)}
               </TableCell>
             </TableRow>
           </TableFooter>
