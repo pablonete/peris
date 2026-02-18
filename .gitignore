@@ -13,6 +13,7 @@ next-env.d.ts
 .DS_Store
 /out
 tsconfig.tsbuildinfo
+package-lock.json
 
 # Test coverage
 coverage/
