@@ -3,6 +3,7 @@
 import { useData } from "@/lib/use-data"
 import { useStorageData } from "@/lib/use-storage-data"
 import { formatCurrency } from "@/lib/ledger-utils"
+import { getCashflowOpeningBalance } from "@/lib/cashflow-utils"
 import type { ViewType } from "@/components/ledger-sidebar"
 import { useLanguage } from "@/lib/i18n-context"
 
@@ -43,7 +44,7 @@ function useQuarterSummary(qId: string) {
     0
   )
   const entries = cashflowQuery.content.entries
-  const openingBalance = getCashflowPreviousBalance(entries)
+  const openingBalance = getCashflowOpeningBalance(entries)
   const closingBalance = entries[entries.length - 1]?.balance ?? openingBalance
   const net = totalInvoiced - totalExpenses
 
