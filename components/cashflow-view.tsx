@@ -2,7 +2,10 @@
 
 import { useState } from "react"
 import { formatCurrency, formatDate } from "@/lib/ledger-utils"
-import { getCashflowOpeningBalance } from "@/lib/cashflow-utils"
+import {
+  getCashflowOpeningBalance,
+  getCashflowClosingBalance,
+} from "@/lib/cashflow-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useData } from "@/lib/use-data"
 import {
@@ -84,9 +87,15 @@ export function CashflowView({
 
   const totalIncome = filteredEntries.reduce((s, e) => s + (e.income ?? 0), 0)
   const totalExpense = filteredEntries.reduce((s, e) => s + (e.expense ?? 0), 0)
-  const openingBalance = getCashflowOpeningBalance(filteredEntries)
-  const closingBalance =
-    filteredEntries[filteredEntries.length - 1]?.balance ?? openingBalance
+  const openingBalance = getCashflowOpeningBalance(
+    activeBank ? filteredEntries : entries
+  )
+  const calculatedClosingBalance = openingBalance + totalIncome - totalExpense
+  const actualClosingBalance = getCashflowClosingBalance(
+    activeBank ? filteredEntries : entries
+  )
+  const balanceMismatch = calculatedClosingBalance !== actualClosingBalance
+  const balanceDifference = actualClosingBalance - calculatedClosingBalance
 
   return (
     <div>
@@ -113,8 +122,24 @@ export function CashflowView({
           value={totalExpense}
           valueClassName="text-[hsl(var(--ledger-red))]"
         />
-        <SummaryCard label={t("cashflow.closing")} value={closingBalance} />
+        <SummaryCard
+          label={t("cashflow.closing")}
+          value={actualClosingBalance}
+        />
       </div>
+
+      {balanceMismatch && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription>
+            Balance mismatch detected: Expected closing balance is{" "}
+            {formatCurrency(calculatedClosingBalance)} (opening + income -
+            expense), but actual closing balance from entries is{" "}
+            {formatCurrency(actualClosingBalance)}. Difference:{" "}
+            {formatCurrency(Math.abs(balanceDifference))}
+            {balanceDifference > 0 ? " over" : " under"}.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <CashflowBankFilter
         banks={uniqueBanks}
