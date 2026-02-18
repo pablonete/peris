@@ -1,6 +1,6 @@
 "use client"
 
-import { MoreVertical, Copy, Trash2 } from "lucide-react"
+import { MoreVertical, Copy, Trash2, Link2 } from "lucide-react"
 import { Expense } from "@/lib/types"
 import { useLanguage } from "@/lib/i18n-context"
 import { Button } from "@/components/ui/button"
@@ -15,12 +15,14 @@ interface ExpenseRowActionsProps {
   expense: Expense
   onDuplicate: (expense: Expense) => void
   onDelete: (id: string) => void
+  onLinkOrphan: (expense: Expense) => void
 }
 
 export function ExpenseRowActions({
   expense,
   onDuplicate,
   onDelete,
+  onLinkOrphan,
 }: ExpenseRowActionsProps) {
   const { t } = useLanguage()
 
@@ -35,6 +37,10 @@ export function ExpenseRowActions({
         <DropdownMenuItem onClick={() => onDuplicate(expense)}>
           <Copy className="mr-2 h-4 w-4" />
           {t("expenses.duplicate")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onLinkOrphan(expense)}>
+          <Link2 className="mr-2 h-4 w-4" />
+          {t("expenses.linkOrphan")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => onDelete(expense.id)}

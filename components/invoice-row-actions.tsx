@@ -1,6 +1,6 @@
 "use client"
 
-import { MoreVertical, Copy, Trash2 } from "lucide-react"
+import { MoreVertical, Copy, Trash2, Link2 } from "lucide-react"
 import { Invoice } from "@/lib/types"
 import { useLanguage } from "@/lib/i18n-context"
 import { Button } from "@/components/ui/button"
@@ -15,12 +15,14 @@ interface InvoiceRowActionsProps {
   invoice: Invoice
   onDuplicate: (invoice: Invoice) => void
   onDelete: (id: string) => void
+  onLinkOrphan: (invoice: Invoice) => void
 }
 
 export function InvoiceRowActions({
   invoice,
   onDuplicate,
   onDelete,
+  onLinkOrphan,
 }: InvoiceRowActionsProps) {
   const { t } = useLanguage()
 
@@ -35,6 +37,10 @@ export function InvoiceRowActions({
         <DropdownMenuItem onClick={() => onDuplicate(invoice)}>
           <Copy className="mr-2 h-4 w-4" />
           {t("invoices.duplicate")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onLinkOrphan(invoice)}>
+          <Link2 className="mr-2 h-4 w-4" />
+          {t("invoices.linkOrphan")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => onDelete(invoice.id)}
