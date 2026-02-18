@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest"
 import {
   getCashflowPreviousBalance,
   getCashflowOpeningBalance,
+  getCashflowOpeningBalancePerBank,
 } from "./cashflow-utils"
 import { CashflowEntry } from "./types"
 
@@ -136,6 +137,157 @@ describe("cashflow-utils", () => {
       ]
       const result = getCashflowOpeningBalance(entries)
       expect(result).toBe(5000) // 5700 - 1000 + 300
+    })
+  })
+
+  describe("getCashflowOpeningBalancePerBank", () => {
+    it("should return 0 for empty entries array", () => {
+      const result = getCashflowOpeningBalancePerBank([])
+      expect(result).toBe(0)
+    })
+
+    it("should calculate opening balance for single bank", () => {
+      const entries: CashflowEntry[] = [
+        {
+          id: "1",
+          date: "2025-01-01",
+          concept: "Carry over",
+          bankName: "Unicaja",
+          balance: 5000,
+        },
+        {
+          id: "2",
+          date: "2025-01-15",
+          concept: "Invoice payment",
+          bankName: "Unicaja",
+          bankSequence: 1,
+          balance: 6210,
+          income: 1210,
+        },
+      ]
+      const result = getCashflowOpeningBalancePerBank(entries)
+      expect(result).toBe(5000)
+    })
+
+    it("should aggregate opening balance from multiple banks", () => {
+      const entries: CashflowEntry[] = [
+        {
+          id: "1",
+          date: "2025-01-01",
+          concept: "Carry over",
+          bankName: "Unicaja",
+          balance: 5000,
+        },
+        {
+          id: "2",
+          date: "2025-01-01",
+          concept: "Carry over",
+          bankName: "Revolut",
+          balance: 3000,
+        },
+        {
+          id: "3",
+          date: "2025-01-15",
+          concept: "Invoice payment",
+          bankName: "Unicaja",
+          bankSequence: 1,
+          balance: 6210,
+          income: 1210,
+        },
+        {
+          id: "4",
+          date: "2025-01-20",
+          concept: "Expense",
+          bankName: "Revolut",
+          bankSequence: 1,
+          balance: 2700,
+          expense: 300,
+        },
+      ]
+      const result = getCashflowOpeningBalancePerBank(entries)
+      expect(result).toBe(8000) // 5000 (Unicaja) + 3000 (Revolut)
+    })
+
+    it("should handle banks with income/expense in first entry", () => {
+      const entries: CashflowEntry[] = [
+        {
+          id: "1",
+          date: "2025-01-05",
+          concept: "First transaction",
+          bankName: "Unicaja",
+          bankSequence: 1,
+          balance: 6000,
+          income: 1000,
+        },
+        {
+          id: "2",
+          date: "2025-01-10",
+          concept: "Carry over",
+          bankName: "Revolut",
+          balance: 2000,
+        },
+      ]
+      const result = getCashflowOpeningBalancePerBank(entries)
+      expect(result).toBe(7000) // 5000 (6000-1000 from Unicaja) + 2000 (Revolut)
+    })
+
+    it("should handle entries without bankName as separate group", () => {
+      const entries: CashflowEntry[] = [
+        {
+          id: "1",
+          date: "2025-01-01",
+          concept: "Carry over",
+          balance: 1000,
+        },
+        {
+          id: "2",
+          date: "2025-01-01",
+          concept: "Carry over",
+          bankName: "Unicaja",
+          balance: 5000,
+        },
+      ]
+      const result = getCashflowOpeningBalancePerBank(entries)
+      expect(result).toBe(6000) // 1000 (no bank) + 5000 (Unicaja)
+    })
+
+    it("should handle three banks with mixed transactions", () => {
+      const entries: CashflowEntry[] = [
+        {
+          id: "1",
+          date: "2025-01-01",
+          concept: "Carry over",
+          bankName: "Unicaja",
+          balance: 5000,
+        },
+        {
+          id: "2",
+          date: "2025-01-01",
+          concept: "Carry over",
+          bankName: "Revolut",
+          balance: 3000,
+        },
+        {
+          id: "3",
+          date: "2025-01-02",
+          concept: "First transaction",
+          bankName: "N26",
+          bankSequence: 1,
+          balance: 2500,
+          income: 500,
+        },
+        {
+          id: "4",
+          date: "2025-01-15",
+          concept: "Payment",
+          bankName: "Unicaja",
+          bankSequence: 1,
+          balance: 6210,
+          income: 1210,
+        },
+      ]
+      const result = getCashflowOpeningBalancePerBank(entries)
+      expect(result).toBe(10000) // 5000 (Unicaja) + 3000 (Revolut) + 2000 (2500-500 from N26)
     })
   })
 })
