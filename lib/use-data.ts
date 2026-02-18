@@ -16,7 +16,14 @@ type FileContent<T extends LedgerFileName> = T extends "invoices"
     : CashflowFileData
 
 export function useData() {
-  const { activeStorage, storages, isSample, setActiveStorage, addStorage, removeStorage } = useStorage()
+  const {
+    activeStorage,
+    storages,
+    isSample,
+    setActiveStorage,
+    addStorage,
+    removeStorage,
+  } = useStorage()
   const {
     getEditingFile,
     setEditingFile,
@@ -30,7 +37,11 @@ export function useData() {
     isCommitting,
     error: commitError,
   } = useEditingState()
-  const { quarters, isPending: quartersPending, error: quartersError } = useStorageQuarters()
+  const {
+    quarters,
+    isPending: quartersPending,
+    error: quartersError,
+  } = useStorageQuarters()
 
   const companyName = activeStorage?.name || ""
 
@@ -47,7 +58,11 @@ export function useData() {
     setEditingFile(quarterId, type, data, sha)
   }
 
-  const getFileUrl = (quarterId: string, type: LedgerFileName, filename: string): string => {
+  const getFileUrl = (
+    quarterId: string,
+    type: LedgerFileName,
+    filename: string
+  ): string => {
     if (!activeStorage) return ""
     const [owner, repo] = activeStorage.url
       .replace("https://github.com/", "")

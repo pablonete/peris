@@ -35,7 +35,14 @@ interface InvoicesViewProps {
 
 export function InvoicesView({ quarterId }: InvoicesViewProps) {
   const { t } = useLanguage()
-  const { activeStorage, companyName, getFileUrl, isDirtyFile, getEditingFile, setEditingFile } = useData()
+  const {
+    activeStorage,
+    companyName,
+    getFileUrl,
+    isDirtyFile,
+    getEditingFile,
+    setEditingFile,
+  } = useData()
   const { content, isPending, error } = useStorageData(quarterId, "invoices")
   const isEditing = isDirtyFile(quarterId, "invoices")
   const [deleteAlert, setDeleteAlert] = useState<string | null>(null)
@@ -93,8 +100,8 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
               <EditingIndicator isEditing={isEditing} />
             </h2>
             <p className="font-mono text-xs text-muted-foreground">
-              {quarterId} &middot; {companyName} &middot;{" "}
-              {content.length} {t("invoices.sentInvoices").toLowerCase()}
+              {quarterId} &middot; {companyName} &middot; {content.length}{" "}
+              {t("invoices.sentInvoices").toLowerCase()}
             </p>
           </div>
           <NewInvoiceDialog quarterId={quarterId} invoices={content} />

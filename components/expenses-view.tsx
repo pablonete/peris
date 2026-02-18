@@ -37,7 +37,13 @@ interface ExpensesViewProps {
 
 export function ExpensesView({ quarterId }: ExpensesViewProps) {
   const { t } = useLanguage()
-  const { activeStorage, companyName, isDirtyFile, getEditingFile, setEditingFile } = useData()
+  const {
+    activeStorage,
+    companyName,
+    isDirtyFile,
+    getEditingFile,
+    setEditingFile,
+  } = useData()
   const { content, isPending, error } = useStorageData(quarterId, "expenses")
   const isEditing = isDirtyFile(quarterId, "expenses")
   const [deleteAlert, setDeleteAlert] = useState<string | null>(null)
