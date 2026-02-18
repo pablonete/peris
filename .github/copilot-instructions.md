@@ -26,6 +26,7 @@ This is Peris - a minimalist ledger book application for personal accounting and
 - **Code comments**: Set a high bar - only explain non-obvious logic or the "why", never describe what code obviously does. Self-explanatory code with clear variable/function names is preferred over comments.
 - **Avoid useMemo/useCallback**: This project uses React Compiler which automatically optimizes these patterns. Extract complex logic to separate functions instead.
 - **Extract logic to functions**: Keep component bodies clean by extracting grouping, filtering, and transformation logic to separate functions outside the component.
+- **Pure utility functions**: Extract pure functions that work with model types (from `lib/types.ts`) to separate modules in `lib/` with unit tests. These functions should be stateless, side-effect free, and easy to test. Examples: `lib/ledger-utils.ts`, `lib/cashflow-utils.ts`, `lib/vat-subtotals.ts`.
 
 ### Testing Guidelines
 
@@ -73,6 +74,7 @@ This is Peris - a minimalist ledger book application for personal accounting and
 - `README.md` - Main documentation (only update for significant features, not UI mechanics)
 - `lib/translations.ts` - All translatable strings
 - `lib/ledger-utils.ts` - Shared formatting helpers
+- `lib/cashflow-utils.ts` - Cashflow calculation utilities
 - `lib/use-storage-data.ts` - GitHub-backed data loader hook
 - `lib/use-storage-quarters.ts` - GitHub-backed quarters hook
 - `components/ledger-sidebar.tsx` - Main navigation

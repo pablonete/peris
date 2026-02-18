@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { formatCurrency, formatDate } from "@/lib/ledger-utils"
+import { getCashflowOpeningBalance } from "@/lib/cashflow-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useData } from "@/lib/use-data"
 import {
@@ -83,7 +84,7 @@ export function CashflowView({
 
   const totalIncome = filteredEntries.reduce((s, e) => s + (e.income ?? 0), 0)
   const totalExpense = filteredEntries.reduce((s, e) => s + (e.expense ?? 0), 0)
-  const openingBalance = content?.carryOver ?? 0
+  const openingBalance = getCashflowOpeningBalance(filteredEntries)
   const closingBalance =
     filteredEntries[filteredEntries.length - 1]?.balance ?? openingBalance
 
@@ -162,9 +163,11 @@ export function CashflowView({
                       {showBankColumn ? (
                         <span>{entry.bankName || "—"}</span>
                       ) : null}
-                      <span className="font-mono text-[10px] text-muted-foreground/60">
-                        {String(entry.bankSequence).padStart(4, "0")}
-                      </span>
+                      {entry.bankSequence != null ? (
+                        <span className="font-mono text-[10px] text-muted-foreground/60">
+                          {String(entry.bankSequence).padStart(4, "0")}
+                        </span>
+                      ) : null}
                     </div>
                   </TableCell>
                   <TableCell className="font-mono text-xs">

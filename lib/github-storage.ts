@@ -6,7 +6,6 @@ import { QuarterData, Invoice, Expense, CashflowEntry } from "./types"
 
 export interface CashflowFileData {
   companyName: string
-  carryOver: number
   entries: CashflowEntry[]
 }
 

@@ -132,7 +132,6 @@ finances/
 ```json
 {
   "companyName": "Your Company Name",
-  "carryOver": 5000,
   "entries": [
     {
       "date": "2025-01-15",
