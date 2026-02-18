@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest"
 import {
   getCashflowPreviousBalance,
   getCashflowOpeningBalance,
-  getCashflowOpeningBalancePerBank,
 } from "./cashflow-utils"
 import { CashflowEntry } from "./types"
 
@@ -63,7 +62,7 @@ describe("cashflow-utils", () => {
       expect(result).toBe(0)
     })
 
-    it("should calculate opening balance for income entry", () => {
+    it("should calculate opening balance for single entry", () => {
       const entries: CashflowEntry[] = [
         {
           id: "1",
@@ -74,7 +73,7 @@ describe("cashflow-utils", () => {
         },
       ]
       const result = getCashflowOpeningBalance(entries)
-      expect(result).toBe(5000) // 6210 - 1210 + 0
+      expect(result).toBe(5000)
     })
 
     it("should calculate opening balance for expense entry", () => {
@@ -88,10 +87,10 @@ describe("cashflow-utils", () => {
         },
       ]
       const result = getCashflowOpeningBalance(entries)
-      expect(result).toBe(5000) // 4500 - 0 + 500
+      expect(result).toBe(5000)
     })
 
-    it("should calculate opening balance for carry over entry with no income/expense", () => {
+    it("should calculate opening balance for carry over entry", () => {
       const entries: CashflowEntry[] = [
         {
           id: "1",
@@ -101,10 +100,10 @@ describe("cashflow-utils", () => {
         },
       ]
       const result = getCashflowOpeningBalance(entries)
-      expect(result).toBe(5000) // 5000 - 0 + 0
+      expect(result).toBe(5000)
     })
 
-    it("should only use first entry when multiple entries exist", () => {
+    it("should use first entry for single bank with multiple entries", () => {
       const entries: CashflowEntry[] = [
         {
           id: "1",
@@ -121,29 +120,7 @@ describe("cashflow-utils", () => {
         },
       ]
       const result = getCashflowOpeningBalance(entries)
-      expect(result).toBe(5000) // Only uses first entry
-    })
-
-    it("should handle entry with both income and expense", () => {
-      const entries: CashflowEntry[] = [
-        {
-          id: "1",
-          date: "2025-01-15",
-          concept: "Mixed transaction",
-          balance: 5700,
-          income: 1000,
-          expense: 300,
-        },
-      ]
-      const result = getCashflowOpeningBalance(entries)
-      expect(result).toBe(5000) // 5700 - 1000 + 300
-    })
-  })
-
-  describe("getCashflowOpeningBalancePerBank", () => {
-    it("should return 0 for empty entries array", () => {
-      const result = getCashflowOpeningBalancePerBank([])
-      expect(result).toBe(0)
+      expect(result).toBe(5000)
     })
 
     it("should calculate opening balance for single bank", () => {
@@ -165,7 +142,7 @@ describe("cashflow-utils", () => {
           income: 1210,
         },
       ]
-      const result = getCashflowOpeningBalancePerBank(entries)
+      const result = getCashflowOpeningBalance(entries)
       expect(result).toBe(5000)
     })
 
@@ -204,8 +181,8 @@ describe("cashflow-utils", () => {
           expense: 300,
         },
       ]
-      const result = getCashflowOpeningBalancePerBank(entries)
-      expect(result).toBe(8000) // 5000 (Unicaja) + 3000 (Revolut)
+      const result = getCashflowOpeningBalance(entries)
+      expect(result).toBe(8000)
     })
 
     it("should handle banks with income/expense in first entry", () => {
@@ -227,8 +204,8 @@ describe("cashflow-utils", () => {
           balance: 2000,
         },
       ]
-      const result = getCashflowOpeningBalancePerBank(entries)
-      expect(result).toBe(7000) // 5000 (6000-1000 from Unicaja) + 2000 (Revolut)
+      const result = getCashflowOpeningBalance(entries)
+      expect(result).toBe(7000)
     })
 
     it("should handle entries without bankName as separate group", () => {
@@ -247,8 +224,8 @@ describe("cashflow-utils", () => {
           balance: 5000,
         },
       ]
-      const result = getCashflowOpeningBalancePerBank(entries)
-      expect(result).toBe(6000) // 1000 (no bank) + 5000 (Unicaja)
+      const result = getCashflowOpeningBalance(entries)
+      expect(result).toBe(6000)
     })
 
     it("should handle three banks with mixed transactions", () => {
@@ -286,8 +263,8 @@ describe("cashflow-utils", () => {
           income: 1210,
         },
       ]
-      const result = getCashflowOpeningBalancePerBank(entries)
-      expect(result).toBe(10000) // 5000 (Unicaja) + 3000 (Revolut) + 2000 (2500-500 from N26)
+      const result = getCashflowOpeningBalance(entries)
+      expect(result).toBe(10000)
     })
 
     it("should match totals when all banks vs individual bank sums", () => {
@@ -326,7 +303,7 @@ describe("cashflow-utils", () => {
         },
       ]
 
-      const perBankTotal = getCashflowOpeningBalancePerBank(entries)
+      const allBanksTotal = getCashflowOpeningBalance(entries)
 
       const unicajaEntries = entries.filter((e) => e.bankName === "Unicaja")
       const revolutEntries = entries.filter((e) => e.bankName === "Revolut")
@@ -334,10 +311,10 @@ describe("cashflow-utils", () => {
       const revolutOpening = getCashflowOpeningBalance(revolutEntries)
       const sumOfIndividual = unicajaOpening + revolutOpening
 
-      expect(perBankTotal).toBe(8000)
+      expect(allBanksTotal).toBe(8000)
       expect(unicajaOpening).toBe(5000)
       expect(revolutOpening).toBe(3000)
-      expect(perBankTotal).toBe(sumOfIndividual)
+      expect(allBanksTotal).toBe(sumOfIndividual)
     })
   })
 })

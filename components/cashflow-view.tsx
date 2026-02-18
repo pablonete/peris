@@ -2,10 +2,7 @@
 
 import { useState } from "react"
 import { formatCurrency, formatDate } from "@/lib/ledger-utils"
-import {
-  getCashflowOpeningBalance,
-  getCashflowOpeningBalancePerBank,
-} from "@/lib/cashflow-utils"
+import { getCashflowOpeningBalance } from "@/lib/cashflow-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useData } from "@/lib/use-data"
 import {
@@ -87,14 +84,9 @@ export function CashflowView({
 
   const totalIncome = filteredEntries.reduce((s, e) => s + (e.income ?? 0), 0)
   const totalExpense = filteredEntries.reduce((s, e) => s + (e.expense ?? 0), 0)
-
-  // When showing all banks, aggregate opening balance from each bank
-  // When filtering to one bank, use single-bank calculation
-  const openingBalance = activeBank
-    ? getCashflowOpeningBalance(filteredEntries)
-    : getCashflowOpeningBalancePerBank(entries)
-
-  // Closing balance is opening + income - expense
+  const openingBalance = getCashflowOpeningBalance(
+    activeBank ? filteredEntries : entries
+  )
   const closingBalance = openingBalance + totalIncome - totalExpense
 
   return (
