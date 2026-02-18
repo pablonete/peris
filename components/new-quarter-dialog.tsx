@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Plus } from "lucide-react"
 import { useLanguage } from "@/lib/i18n-context"
-import { useEditingState } from "@/lib/editing-state-context"
+import { useData } from "@/lib/use-data"
 import {
   Dialog,
   DialogContent,
@@ -51,7 +51,7 @@ function validateQuarterFormat(
 
 export function NewQuarterDialog({ existingQuarters }: NewQuarterDialogProps) {
   const { t } = useLanguage()
-  const { createNewQuarter } = useEditingState()
+  const { createNewQuarter } = useData()
   const [open, setOpen] = useState(false)
   const [year, setYear] = useState("")
   const [quarter, setQuarter] = useState("")

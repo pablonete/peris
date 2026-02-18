@@ -5,11 +5,10 @@ import { Plus, X, File, AlertCircle } from "lucide-react"
 import { formatCurrency, getQuarterFromDate } from "@/lib/ledger-utils"
 import { generateNextId } from "@/lib/id-utils"
 import { readFileAsArrayBuffer } from "@/lib/file-utils"
-import { useEditingState } from "@/lib/editing-state-context"
+import { useData } from "@/lib/use-data"
 import { useFileSha } from "@/lib/use-storage-data"
 import { Expense } from "@/lib/types"
 import { useLanguage } from "@/lib/i18n-context"
-import { useStorageQuarters } from "@/lib/use-storage-quarters"
 import { useRouter } from "next/navigation"
 import {
   Dialog,
@@ -106,8 +105,7 @@ function ExpenseDialogContent({
 }: ExpenseDialogContentProps) {
   const { t } = useLanguage()
   const router = useRouter()
-  const { quarters } = useStorageQuarters()
-  const { getEditingFile, setEditingFile } = useEditingState()
+  const { quarters, getEditingFile, setEditingFile, addAttachment } = useData()
   const editingFile = getEditingFile(quarterId, "expenses")
   const fileSha = useFileSha(quarterId, "expenses")
   const targetSha = useFileSha(targetQuarterId || quarterId, "expenses")
@@ -136,7 +134,6 @@ function ExpenseDialogContent({
   const [isPaid, setIsPaid] = useState(!!initialExpense?.paymentDate)
   const [filename, setFilename] = useState(initialExpense?.filename || "")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const { addAttachment } = useEditingState()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {

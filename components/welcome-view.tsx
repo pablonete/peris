@@ -1,6 +1,6 @@
 "use client"
 
-import { useStorageQuarters } from "@/lib/use-storage-quarters"
+import { useData } from "@/lib/use-data"
 import { useStorageData } from "@/lib/use-storage-data"
 import { formatCurrency } from "@/lib/ledger-utils"
 import type { ViewType } from "@/components/ledger-sidebar"
@@ -131,7 +131,7 @@ function QuarterCard({ qId, onNavigate }: QuarterCardProps) {
 
 export function WelcomeView({ onNavigate }: WelcomeViewProps) {
   const { t } = useLanguage()
-  const { quarters } = useStorageQuarters()
+  const { quarters } = useData()
   const hasQuarters = quarters.length > 0
 
   return (

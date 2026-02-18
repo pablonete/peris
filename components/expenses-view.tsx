@@ -4,8 +4,7 @@ import { useState } from "react"
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { formatCurrency, formatDate } from "@/lib/ledger-utils"
 import { useStorageData } from "@/lib/use-storage-data"
-import { useStorage } from "@/lib/storage-context"
-import { useEditingState } from "@/lib/editing-state-context"
+import { useData } from "@/lib/use-data"
 import { Expense } from "@/lib/types"
 import { getVatSubtotals } from "@/lib/vat-subtotals"
 import {
@@ -38,10 +37,15 @@ interface ExpensesViewProps {
 
 export function ExpensesView({ quarterId }: ExpensesViewProps) {
   const { t } = useLanguage()
-  const { activeStorage } = useStorage()
-  const { getEditingFile, setEditingFile } = useEditingState()
+  const {
+    activeStorage,
+    companyName,
+    isDirtyFile,
+    getEditingFile,
+    setEditingFile,
+  } = useData()
   const { content, isPending, error } = useStorageData(quarterId, "expenses")
-  const isEditing = !!getEditingFile(quarterId, "expenses")
+  const isEditing = isDirtyFile(quarterId, "expenses")
   const [deleteAlert, setDeleteAlert] = useState<string | null>(null)
   const [duplicateExpense, setDuplicateExpense] = useState<Expense | null>(null)
   const [linkOrphanExpense, setLinkOrphanExpense] = useState<Expense | null>(
@@ -113,7 +117,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
           <NewExpenseDialog quarterId={quarterId} expenses={expenses} />
         </div>
         <p className="font-mono text-xs text-muted-foreground">
-          {quarterId} &middot; {activeStorage.name} &middot; {expenses.length}{" "}
+          {quarterId} &middot; {companyName} &middot; {expenses.length}{" "}
           {t("expenses.entries")}
         </p>
       </div>
