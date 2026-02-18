@@ -30,9 +30,9 @@ export function CashflowView({
   onNavigateToQuarter,
 }: CashflowViewProps) {
   const { t } = useLanguage()
-  const { activeStorage, quarters, getEditingFile, loadCashflow } = useData()
-  const { content, isPending, error } = loadCashflow(quarterId)
-  const isEditing = !!getEditingFile(quarterId, "cashflow")
+  const { companyName, quarters, isDirtyFile, getFile } = useData()
+  const { content, isPending, error } = getFile(quarterId, "cashflow")
+  const isEditing = isDirtyFile(quarterId, "cashflow")
 
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
   const entries = content?.entries ?? []
@@ -98,7 +98,7 @@ export function CashflowView({
           )}
         </h2>
         <p className="font-mono text-xs text-muted-foreground">
-          {quarterId} &middot; {activeStorage.name} &middot; {entries.length}{" "}
+          {quarterId} &middot; {companyName} &middot; {entries.length}{" "}
           {t("cashflow.movements")}
         </p>
       </div>

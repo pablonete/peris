@@ -25,14 +25,9 @@ interface InvoicesViewProps {
 
 export function InvoicesView({ quarterId }: InvoicesViewProps) {
   const { t } = useLanguage()
-  const { activeStorage, getEditingFile, loadInvoices } = useData()
-  const {
-    content,
-    isPending,
-    error,
-    isEditing: isEditingFromHook,
-  } = loadInvoices(quarterId)
-  const isEditing = !!getEditingFile(quarterId, "invoices")
+  const { companyName, isDirtyFile, getFile } = useData()
+  const { content, isPending, error } = getFile(quarterId, "invoices")
+  const isEditing = isDirtyFile(quarterId, "invoices")
 
   if (isPending) {
     return (
@@ -74,8 +69,8 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
               )}
             </h2>
             <p className="font-mono text-xs text-muted-foreground">
-              {quarterId} &middot; {activeStorage.name} &middot;{" "}
-              {content.length} {t("invoices.sentInvoices").toLowerCase()}
+              {quarterId} &middot; {companyName} &middot; {content.length}{" "}
+              {t("invoices.sentInvoices").toLowerCase()}
             </p>
           </div>
           <NewInvoiceDialog quarterId={quarterId} invoices={content} />
@@ -152,7 +147,6 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
                 </TableCell>
                 <TableCell className="text-center">
                   <AttachmentCell
-                    storage={activeStorage}
                     quarterId={quarterId}
                     type="invoices"
                     filename={inv.filename}

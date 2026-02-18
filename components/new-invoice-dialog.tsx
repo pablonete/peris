@@ -57,9 +57,7 @@ function InvoiceFormContent({
   onCancel: () => void
 }) {
   const { t } = useLanguage()
-  const { getEditingFile, setEditingFile, addAttachment, getFileSha } =
-    useData()
-  const editingFile = getEditingFile(quarterId, "invoices")
+  const { updateFile, addAttachment, getFileSha } = useData()
   const sha = getFileSha(quarterId, "invoices")
   const uploadRef = useRef<HTMLInputElement>(null)
 
@@ -167,8 +165,7 @@ function InvoiceFormContent({
     const updated = [...invoices, record].sort((a, b) =>
       a.date.localeCompare(b.date)
     )
-    const currentSha = editingFile?.sha ?? sha
-    setEditingFile(quarterId, "invoices", updated, currentSha)
+    updateFile(quarterId, "invoices", updated, sha)
     onSuccess()
   }
 

@@ -94,9 +94,7 @@ function ExpenseDialogContent({
   onCancel,
 }: ExpenseDialogContentProps) {
   const { t } = useLanguage()
-  const { getEditingFile, setEditingFile, addAttachment, getFileSha } =
-    useData()
-  const editingFile = getEditingFile(quarterId, "expenses")
+  const { updateFile, addAttachment, getFileSha } = useData()
   const fileSha = getFileSha(quarterId, "expenses")
 
   const [expenseDate, setExpenseDate] = useState(
@@ -201,8 +199,7 @@ function ExpenseDialogContent({
     const nextExpenses = [...expenses, newExpense].sort((a, b) =>
       a.date.localeCompare(b.date)
     )
-    const nextSha = editingFile?.sha ?? fileSha
-    setEditingFile(quarterId, "expenses", nextExpenses, nextSha)
+    updateFile(quarterId, "expenses", nextExpenses, fileSha)
     onSuccess()
   }
 

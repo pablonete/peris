@@ -25,7 +25,7 @@ export function LedgerSidebar({
 }: LedgerSidebarProps) {
   const { language, setLanguage, t } = useLanguage()
   const router = useRouter()
-  const { quarters, quartersError, getEditingFile } = useData()
+  const { quarters, quartersError, isDirtyFile } = useData()
 
   const viewItems: { key: ViewType; label: string; icon: typeof FileText }[] = [
     { key: "invoices", label: t("sidebar.invoices"), icon: FileText },
@@ -49,9 +49,9 @@ export function LedgerSidebar({
     const yearQuarters = quartersByYear[year] || []
     return yearQuarters.some(
       (qId) =>
-        !!getEditingFile(qId, "invoices") ||
-        !!getEditingFile(qId, "expenses") ||
-        !!getEditingFile(qId, "cashflow")
+        isDirtyFile(qId, "invoices") ||
+        isDirtyFile(qId, "expenses") ||
+        isDirtyFile(qId, "cashflow")
     )
   }
 
@@ -112,9 +112,9 @@ export function LedgerSidebar({
                   {yearQuarters.map((qId) => {
                     const isQuarterSelected = selectedQuarter === qId
                     const hasEdits =
-                      !!getEditingFile(qId, "invoices") ||
-                      !!getEditingFile(qId, "expenses") ||
-                      !!getEditingFile(qId, "cashflow")
+                      isDirtyFile(qId, "invoices") ||
+                      isDirtyFile(qId, "expenses") ||
+                      isDirtyFile(qId, "cashflow")
 
                     if (isQuarterSelected) {
                       return (
@@ -125,7 +125,7 @@ export function LedgerSidebar({
                           formatQuarterLabel={formatQuarterLabel}
                           viewItems={viewItems}
                           selectedView={selectedView}
-                          getEditingFile={getEditingFile}
+                          isDirtyFile={isDirtyFile}
                           onSidebarClose={onSidebarClose}
                           t={t}
                         />
@@ -139,7 +139,7 @@ export function LedgerSidebar({
                         hasEdits={hasEdits}
                         formatQuarterLabel={formatQuarterLabel}
                         viewItems={viewItems}
-                        getEditingFile={getEditingFile}
+                        isDirtyFile={isDirtyFile}
                         router={router}
                         t={t}
                       />
@@ -271,7 +271,7 @@ function SelectedQuarterRow({
   formatQuarterLabel,
   viewItems,
   selectedView,
-  getEditingFile,
+  isDirtyFile,
   onSidebarClose,
   t,
 }: {
@@ -280,7 +280,7 @@ function SelectedQuarterRow({
   formatQuarterLabel: (qId: string) => string
   viewItems: { key: ViewType; label: string; icon: typeof FileText }[]
   selectedView: ViewType | null
-  getEditingFile: (qId: string, key: ViewType) => any
+  isDirtyFile: (qId: string, key: ViewType) => boolean
   onSidebarClose?: () => void
   t: (key: string) => string
 }) {
@@ -310,7 +310,7 @@ function SelectedQuarterRow({
       <ul className="ml-3 mt-1 flex flex-col gap-0.5 border-l border-sidebar-border pl-3">
         {viewItems.map(({ key, label, icon: Icon }) => {
           const isActive = selectedView === key
-          const isEditing = !!getEditingFile(quarterId, key)
+          const isEditing = isDirtyFile(quarterId, key)
           return (
             <li key={key}>
               <Link
@@ -346,7 +346,7 @@ function NonSelectedQuarterRow({
   hasEdits,
   formatQuarterLabel,
   viewItems,
-  getEditingFile,
+  isDirtyFile,
   router,
   t,
 }: {
@@ -354,7 +354,7 @@ function NonSelectedQuarterRow({
   hasEdits: boolean
   formatQuarterLabel: (qId: string) => string
   viewItems: { key: ViewType; label: string; icon: typeof FileText }[]
-  getEditingFile: (qId: string, key: ViewType) => any
+  isDirtyFile: (qId: string, key: ViewType) => boolean
   router: ReturnType<typeof useRouter>
   t: (key: string) => string
 }) {
@@ -385,7 +385,7 @@ function NonSelectedQuarterRow({
         </button>
         <div className="flex gap-0.5 pr-3">
           {viewItems.map(({ key, icon: Icon }) => {
-            const isEditing = !!getEditingFile(quarterId, key)
+            const isEditing = isDirtyFile(quarterId, key)
             return (
               <button
                 key={key}

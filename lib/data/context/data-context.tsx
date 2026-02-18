@@ -1,16 +1,18 @@
 "use client"
 
 import React, { createContext, useContext, useEffect, useState } from "react"
-import { useQuery, useQueryClient, QueryClient } from "@tanstack/react-query"
-import { Storage, StorageConfig } from "../infrastructure/storage-types"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  Storage,
+  StorageConfig,
+  getFileUrl,
+} from "../infrastructure/storage-types"
 import {
   loadStorageConfig,
   saveStorageConfig,
 } from "../infrastructure/storage-persistence"
 import { QuartersRepository } from "../repositories/quarters-repository"
-import { InvoicesRepository } from "../repositories/invoices-repository"
-import { ExpensesRepository } from "../repositories/expenses-repository"
-import { CashflowRepository } from "../repositories/cashflow-repository"
+import { QuarterFileRepository } from "../repositories/quarter-file-repository"
 import { Invoice, Expense } from "@/lib/types"
 import {
   CashflowFileData,
@@ -37,11 +39,26 @@ interface EditingAttachment {
   content: ArrayBuffer
 }
 
+// Type mapping for file names to their data types
+type FileDataType<T extends LedgerFileName> = T extends "invoices"
+  ? Invoice[]
+  : T extends "expenses"
+    ? Expense[]
+    : CashflowFileData
+
+interface FileResult<T> {
+  content: T | null
+  isPending: boolean
+  error: Error | null
+  isEditing: boolean
+}
+
 interface DataContextType {
   // Storage management
   storages: Storage[]
   activeStorage: Storage
   isSample: boolean
+  companyName: string | null
   setActiveStorage: (storageName: string) => void
   addStorage: (storage: Storage) => void
   removeStorage: (storageName: string) => void
@@ -51,39 +68,22 @@ interface DataContextType {
   quartersLoading: boolean
   quartersError: Error | null
 
-  // Data loading
-  loadInvoices: (quarterId: string) => {
-    content: Invoice[] | null
-    isPending: boolean
-    error: Error | null
-    isEditing: boolean
-  }
-  loadExpenses: (quarterId: string) => {
-    content: Expense[] | null
-    isPending: boolean
-    error: Error | null
-    isEditing: boolean
-  }
-  loadCashflow: (quarterId: string) => {
-    content: CashflowFileData | null
-    isPending: boolean
-    error: Error | null
-    isEditing: boolean
-  }
+  // Data loading - unified method
+  getFile: <T extends LedgerFileName>(
+    quarterId: string,
+    fileName: T
+  ) => FileResult<FileDataType<T>>
 
   // Editing state
   editingFiles: Map<string, EditingFile>
   editingAttachments: Map<string, EditingAttachment>
   editingCount: number
   isCommitting: boolean
-  commitError: string | null
+  globalError: string | null
 
   // Editing operations
-  getEditingFile: (
-    quarterId: string,
-    fileName: LedgerFileName
-  ) => EditingFile | undefined
-  setEditingFile: (
+  isDirtyFile: (quarterId: string, fileName: LedgerFileName) => boolean
+  updateFile: (
     quarterId: string,
     fileName: LedgerFileName,
     data: Invoice[] | Expense[] | CashflowFileData,
@@ -105,6 +105,11 @@ interface DataContextType {
 
   // Utilities
   getFileSha: (quarterId: string, type: LedgerFileName) => string | undefined
+  getFileUrl: (
+    quarterId: string,
+    type: "invoices" | "expenses",
+    filename: string
+  ) => string
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
@@ -134,7 +139,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     Map<string, EditingAttachment>
   >(new Map())
   const [isCommitting, setIsCommitting] = useState(false)
-  const [commitError, setCommitError] = useState<string | null>(null)
+  const [globalError, setGlobalError] = useState<string | null>(null)
 
   // Load storage config from localStorage
   useEffect(() => {
@@ -180,8 +185,26 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     new Set([...githubQuarters, ...editingQuarters])
   ).sort()
 
+  // Get company name from first cashflow file we can find
+  const firstQuarter = quarters[0]
+  const companyNameQuery = useQuery({
+    queryKey: ["companyName", activeStorage.name, firstQuarter],
+    queryFn: async () => {
+      if (!firstQuarter) return null
+      const repo = new QuarterFileRepository<CashflowFileData>(
+        activeStorage,
+        "cashflow"
+      )
+      const result = await repo.getContent(firstQuarter)
+      return result.data?.companyName || null
+    },
+    enabled: !!activeStorage && !!firstQuarter,
+  })
+
+  const companyName = companyNameQuery.data || null
+
   // Storage management functions
-  const setActiveStorage = (storageName: string) => {
+  const setActiveStorageFn = (storageName: string) => {
     const storage = storages.find((s) => s.name === storageName)
     if (storage) {
       setActiveStorageName(storageName)
@@ -209,22 +232,25 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Data loading functions
-  const loadInvoices = (quarterId: string) => {
-    const editingFile = getEditingFile(quarterId, "invoices")
+  // Unified data loading function
+  const getFile = <T extends LedgerFileName>(
+    quarterId: string,
+    fileName: T
+  ): FileResult<FileDataType<T>> => {
+    const editingFile = editingFiles.get(getEditingKey(quarterId, fileName))
 
     const query = useQuery({
-      queryKey: ["loadFile", activeStorage.name, quarterId, "invoices"],
+      queryKey: ["loadFile", activeStorage.name, quarterId, fileName],
       queryFn: async () => {
-        const repo = new InvoicesRepository(activeStorage)
-        return await repo.load(quarterId)
+        const repo = new QuarterFileRepository(activeStorage, fileName)
+        return await repo.getContent(quarterId)
       },
       enabled: !!activeStorage && !editingFile,
     })
 
     if (editingFile) {
       return {
-        content: editingFile.data as Invoice[],
+        content: editingFile.data as FileDataType<T>,
         isPending: false,
         error: null,
         isEditing: true,
@@ -232,67 +258,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
 
     return {
-      content: query.data?.data ?? null,
-      isPending: query.isPending,
-      error:
-        query.error || (query.data?.error ? new Error(query.data.error) : null),
-      isEditing: false,
-    }
-  }
-
-  const loadExpenses = (quarterId: string) => {
-    const editingFile = getEditingFile(quarterId, "expenses")
-
-    const query = useQuery({
-      queryKey: ["loadFile", activeStorage.name, quarterId, "expenses"],
-      queryFn: async () => {
-        const repo = new ExpensesRepository(activeStorage)
-        return await repo.load(quarterId)
-      },
-      enabled: !!activeStorage && !editingFile,
-    })
-
-    if (editingFile) {
-      return {
-        content: editingFile.data as Expense[],
-        isPending: false,
-        error: null,
-        isEditing: true,
-      }
-    }
-
-    return {
-      content: query.data?.data ?? null,
-      isPending: query.isPending,
-      error:
-        query.error || (query.data?.error ? new Error(query.data.error) : null),
-      isEditing: false,
-    }
-  }
-
-  const loadCashflow = (quarterId: string) => {
-    const editingFile = getEditingFile(quarterId, "cashflow")
-
-    const query = useQuery({
-      queryKey: ["loadFile", activeStorage.name, quarterId, "cashflow"],
-      queryFn: async () => {
-        const repo = new CashflowRepository(activeStorage)
-        return await repo.load(quarterId)
-      },
-      enabled: !!activeStorage && !editingFile,
-    })
-
-    if (editingFile) {
-      return {
-        content: editingFile.data as CashflowFileData,
-        isPending: false,
-        error: null,
-        isEditing: true,
-      }
-    }
-
-    return {
-      content: query.data?.data ?? null,
+      content: (query.data?.data ?? null) as FileDataType<T>,
       isPending: query.isPending,
       error:
         query.error || (query.data?.error ? new Error(query.data.error) : null),
@@ -301,14 +267,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }
 
   // Editing operations
-  const getEditingFile = (
+  const isDirtyFile = (
     quarterId: string,
     fileName: LedgerFileName
-  ): EditingFile | undefined => {
-    return editingFiles.get(getEditingKey(quarterId, fileName))
+  ): boolean => {
+    return editingFiles.has(getEditingKey(quarterId, fileName))
   }
 
-  const setEditingFile = (
+  const updateFile = (
     quarterId: string,
     fileName: LedgerFileName,
     data: Invoice[] | Expense[] | CashflowFileData,
@@ -358,9 +324,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }
 
   const createNewQuarter = (quarterId: string, companyName: string) => {
-    setEditingFile(quarterId, "invoices", [])
-    setEditingFile(quarterId, "expenses", [])
-    setEditingFile(quarterId, "cashflow", {
+    updateFile(quarterId, "invoices", [])
+    updateFile(quarterId, "expenses", [])
+    updateFile(quarterId, "cashflow", {
       companyName,
       carryOver: 0,
       entries: [],
@@ -375,7 +341,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const editingCount = editingFiles.size
 
   const commitChanges = async (): Promise<void> => {
-    setCommitError(null)
+    setGlobalError(null)
     setIsCommitting(true)
 
     try {
@@ -417,14 +383,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       clearAllEditing()
       await queryClient.invalidateQueries()
     } catch (err) {
-      setCommitError(err instanceof Error ? err.message : String(err))
+      setGlobalError(err instanceof Error ? err.message : String(err))
       throw err
     } finally {
       setIsCommitting(false)
     }
   }
 
-  const getFileSha = (
+  const getFileShaFn = (
     quarterId: string,
     type: LedgerFileName
   ): string | undefined => {
@@ -437,35 +403,43 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return cachedData?.sha
   }
 
+  const getFileUrlFn = (
+    quarterId: string,
+    type: "invoices" | "expenses",
+    filename: string
+  ): string => {
+    return getFileUrl(activeStorage.url, quarterId, type, filename)
+  }
+
   return (
     <DataContext.Provider
       value={{
         storages,
         activeStorage,
         isSample,
-        setActiveStorage,
+        companyName,
+        setActiveStorage: setActiveStorageFn,
         addStorage,
         removeStorage,
         quarters,
         quartersLoading: quartersQuery.isPending,
         quartersError: quartersQuery.error,
-        loadInvoices,
-        loadExpenses,
-        loadCashflow,
+        getFile,
         editingFiles,
         editingAttachments,
         editingCount,
         isCommitting,
-        commitError,
-        getEditingFile,
-        setEditingFile,
+        globalError,
+        isDirtyFile,
+        updateFile,
         addAttachment,
         getAttachment,
         removeAttachment,
         createNewQuarter,
         clearAllEditing,
         commitChanges,
-        getFileSha,
+        getFileSha: getFileShaFn,
+        getFileUrl: getFileUrlFn,
       }}
     >
       {children}

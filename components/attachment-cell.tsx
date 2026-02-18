@@ -1,7 +1,5 @@
 import { Paperclip } from "lucide-react"
-import { getFileUrl } from "@/lib/data/infrastructure/storage-types"
-import { useLanguage } from "@/lib/i18n-context"
-import { Storage } from "@/lib/data"
+import { useData } from "@/lib/data"
 import {
   Tooltip,
   TooltipContent,
@@ -9,25 +7,25 @@ import {
 } from "@/components/ui/tooltip"
 
 interface AttachmentCellProps {
-  storage: Storage
   quarterId: string
   type: "invoices" | "expenses"
   filename?: string
 }
 
 export function AttachmentCell({
-  storage,
   quarterId,
   type,
   filename,
 }: AttachmentCellProps) {
+  const { getFileUrl } = useData()
+
   if (!filename) return null
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <a
-          href={getFileUrl(storage.url, quarterId, type, filename)}
+          href={getFileUrl(quarterId, type, filename)}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex text-muted-foreground transition-colors hover:text-foreground"

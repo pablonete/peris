@@ -13,7 +13,7 @@ function MainLayoutInner({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const { commitError } = useData()
+  const { globalError } = useData()
   const { t } = useLanguage()
 
   const selectedQuarter = searchParams.get("q") || ""
@@ -88,10 +88,10 @@ function MainLayoutInner({ children }: { children: React.ReactNode }) {
               paddingLeft: "1.5rem",
             }}
           >
-            {commitError && (
+            {globalError && (
               <ErrorBanner
                 title={t("storage.error.saving")}
-                message={commitError}
+                message={globalError}
                 className="mb-6"
               />
             )}

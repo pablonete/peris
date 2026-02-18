@@ -15,10 +15,10 @@ interface QuarterCardProps {
 }
 
 function useQuarterSummary(qId: string) {
-  const { loadInvoices, loadExpenses, loadCashflow } = useData()
-  const invoicesQuery = loadInvoices(qId)
-  const expensesQuery = loadExpenses(qId)
-  const cashflowQuery = loadCashflow(qId)
+  const { getFile } = useData()
+  const invoicesQuery = getFile(qId, "invoices")
+  const expensesQuery = getFile(qId, "expenses")
+  const cashflowQuery = getFile(qId, "cashflow")
 
   const loading =
     invoicesQuery.isPending ||

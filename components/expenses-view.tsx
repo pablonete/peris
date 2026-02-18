@@ -31,10 +31,10 @@ interface ExpensesViewProps {
 
 export function ExpensesView({ quarterId }: ExpensesViewProps) {
   const { t } = useLanguage()
-  const { activeStorage, getEditingFile, setEditingFile, loadExpenses } =
+  const { companyName, isDirtyFile, updateFile, getFile, getFileSha } =
     useData()
-  const { content, isPending, error } = loadExpenses(quarterId)
-  const isEditing = !!getEditingFile(quarterId, "expenses")
+  const { content, isPending, error } = getFile(quarterId, "expenses")
+  const isEditing = isDirtyFile(quarterId, "expenses")
   const [deleteAlert, setDeleteAlert] = useState<string | null>(null)
   const [duplicateExpense, setDuplicateExpense] = useState<Expense | null>(null)
 
@@ -73,8 +73,8 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
 
   const handleDeleteExpense = (id: string) => {
     const nextExpenses = expenses.filter((e) => e.id !== id)
-    const editingFile = getEditingFile(quarterId, "expenses")
-    setEditingFile(quarterId, "expenses", nextExpenses, editingFile?.sha)
+    const sha = getFileSha(quarterId, "expenses")
+    updateFile(quarterId, "expenses", nextExpenses, sha)
     setDeleteAlert(null)
   }
 
@@ -94,7 +94,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
           <NewExpenseDialog quarterId={quarterId} expenses={expenses} />
         </div>
         <p className="font-mono text-xs text-muted-foreground">
-          {quarterId} &middot; {activeStorage.name} &middot; {expenses.length}{" "}
+          {quarterId} &middot; {companyName} &middot; {expenses.length}{" "}
           {t("expenses.entries")}
         </p>
       </div>
@@ -172,7 +172,6 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                   </TableCell>
                   <TableCell className="text-center">
                     <AttachmentCell
-                      storage={activeStorage}
                       quarterId={quarterId}
                       type="expenses"
                       filename={exp.filename}
