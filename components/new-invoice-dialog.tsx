@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useMemo } from "react"
+import { useRef, useState, useMemo, useEffect } from "react"
 import { Plus, X, File, AlertCircle } from "lucide-react"
 import { formatCurrency, getQuarterFromDate } from "@/lib/ledger-utils"
 import { generateNextId } from "@/lib/id-utils"
@@ -49,6 +49,7 @@ interface InvoiceFormData {
   number: string
   concept: string
   subtotal: string
+  vatRate: string
   vat: string
   collected: boolean
   paymentDate: string
@@ -94,6 +95,7 @@ function InvoiceFormContent({
     number: initialInvoice?.number || "",
     concept: initialInvoice?.concept || "",
     subtotal: initialInvoice ? String(initialInvoice.subtotal) : "",
+    vatRate: initialInvoice?.vatRate ? String(initialInvoice.vatRate) : "21",
     vat: initialInvoice ? String(initialInvoice.vat) : "",
     collected: !!initialInvoice?.paymentDate,
     paymentDate: initialInvoice?.paymentDate || "",
@@ -110,6 +112,23 @@ function InvoiceFormContent({
     },
   })
   const [file, setFile] = useState<File | null>(null)
+  const lastVatChangeRef = useRef(false)
+
+  // Auto-calculate VAT when subtotal or vatRate changes (but not when VAT is changed manually)
+  useEffect(() => {
+    if (lastVatChangeRef.current) {
+      lastVatChangeRef.current = false
+      return
+    }
+
+    const subtotal = Number.parseFloat(invoice.subtotal) || 0
+    const vatRate = Number.parseFloat(invoice.vatRate) || 0
+    const calculatedVat = roundTwo((subtotal * vatRate) / 100)
+
+    if (invoice.vat !== String(calculatedVat)) {
+      setInvoice((prev) => ({ ...prev, vat: String(calculatedVat) }))
+    }
+  }, [invoice.subtotal, invoice.vatRate])
 
   const roundTwo = (n: number) => Math.round(n * 100) / 100
 
@@ -186,6 +205,7 @@ function InvoiceFormContent({
       client: invoice.client.trim(),
       concept: invoice.concept.trim(),
       subtotal: subtotalNum,
+      vatRate: invoice.vatRate ? roundTwo(Number.parseFloat(invoice.vatRate)) : undefined,
       vat: vatNum,
       total: totalNum,
       paymentDate: invoice.collected ? invoice.paymentDate : undefined,
@@ -336,18 +356,33 @@ function InvoiceFormContent({
           />
         </div>
 
+        <div className="grid gap-2">
+          <Label htmlFor="inv-subtotal">{t("invoices.subtotal")}</Label>
+          <Input
+            id="inv-subtotal"
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="0.01"
+            value={invoice.subtotal}
+            onChange={(e) =>
+              setInvoice({ ...invoice, subtotal: e.target.value })
+            }
+          />
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-2">
-            <Label htmlFor="inv-subtotal">{t("invoices.subtotal")}</Label>
+            <Label htmlFor="inv-vat-rate">{t("invoices.vatRate")}</Label>
             <Input
-              id="inv-subtotal"
+              id="inv-vat-rate"
               type="number"
               inputMode="decimal"
               min="0"
               step="0.01"
-              value={invoice.subtotal}
+              value={invoice.vatRate}
               onChange={(e) =>
-                setInvoice({ ...invoice, subtotal: e.target.value })
+                setInvoice({ ...invoice, vatRate: e.target.value })
               }
             />
           </div>
@@ -360,7 +395,10 @@ function InvoiceFormContent({
               min="0"
               step="0.01"
               value={invoice.vat}
-              onChange={(e) => setInvoice({ ...invoice, vat: e.target.value })}
+              onChange={(e) => {
+                lastVatChangeRef.current = true
+                setInvoice({ ...invoice, vat: e.target.value })
+              }}
             />
           </div>
         </div>

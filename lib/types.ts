@@ -37,6 +37,8 @@ export interface Invoice {
   concept: string
   /** Amount before VAT */
   subtotal: number
+  /** VAT rate as percentage (e.g., 21 for 21% VAT) */
+  vatRate?: number
   /** Single VAT amount (simplified for single-rate invoices) */
   vat: number
   /** Total amount including VAT */
