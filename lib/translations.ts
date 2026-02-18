@@ -63,6 +63,7 @@ export const translations = {
       concept: "Concepto",
       subtotal: "Base imponible",
       vat: "IVA",
+      vatRate: "% IVA",
       createInvoice: "Crear factura",
       createInvoiceTo: "Crear factura en",
       differentQuarterWarning:
@@ -255,6 +256,7 @@ export const translations = {
       concept: "Concept",
       subtotal: "Subtotal",
       vat: "VAT",
+      vatRate: "VAT Rate",
       createInvoice: "Create invoice",
       createInvoiceTo: "Create invoice in",
       differentQuarterWarning: "This date belongs to a different quarter",

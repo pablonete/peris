@@ -49,6 +49,7 @@ interface InvoiceFormData {
   number: string
   concept: string
   subtotal: string
+  vatRate: string
   vat: string
   collected: boolean
   paymentDate: string
@@ -94,6 +95,7 @@ function InvoiceFormContent({
     number: initialInvoice?.number || "",
     concept: initialInvoice?.concept || "",
     subtotal: initialInvoice ? String(initialInvoice.subtotal) : "",
+    vatRate: initialInvoice?.vatRate ? String(initialInvoice.vatRate) : "21",
     vat: initialInvoice ? String(initialInvoice.vat) : "",
     collected: !!initialInvoice?.paymentDate,
     paymentDate: initialInvoice?.paymentDate || "",
@@ -112,6 +114,19 @@ function InvoiceFormContent({
   const [file, setFile] = useState<File | null>(null)
 
   const roundTwo = (n: number) => Math.round(n * 100) / 100
+
+  const setSubtotal = (newSubtotal: string, newVatRate: string) => {
+    const subtotal = Number.parseFloat(newSubtotal) || 0
+    const vatRate = Number.parseFloat(newVatRate) || 0
+    const calculatedVat = roundTwo((subtotal * vatRate) / 100)
+
+    setInvoice({
+      ...invoice,
+      subtotal: newSubtotal,
+      vatRate: newVatRate,
+      vat: String(calculatedVat),
+    })
+  }
 
   const subtotalNum = roundTwo(Number.parseFloat(invoice.subtotal) || 0)
   const vatNum = roundTwo(Number.parseFloat(invoice.vat) || 0)
@@ -186,6 +201,9 @@ function InvoiceFormContent({
       client: invoice.client.trim(),
       concept: invoice.concept.trim(),
       subtotal: subtotalNum,
+      vatRate: invoice.vatRate
+        ? roundTwo(Number.parseFloat(invoice.vatRate))
+        : undefined,
       vat: vatNum,
       total: totalNum,
       paymentDate: invoice.collected ? invoice.paymentDate : undefined,
@@ -336,7 +354,7 @@ function InvoiceFormContent({
           />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-3">
           <div className="grid gap-2">
             <Label htmlFor="inv-subtotal">{t("invoices.subtotal")}</Label>
             <Input
@@ -346,9 +364,19 @@ function InvoiceFormContent({
               min="0"
               step="0.01"
               value={invoice.subtotal}
-              onChange={(e) =>
-                setInvoice({ ...invoice, subtotal: e.target.value })
-              }
+              onChange={(e) => setSubtotal(e.target.value, invoice.vatRate)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="inv-vat-rate">{t("invoices.vatRate")}</Label>
+            <Input
+              id="inv-vat-rate"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.01"
+              value={invoice.vatRate}
+              onChange={(e) => setSubtotal(invoice.subtotal, e.target.value)}
             />
           </div>
           <div className="grid gap-2">
