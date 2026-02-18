@@ -289,5 +289,55 @@ describe("cashflow-utils", () => {
       const result = getCashflowOpeningBalancePerBank(entries)
       expect(result).toBe(10000) // 5000 (Unicaja) + 3000 (Revolut) + 2000 (2500-500 from N26)
     })
+
+    it("should match totals when all banks vs individual bank sums", () => {
+      const entries: CashflowEntry[] = [
+        {
+          id: "1",
+          date: "2025-01-01",
+          concept: "Carry over",
+          bankName: "Unicaja",
+          balance: 5000,
+        },
+        {
+          id: "2",
+          date: "2025-01-01",
+          concept: "Carry over",
+          bankName: "Revolut",
+          balance: 3000,
+        },
+        {
+          id: "3",
+          date: "2025-01-15",
+          concept: "Invoice payment",
+          bankName: "Unicaja",
+          bankSequence: 1,
+          balance: 6210,
+          income: 1210,
+        },
+        {
+          id: "4",
+          date: "2025-01-20",
+          concept: "Expense",
+          bankName: "Revolut",
+          bankSequence: 1,
+          balance: 2700,
+          expense: 300,
+        },
+      ]
+
+      const perBankTotal = getCashflowOpeningBalancePerBank(entries)
+
+      const unicajaEntries = entries.filter((e) => e.bankName === "Unicaja")
+      const revolutEntries = entries.filter((e) => e.bankName === "Revolut")
+      const unicajaOpening = getCashflowOpeningBalance(unicajaEntries)
+      const revolutOpening = getCashflowOpeningBalance(revolutEntries)
+      const sumOfIndividual = unicajaOpening + revolutOpening
+
+      expect(perBankTotal).toBe(8000)
+      expect(unicajaOpening).toBe(5000)
+      expect(revolutOpening).toBe(3000)
+      expect(perBankTotal).toBe(sumOfIndividual)
+    })
   })
 })
