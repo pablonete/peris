@@ -115,12 +115,17 @@ function InvoiceFormContent({
 
   const roundTwo = (n: number) => Math.round(n * 100) / 100
 
-  const setInvoiceAndCalculateVat = (updatedInvoice: InvoiceFormData) => {
-    const subtotal = Number.parseFloat(updatedInvoice.subtotal) || 0
-    const vatRate = Number.parseFloat(updatedInvoice.vatRate) || 0
+  const setSubtotal = (newSubtotal: string, newVatRate: string) => {
+    const subtotal = Number.parseFloat(newSubtotal) || 0
+    const vatRate = Number.parseFloat(newVatRate) || 0
     const calculatedVat = roundTwo((subtotal * vatRate) / 100)
 
-    setInvoice({ ...updatedInvoice, vat: String(calculatedVat) })
+    setInvoice({
+      ...invoice,
+      subtotal: newSubtotal,
+      vatRate: newVatRate,
+      vat: String(calculatedVat),
+    })
   }
 
   const subtotalNum = roundTwo(Number.parseFloat(invoice.subtotal) || 0)
@@ -359,12 +364,7 @@ function InvoiceFormContent({
               min="0"
               step="0.01"
               value={invoice.subtotal}
-              onChange={(e) =>
-                setInvoiceAndCalculateVat({
-                  ...invoice,
-                  subtotal: e.target.value,
-                })
-              }
+              onChange={(e) => setSubtotal(e.target.value, invoice.vatRate)}
             />
           </div>
           <div className="grid gap-2">
@@ -376,12 +376,7 @@ function InvoiceFormContent({
               min="0"
               step="0.01"
               value={invoice.vatRate}
-              onChange={(e) =>
-                setInvoiceAndCalculateVat({
-                  ...invoice,
-                  vatRate: e.target.value,
-                })
-              }
+              onChange={(e) => setSubtotal(invoice.subtotal, e.target.value)}
             />
           </div>
           <div className="grid gap-2">
