@@ -24,22 +24,43 @@ export function getCashflowOpeningBalance(entries: CashflowEntry[]): number {
     return 0
   }
 
-  const bankEntries = new Map<string, CashflowEntry[]>()
+  const seenBanks = new Set<string>()
+  let totalOpening = 0
 
   for (const entry of entries) {
     const bankName = entry.bankName ?? ""
-    if (!bankEntries.has(bankName)) {
-      bankEntries.set(bankName, [])
-    }
-    bankEntries.get(bankName)!.push(entry)
-  }
-
-  let totalOpening = 0
-  for (const entriesForBank of bankEntries.values()) {
-    if (entriesForBank.length > 0) {
-      totalOpening += getCashflowPreviousBalance(entriesForBank[0])
+    if (!seenBanks.has(bankName)) {
+      seenBanks.add(bankName)
+      totalOpening += getCashflowPreviousBalance(entry)
     }
   }
 
   return totalOpening
+}
+
+/**
+ * Calculates the closing balance from cashflow entries.
+ * Groups entries by bank and sums the closing balance from each bank's last entry.
+ *
+ * @param entries - Array of cashflow entries
+ * @returns The closing balance, or 0 if no entries exist
+ */
+export function getCashflowClosingBalance(entries: CashflowEntry[]): number {
+  if (entries.length === 0) {
+    return 0
+  }
+
+  const lastEntryPerBank = new Map<string, CashflowEntry>()
+
+  for (const entry of entries) {
+    const bankName = entry.bankName ?? ""
+    lastEntryPerBank.set(bankName, entry)
+  }
+
+  let totalClosing = 0
+  for (const entry of lastEntryPerBank.values()) {
+    totalClosing += entry.balance
+  }
+
+  return totalClosing
 }
