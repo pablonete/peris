@@ -98,6 +98,8 @@ export interface CashflowEntry {
   expenseId?: string
   /** Running account balance after this transaction */
   balance: number
+  /** Periodicity of this recurring entry: "1mo" (monthly), "3mo" (quarterly), "1y" (yearly) */
+  periodicity?: "1mo" | "3mo" | "1y"
 }
 
 /**
