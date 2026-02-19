@@ -94,8 +94,8 @@ export function CashflowView({
   const actualClosingBalance = getCashflowClosingBalance(
     activeBank ? filteredEntries : entries
   )
-  const balanceMismatch = calculatedClosingBalance !== actualClosingBalance
   const balanceDifference = actualClosingBalance - calculatedClosingBalance
+  const balanceMismatch = Math.abs(balanceDifference) >= 0.005
 
   return (
     <div>
@@ -131,12 +131,19 @@ export function CashflowView({
       {balanceMismatch && (
         <Alert variant="destructive" className="mb-6">
           <AlertDescription>
-            Balance mismatch detected: Expected closing balance is{" "}
-            {formatCurrency(calculatedClosingBalance)} (opening + income -
-            expense), but actual closing balance from entries is{" "}
-            {formatCurrency(actualClosingBalance)}. Difference:{" "}
-            {formatCurrency(Math.abs(balanceDifference))}
-            {balanceDifference > 0 ? " over" : " under"}.
+            {t("cashflow.balanceMismatch")
+              .replace("{expected}", formatCurrency(calculatedClosingBalance))
+              .replace("{actual}", formatCurrency(actualClosingBalance))
+              .replace(
+                "{diff}",
+                formatCurrency(Math.abs(balanceDifference))
+              )
+              .replace(
+                "{direction}",
+                balanceDifference > 0
+                  ? t("cashflow.over")
+                  : t("cashflow.under")
+              )}
           </AlertDescription>
         </Alert>
       )}
