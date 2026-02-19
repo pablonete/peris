@@ -150,6 +150,10 @@ export const translations = {
       bank: "Banco",
       allBanks: "Todo",
       movements: "movimientos",
+      balanceMismatch:
+        "Descuadre de saldo detectado: El saldo de cierre esperado es {expected} (apertura + ingresos - gastos), pero el saldo de cierre real de los movimientos es {actual}. Diferencia: {diff} {direction}.",
+      over: "de más",
+      under: "de menos",
     },
     months: {
       "1": "Ene - Mar",
@@ -341,6 +345,10 @@ export const translations = {
       bank: "Bank",
       allBanks: "All",
       movements: "movements",
+      balanceMismatch:
+        "Balance mismatch detected: Expected closing balance is {expected} (opening + income - expense), but actual closing balance from entries is {actual}. Difference: {diff} {direction}.",
+      over: "over",
+      under: "under",
     },
     months: {
       "1": "Jan - Mar",
