@@ -7,36 +7,22 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }))
 
-vi.mock("@/components/new-expense-dialog", () => ({
-  NewExpenseDialog: () => null,
-  DuplicateExpenseDialog: () => null,
+vi.mock("@/lib/orphan-files", () => ({
+  getOrphanFiles: vi.fn().mockResolvedValue([]),
 }))
 
-vi.mock("@/components/expense-row-actions", () => ({
-  ExpenseRowActions: () => null,
-}))
-
-vi.mock("@/components/delete-expense-alert", () => ({
-  DeleteExpenseAlert: () => null,
-}))
-
-vi.mock("@/components/link-orphan-file-dialog", () => ({
-  LinkOrphanFileDialog: () => null,
-}))
-
-vi.mock("@/components/attachment-cell", () => ({
-  AttachmentCell: () => null,
-}))
-
-vi.mock("@/lib/use-data", () => ({
-  useData: () => ({
-    activeStorage: { name: "Test", url: "https://github.com/test/repo" },
-    companyName: "Test Co",
-    isDirtyFile: vi.fn().mockReturnValue(false),
-    getEditingFile: vi.fn().mockReturnValue(null),
-    setEditingFile: vi.fn(),
-  }),
-}))
+vi.mock("@/lib/use-data", () => {
+  const activeStorage = { name: "Test", url: "https://github.com/test/repo" }
+  return {
+    useData: () => ({
+      activeStorage,
+      companyName: "Test Co",
+      isDirtyFile: vi.fn().mockReturnValue(false),
+      getEditingFile: vi.fn().mockReturnValue(null),
+      setEditingFile: vi.fn(),
+    }),
+  }
+})
 
 vi.mock("@/lib/use-storage-data", () => ({
   useStorageData: () => ({
@@ -53,6 +39,7 @@ vi.mock("@/lib/use-storage-data", () => ({
     isPending: false,
     error: null,
   }),
+  useFileSha: vi.fn().mockReturnValue(undefined),
 }))
 
 describe("ExpensesView", () => {

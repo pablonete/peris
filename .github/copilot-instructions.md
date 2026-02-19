@@ -41,6 +41,8 @@ This is Peris - a minimalist ledger book application for personal accounting and
   - Keep tests simple and focused on one thing
 - **Running tests**: Use `pnpm test` for watch mode, `pnpm test:run` for CI, `pnpm test:coverage` for coverage reports
 - **Test providers**: Use `TestProviders` from `test/test-utils.tsx` when components need i18n context
+- **Never mock nested components**: Only mock data-access modules (e.g. `useData`, `useStorageData`, `getOrphanFiles`) and framework infrastructure (e.g. `next/navigation`). Always render real sub-components.
+- **Stable mock references**: When mocking data hooks that return objects, declare constants inside the factory closure to ensure stable references across renders (prevents infinite re-render loops caused by unstable `useEffect` dependencies)
 
 ### Internationalization (i18n)
 
