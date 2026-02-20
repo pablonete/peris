@@ -14,7 +14,7 @@ describe("CashflowBankFilter", () => {
           activeBank={null}
           onSelect={onSelect}
         />
-      </TestProviders>,
+      </TestProviders>
     )
 
     expect(container.firstChild).toBeNull()
@@ -29,13 +29,13 @@ describe("CashflowBankFilter", () => {
           activeBank={null}
           onSelect={onSelect}
         />
-      </TestProviders>,
+      </TestProviders>
     )
 
     expect(screen.getByText("Todo")).toBeInTheDocument()
   })
 
-  it("should render bank buttons with sequence numbers and colored squares", () => {
+  it("should render bank buttons with colored squares", () => {
     const onSelect = vi.fn()
     const banks = ["Revolut", "Santander", "Unicaja"]
     render(
@@ -45,12 +45,9 @@ describe("CashflowBankFilter", () => {
           activeBank={null}
           onSelect={onSelect}
         />
-      </TestProviders>,
+      </TestProviders>
     )
 
-    expect(screen.getByText("01")).toBeInTheDocument()
-    expect(screen.getByText("02")).toBeInTheDocument()
-    expect(screen.getByText("03")).toBeInTheDocument()
     expect(screen.getByText("Revolut")).toBeInTheDocument()
     expect(screen.getByText("Santander")).toBeInTheDocument()
     expect(screen.getByText("Unicaja")).toBeInTheDocument()
@@ -66,7 +63,7 @@ describe("CashflowBankFilter", () => {
           activeBank={null}
           onSelect={onSelect}
         />
-      </TestProviders>,
+      </TestProviders>
     )
 
     await user.click(screen.getByText("Unicaja"))
@@ -83,7 +80,7 @@ describe("CashflowBankFilter", () => {
           activeBank="Unicaja"
           onSelect={onSelect}
         />
-      </TestProviders>,
+      </TestProviders>
     )
 
     await user.click(screen.getByText("Todo"))

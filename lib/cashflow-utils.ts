@@ -86,3 +86,25 @@ export function getBankColor(
   }
   return BANK_COLORS[index % BANK_COLORS.length]
 }
+
+/**
+ * Returns the Tailwind CSS class for the bank color indicator square.
+ *
+ * @param bankName - The name of the bank
+ * @param sortedBanks - Array of all bank names sorted alphabetically
+ * @returns Tailwind class string for the colored square
+ */
+export function getBankColorClass(
+  bankName: string,
+  sortedBanks: string[]
+): string {
+  const color = getBankColor(bankName, sortedBanks)
+  switch (color) {
+    case "blue":
+      return "bg-[hsl(var(--ledger-blue))]"
+    case "green":
+      return "bg-[hsl(var(--ledger-green))]"
+    case "red":
+      return "bg-[hsl(var(--ledger-red))]"
+  }
+}

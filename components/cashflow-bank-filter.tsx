@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/lib/i18n-context"
-import { getBankColor } from "@/lib/cashflow-utils"
+import { getBankColorClass } from "@/lib/cashflow-utils"
 import { cn } from "@/lib/utils"
 
 interface CashflowBankFilterProps {
@@ -31,13 +31,8 @@ export function CashflowBankFilter({
       >
         {t("cashflow.allBanks")}
       </Button>
-      {banks.map((bank, index) => {
-        const color = getBankColor(bank, banks)
-        const colorClass = cn({
-          "bg-[hsl(var(--ledger-blue))]": color === "blue",
-          "bg-[hsl(var(--ledger-green))]": color === "green",
-          "bg-[hsl(var(--ledger-red))]": color === "red",
-        })
+      {banks.map((bank) => {
+        const colorClass = getBankColorClass(bank, banks)
 
         return (
           <Button
@@ -47,13 +42,8 @@ export function CashflowBankFilter({
             onClick={() => onSelect(bank)}
             className="font-mono text-xs"
           >
-            <span className="font-mono text-[10px] text-muted-foreground/60">
-              {String(index + 1).padStart(2, "0")}
-            </span>
-            <span
-              className={cn("ml-1.5 inline-block h-2.5 w-2.5", colorClass)}
-            />
-            <span className="ml-2">{bank}</span>
+            <span className={cn("mr-2 inline-block h-2.5 w-2.5", colorClass)} />
+            <span>{bank}</span>
           </Button>
         )
       })}

@@ -4,6 +4,7 @@ import {
   getCashflowOpeningBalance,
   getCashflowClosingBalance,
   getBankColor,
+  getBankColorClass,
 } from "./cashflow-utils"
 import { CashflowEntry } from "./types"
 
@@ -538,6 +539,36 @@ describe("cashflow-utils", () => {
       expect(getBankColor("Revolut", banks)).toBe("blue")
       expect(getBankColor("Santander", banks)).toBe("green")
       expect(getBankColor("Unicaja", banks)).toBe("red")
+    })
+  })
+
+  describe("getBankColorClass", () => {
+    it("should return blue class for first bank", () => {
+      const banks = ["Alpha", "Beta", "Gamma"]
+      expect(getBankColorClass("Alpha", banks)).toBe(
+        "bg-[hsl(var(--ledger-blue))]"
+      )
+    })
+
+    it("should return green class for second bank", () => {
+      const banks = ["Alpha", "Beta", "Gamma"]
+      expect(getBankColorClass("Beta", banks)).toBe(
+        "bg-[hsl(var(--ledger-green))]"
+      )
+    })
+
+    it("should return red class for third bank", () => {
+      const banks = ["Alpha", "Beta", "Gamma"]
+      expect(getBankColorClass("Gamma", banks)).toBe(
+        "bg-[hsl(var(--ledger-red))]"
+      )
+    })
+
+    it("should repeat color pattern for additional banks", () => {
+      const banks = ["Alpha", "Beta", "Gamma", "Delta"]
+      expect(getBankColorClass("Delta", banks)).toBe(
+        "bg-[hsl(var(--ledger-blue))]"
+      )
     })
   })
 })
