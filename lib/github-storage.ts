@@ -129,6 +129,23 @@ export class GitHubStorageService {
       ? `${this.dataPath}/${quarterId}/${fileName}`
       : `${quarterId}/${fileName}`
 
+    return this.fetchFilePath(filePath)
+  }
+
+  /**
+   * Fetches a file from the repository root (or dataPath root)
+   */
+  async fetchRootFile(fileName: string): Promise<{ data: any; sha: string }> {
+    const filePath = this.dataPath
+      ? `${this.dataPath}/${fileName}`
+      : fileName
+
+    return this.fetchFilePath(filePath)
+  }
+
+  private async fetchFilePath(
+    filePath: string
+  ): Promise<{ data: any; sha: string }> {
     try {
       const response = await this.octokit.rest.repos.getContent({
         owner: this.owner,
@@ -138,7 +155,6 @@ export class GitHubStorageService {
 
       if (typeof response.data === "object" && !Array.isArray(response.data)) {
         const fileData = response.data as any
-
         const content = Buffer.from(fileData.content, "base64").toString(
           "utf-8"
         )

@@ -100,6 +100,20 @@ export interface CashflowEntry {
   balance: number
   /** Periodicity of this recurring entry: "1mo" (monthly), "3mo" (quarterly), "1y" (yearly) */
   periodicity?: "1mo" | "3mo" | "1y"
+  /**
+   * Category for grouping and summarising entries (e.g., "tax", "payroll").
+   * Supports dot-notation sub-categories (e.g., "tax.vat").
+   */
+  category?: string
+}
+
+/**
+ * Global configuration stored in peris.json at the root of the data repository.
+ * Provides shared settings that apply across all quarters.
+ */
+export interface PerisConfig {
+  /** Suggested category names for tagging cashflow entries */
+  categories?: string[]
 }
 
 /**

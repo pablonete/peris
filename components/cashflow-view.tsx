@@ -9,6 +9,8 @@ import {
 } from "@/lib/cashflow-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useData } from "@/lib/use-data"
+import { usePerisConfig } from "@/lib/use-peris-config"
+import { CashflowEntry } from "@/lib/types"
 import {
   Table,
   TableBody,
@@ -21,6 +23,8 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ErrorBanner } from "@/components/error-banner"
 import { CashflowBankFilter } from "@/components/cashflow-bank-filter"
+import { CashflowRowActions } from "@/components/cashflow-row-actions"
+import { AssignCategoryDialog } from "@/components/assign-category-dialog"
 import { SummaryCard } from "@/components/summary-card"
 import { EditingIndicator } from "@/components/editing-indicator"
 import { cn } from "@/lib/utils"
@@ -37,11 +41,14 @@ export function CashflowView({
   onNavigateToQuarter,
 }: CashflowViewProps) {
   const { t } = useLanguage()
-  const { activeStorage, companyName, quarters, isDirtyFile } = useData()
+  const { activeStorage, companyName, quarters, isDirtyFile, getEditingFile, setEditingFile } = useData()
   const { content, isPending, error } = useStorageData(quarterId, "cashflow")
+  const { categories } = usePerisConfig()
   const isEditing = isDirtyFile(quarterId, "cashflow")
 
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
+  const [assignCategoryEntry, setAssignCategoryEntry] =
+    useState<CashflowEntry | null>(null)
   const entries = content?.entries ?? []
   const uniqueBanks = Array.from(
     new Set(
@@ -56,6 +63,7 @@ export function CashflowView({
       ? selectedBank
       : null
   const showBankColumn = hasMultipleBanks && activeBank === null
+  const showEllipsis = categories.length > 0
 
   if (isPending) {
     return (
@@ -97,6 +105,18 @@ export function CashflowView({
   )
   const balanceDifference = actualClosingBalance - calculatedClosingBalance
   const balanceMismatch = Math.abs(balanceDifference) >= 0.005
+
+  const handleAssignCategory = (category: string | undefined) => {
+    if (!assignCategoryEntry) return
+    const nextEntries = entries.map((e) =>
+      e.id === assignCategoryEntry.id
+        ? { ...e, category }
+        : e
+    )
+    const editingFile = getEditingFile(quarterId, "cashflow")
+    setEditingFile(quarterId, "cashflow", { ...content!, entries: nextEntries }, editingFile?.sha)
+    setAssignCategoryEntry(null)
+  }
 
   return (
     <div>
@@ -173,6 +193,7 @@ export function CashflowView({
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-right">
                 Balance
               </TableHead>
+              {showEllipsis && <TableHead className="w-[40px]" />}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -237,18 +258,25 @@ export function CashflowView({
                         t("cashflow.carryOver")
                       )
                     ) : (
-                      <span className="flex items-center gap-2">
-                        {entry.periodicity && (
-                          <span
-                            className="inline-flex items-center justify-center w-4 h-4 border border-current font-bold text-[10px] leading-none shrink-0"
-                            title={t(`cashflow.periodicityLabel.${entry.periodicity}`)}
-                            aria-label={t(`cashflow.periodicityLabel.${entry.periodicity}`)}
-                          >
-                            {t(`cashflow.periodicity.${entry.periodicity}`)}
+                      <div>
+                        <span className="flex items-center gap-2">
+                          {entry.periodicity && (
+                            <span
+                              className="inline-flex items-center justify-center w-4 h-4 border border-current font-bold text-[10px] leading-none shrink-0"
+                              title={t(`cashflow.periodicityLabel.${entry.periodicity}`)}
+                              aria-label={t(`cashflow.periodicityLabel.${entry.periodicity}`)}
+                            >
+                              {t(`cashflow.periodicity.${entry.periodicity}`)}
+                            </span>
+                          )}
+                          {entry.concept}
+                        </span>
+                        {entry.category && (
+                          <span className="font-mono text-[10px] text-muted-foreground/70 mt-0.5 block">
+                            {entry.category}
                           </span>
                         )}
-                        {entry.concept}
-                      </span>
+                      </div>
                     )}
                   </TableCell>
                   <TableCell className="text-center">
@@ -286,13 +314,20 @@ export function CashflowView({
                   <TableCell className="font-mono text-sm font-semibold text-right">
                     {formatCurrency(entry.balance)}
                   </TableCell>
+                  {showEllipsis && (
+                    <TableCell className="text-center">
+                      <CashflowRowActions
+                        onAssignCategory={() => setAssignCategoryEntry(entry)}
+                      />
+                    </TableCell>
+                  )}
                 </TableRow>
               )
             })}
           </TableBody>
           <TableFooter>
             <TableRow className="border-t-2 border-foreground/20 bg-secondary/30 hover:bg-secondary/30">
-              <TableCell colSpan={4} className="font-semibold text-sm">
+              <TableCell colSpan={showEllipsis ? 5 : 4} className="font-semibold text-sm">
                 Period totals
               </TableCell>
               <TableCell className="font-mono text-xs font-semibold text-right text-[hsl(var(--ledger-green))]">
@@ -308,6 +343,16 @@ export function CashflowView({
           </TableFooter>
         </Table>
       </div>
+
+      {assignCategoryEntry && (
+        <AssignCategoryDialog
+          open={assignCategoryEntry !== null}
+          onClose={() => setAssignCategoryEntry(null)}
+          onAssign={handleAssignCategory}
+          categories={categories}
+          currentCategory={assignCategoryEntry.category}
+        />
+      )}
     </div>
   )
 }
