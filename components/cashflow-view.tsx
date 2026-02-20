@@ -27,6 +27,7 @@ import { CashflowRowActions } from "@/components/cashflow-row-actions"
 import { AssignCategoryDialog } from "@/components/assign-category-dialog"
 import { SummaryCard } from "@/components/summary-card"
 import { EditingIndicator } from "@/components/editing-indicator"
+import { PeriodicityBadge } from "@/components/periodicity-badge"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/i18n-context"
 import { FileText, Receipt } from "lucide-react"
@@ -230,7 +231,10 @@ export function CashflowView({
                     </div>
                   </TableCell>
                   <TableCell className="font-mono text-xs">
-                    <span>{formatDate(entry.date)}</span>
+                    <span className="flex items-center gap-2">
+                      <span>{formatDate(entry.date)}</span>
+                      <PeriodicityBadge periodicity={entry.periodicity} />
+                    </span>
                   </TableCell>
                   <TableCell className={cn("text-sm", isCarryOver && "italic")}>
                     {isCarryOver ? (
@@ -259,18 +263,7 @@ export function CashflowView({
                       )
                     ) : (
                       <div>
-                        <span className="flex items-center gap-2">
-                          {entry.periodicity && (
-                            <span
-                              className="inline-flex items-center justify-center w-4 h-4 border border-current font-bold text-[10px] leading-none shrink-0"
-                              title={t(`cashflow.periodicityLabel.${entry.periodicity}`)}
-                              aria-label={t(`cashflow.periodicityLabel.${entry.periodicity}`)}
-                            >
-                              {t(`cashflow.periodicity.${entry.periodicity}`)}
-                            </span>
-                          )}
-                          {entry.concept}
-                        </span>
+                        <span>{entry.concept}</span>
                         {entry.category && (
                           <span className="font-mono text-[10px] text-muted-foreground/70 mt-0.5 block">
                             {entry.category}
