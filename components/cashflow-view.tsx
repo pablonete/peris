@@ -226,13 +226,17 @@ export function CashflowView({
                         t("cashflow.carryOver")
                       )
                     ) : (
-                      <span className="flex items-baseline gap-2">
-                        {entry.concept}
+                      <span className="flex items-center gap-2">
                         {entry.periodicity && (
-                          <span className="font-mono text-[10px] text-muted-foreground/60">
+                          <span
+                            className="inline-flex items-center justify-center w-4 h-4 border border-current font-bold text-[10px] leading-none shrink-0"
+                            title={t(`cashflow.periodicityLabel.${entry.periodicity}`)}
+                            aria-label={t(`cashflow.periodicityLabel.${entry.periodicity}`)}
+                          >
                             {t(`cashflow.periodicity.${entry.periodicity}`)}
                           </span>
                         )}
+                        {entry.concept}
                       </span>
                     )}
                   </TableCell>
