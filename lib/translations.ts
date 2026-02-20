@@ -155,9 +155,14 @@ export const translations = {
       over: "de más",
       under: "de menos",
       periodicity: {
-        "1mo": "mensual",
-        "3mo": "trimestral",
-        "1y": "anual",
+        "1mo": "M",
+        "3mo": "T",
+        "1y": "A",
+      },
+      periodicityLabel: {
+        "1mo": "Mensual",
+        "3mo": "Trimestral",
+        "1y": "Anual",
       },
     },
     months: {
@@ -355,9 +360,14 @@ export const translations = {
       over: "over",
       under: "under",
       periodicity: {
-        "1mo": "monthly",
-        "3mo": "quarterly",
-        "1y": "yearly",
+        "1mo": "M",
+        "3mo": "Q",
+        "1y": "Y",
+      },
+      periodicityLabel: {
+        "1mo": "Monthly",
+        "3mo": "Quarterly",
+        "1y": "Yearly",
       },
     },
     months: {
