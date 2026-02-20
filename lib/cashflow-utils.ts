@@ -1,5 +1,8 @@
 import { CashflowEntry } from "./types"
 
+const BANK_COLORS = ["blue", "green", "red"] as const
+type BankColor = (typeof BANK_COLORS)[number]
+
 /**
  * Calculates the previous balance from a single cashflow entry.
  * The previous balance is derived by subtracting the entry's income
@@ -63,4 +66,45 @@ export function getCashflowClosingBalance(entries: CashflowEntry[]): number {
   }
 
   return totalClosing
+}
+
+/**
+ * Assigns a color to a bank based on its alphabetical position.
+ * Banks are sorted alphabetically and assigned colors in order: Blue, Green, Red (repeating).
+ *
+ * @param bankName - The name of the bank
+ * @param sortedBanks - Array of all bank names sorted alphabetically
+ * @returns The color assigned to this bank
+ */
+export function getBankColor(
+  bankName: string,
+  sortedBanks: string[]
+): BankColor {
+  const index = sortedBanks.indexOf(bankName)
+  if (index === -1) {
+    return "blue"
+  }
+  return BANK_COLORS[index % BANK_COLORS.length]
+}
+
+/**
+ * Returns the Tailwind CSS class for the bank color indicator square.
+ *
+ * @param bankName - The name of the bank
+ * @param sortedBanks - Array of all bank names sorted alphabetically
+ * @returns Tailwind class string for the colored square
+ */
+export function getBankColorClass(
+  bankName: string,
+  sortedBanks: string[]
+): string {
+  const color = getBankColor(bankName, sortedBanks)
+  switch (color) {
+    case "blue":
+      return "bg-[hsl(var(--ledger-blue))]"
+    case "green":
+      return "bg-[hsl(var(--ledger-green))]"
+    case "red":
+      return "bg-[hsl(var(--ledger-red))]"
+  }
 }

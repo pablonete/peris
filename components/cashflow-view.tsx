@@ -5,6 +5,7 @@ import { formatCurrency, formatDate } from "@/lib/ledger-utils"
 import {
   getCashflowOpeningBalance,
   getCashflowClosingBalance,
+  getBankColorClass,
 } from "@/lib/cashflow-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useData } from "@/lib/use-data"
@@ -188,7 +189,17 @@ export function CashflowView({
                   <TableCell className="text-xs text-muted-foreground">
                     <div className="flex items-baseline gap-2">
                       {showBankColumn ? (
-                        <span>{entry.bankName || "—"}</span>
+                        <>
+                          <span>{entry.bankName || "—"}</span>
+                          {entry.bankName && (
+                            <span
+                              className={cn(
+                                "inline-block h-2.5 w-2.5",
+                                getBankColorClass(entry.bankName, uniqueBanks)
+                              )}
+                            />
+                          )}
+                        </>
                       ) : null}
                       {entry.bankSequence != null ? (
                         <span className="font-mono text-[10px] text-muted-foreground/60">
