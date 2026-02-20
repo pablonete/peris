@@ -1,5 +1,12 @@
 import { CashflowEntry } from "./types"
 
+export type CategoryGroupMode = "first-level" | "full"
+
+export interface CategoryTotal {
+  category: string
+  total: number
+}
+
 const BANK_COLORS = ["blue", "green", "red"] as const
 type BankColor = (typeof BANK_COLORS)[number]
 
@@ -107,4 +114,46 @@ export function getBankColorClass(
     case "red":
       return "bg-[hsl(var(--ledger-red))]"
   }
+}
+
+/**
+ * Aggregates cashflow expense entries by category.
+ * Entries without a category use an empty string key.
+ * Categorised entries are sorted by total descending; the no-category group is last.
+ *
+ * @param entries - Array of cashflow entries
+ * @param mode - "first-level" groups by the segment before the first dot; "full" keeps the literal name
+ * @returns Sorted array of category totals
+ */
+export function getCashflowExpenseTotalsByCategory(
+  entries: CashflowEntry[],
+  mode: CategoryGroupMode
+): CategoryTotal[] {
+  const totals = new Map<string, number>()
+
+  for (const entry of entries) {
+    if (!entry.expense) continue
+    const key = resolveCategoryKey(entry.category, mode)
+    totals.set(key, (totals.get(key) ?? 0) + entry.expense)
+  }
+
+  const result = Array.from(totals.entries()).map(([category, total]) => ({
+    category,
+    total,
+  }))
+
+  const withCategory = result
+    .filter((r) => r.category !== "")
+    .sort((a, b) => b.total - a.total)
+  const withoutCategory = result.filter((r) => r.category === "")
+
+  return [...withCategory, ...withoutCategory]
+}
+
+function resolveCategoryKey(
+  category: string | undefined,
+  mode: CategoryGroupMode
+): string {
+  if (!category) return ""
+  return mode === "first-level" ? category.split(".")[0] : category
 }
