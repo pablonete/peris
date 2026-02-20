@@ -17,3 +17,6 @@ package-lock.json
 
 # Test coverage
 coverage/
+
+# Storybook build
+storybook-static/

@@ -2,6 +2,7 @@
 
 import { GitHubStorageService } from "./github-storage"
 import { Storage } from "./storage-types"
+import { PerisConfig } from "./types"
 
 export interface EditingAttachment {
   quarterId: string
@@ -51,6 +52,25 @@ export async function loadFileFromQuarter<T>(
     return { data: result.data, sha: result.sha }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
+    return { data: null, error: message }
+  }
+}
+
+/**
+ * Loads the global peris.json config from the root of the data repository
+ */
+export async function loadPerisConfig(
+  storage: Storage
+): Promise<{ data: PerisConfig | null; error?: string }> {
+  try {
+    const service = new GitHubStorageService(storage.url)
+    const result = await service.fetchRootFile("peris.json")
+    return { data: result.data }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    if (message.includes("does not exist")) {
+      return { data: null }
+    }
     return { data: null, error: message }
   }
 }

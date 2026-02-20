@@ -3,6 +3,8 @@ import {
   getCashflowPreviousBalance,
   getCashflowOpeningBalance,
   getCashflowClosingBalance,
+  getBankColor,
+  getBankColorClass,
 } from "./cashflow-utils"
 import { CashflowEntry } from "./types"
 
@@ -497,6 +499,76 @@ describe("cashflow-utils", () => {
       expect(closing).toBe(5710)
       expect(calculatedClosing).toBe(5710)
       expect(closing).toBe(calculatedClosing)
+    })
+  })
+
+  describe("getBankColor", () => {
+    it("should assign blue to the first bank alphabetically", () => {
+      const banks = ["Alpha", "Beta", "Gamma"]
+      expect(getBankColor("Alpha", banks)).toBe("blue")
+    })
+
+    it("should assign green to the second bank alphabetically", () => {
+      const banks = ["Alpha", "Beta", "Gamma"]
+      expect(getBankColor("Beta", banks)).toBe("green")
+    })
+
+    it("should assign red to the third bank alphabetically", () => {
+      const banks = ["Alpha", "Beta", "Gamma"]
+      expect(getBankColor("Gamma", banks)).toBe("red")
+    })
+
+    it("should repeat the color pattern after three banks", () => {
+      const banks = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"]
+      expect(getBankColor("Alpha", banks)).toBe("blue") // index 0
+      expect(getBankColor("Beta", banks)).toBe("green") // index 1
+      expect(getBankColor("Gamma", banks)).toBe("red") // index 2
+      expect(getBankColor("Delta", banks)).toBe("blue") // index 3 (repeats)
+      expect(getBankColor("Epsilon", banks)).toBe("green") // index 4 (repeats)
+      expect(getBankColor("Zeta", banks)).toBe("red") // index 5 (repeats)
+    })
+
+    it("should return blue for bank not in the list", () => {
+      const banks = ["Alpha", "Beta"]
+      expect(getBankColor("Unknown", banks)).toBe("blue")
+    })
+
+    it("should handle real bank names alphabetically", () => {
+      const banks = ["Revolut", "Santander", "Unicaja"].sort()
+      expect(banks).toEqual(["Revolut", "Santander", "Unicaja"])
+      expect(getBankColor("Revolut", banks)).toBe("blue")
+      expect(getBankColor("Santander", banks)).toBe("green")
+      expect(getBankColor("Unicaja", banks)).toBe("red")
+    })
+  })
+
+  describe("getBankColorClass", () => {
+    it("should return blue class for first bank", () => {
+      const banks = ["Alpha", "Beta", "Gamma"]
+      expect(getBankColorClass("Alpha", banks)).toBe(
+        "bg-[hsl(var(--ledger-blue))]"
+      )
+    })
+
+    it("should return green class for second bank", () => {
+      const banks = ["Alpha", "Beta", "Gamma"]
+      expect(getBankColorClass("Beta", banks)).toBe(
+        "bg-[hsl(var(--ledger-green))]"
+      )
+    })
+
+    it("should return red class for third bank", () => {
+      const banks = ["Alpha", "Beta", "Gamma"]
+      expect(getBankColorClass("Gamma", banks)).toBe(
+        "bg-[hsl(var(--ledger-red))]"
+      )
+    })
+
+    it("should repeat color pattern for additional banks", () => {
+      const banks = ["Alpha", "Beta", "Gamma", "Delta"]
+      expect(getBankColorClass("Delta", banks)).toBe(
+        "bg-[hsl(var(--ledger-blue))]"
+      )
     })
   })
 })

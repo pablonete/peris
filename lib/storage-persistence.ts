@@ -3,6 +3,8 @@ import { StorageConfig } from "./storage-types"
 const STORAGE_CONFIG_KEY = "peris_storage_config"
 
 export function loadStorageConfig(): StorageConfig | null {
+  if (typeof window === "undefined") return null
+
   try {
     const stored = localStorage.getItem(STORAGE_CONFIG_KEY)
     if (!stored) return null
@@ -14,6 +16,8 @@ export function loadStorageConfig(): StorageConfig | null {
 }
 
 export function saveStorageConfig(config: StorageConfig): void {
+  if (typeof window === "undefined") return
+
   try {
     localStorage.setItem(STORAGE_CONFIG_KEY, JSON.stringify(config))
   } catch (error) {

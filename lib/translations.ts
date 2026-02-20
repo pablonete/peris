@@ -150,6 +150,24 @@ export const translations = {
       bank: "Banco",
       allBanks: "Todo",
       movements: "movimientos",
+      balanceMismatch:
+        "Descuadre de saldo detectado: El saldo de cierre esperado es {expected} (apertura + ingresos - gastos), pero el saldo de cierre real de los movimientos es {actual}. Diferencia: {diff} {direction}.",
+      over: "de más",
+      under: "de menos",
+      periodicity: {
+        "1mo": "M",
+        "3mo": "T",
+        "1y": "A",
+      },
+      periodicityLabel: {
+        "1mo": "Mensual",
+        "3mo": "Trimestral",
+        "1y": "Anual",
+      },
+      assignCategory: "Categoría...",
+      assignCategoryDesc: "Selecciona una categoría para este movimiento.",
+      clearCategory: "Borrar categoría",
+      cancel: "Cancelar",
     },
     months: {
       "1": "Ene - Mar",
@@ -341,6 +359,24 @@ export const translations = {
       bank: "Bank",
       allBanks: "All",
       movements: "movements",
+      balanceMismatch:
+        "Balance mismatch detected: Expected closing balance is {expected} (opening + income - expense), but actual closing balance from entries is {actual}. Difference: {diff} {direction}.",
+      over: "over",
+      under: "under",
+      periodicity: {
+        "1mo": "M",
+        "3mo": "Q",
+        "1y": "Y",
+      },
+      periodicityLabel: {
+        "1mo": "Monthly",
+        "3mo": "Quarterly",
+        "1y": "Yearly",
+      },
+      assignCategory: "Category...",
+      assignCategoryDesc: "Select a category for this entry.",
+      clearCategory: "Clear category",
+      cancel: "Cancel",
     },
     months: {
       "1": "Jan - Mar",
