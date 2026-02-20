@@ -19,7 +19,7 @@ export function usePerisConfig(): {
   })
 
   const config = query.data?.data ?? null
-  const categories = config?.categories ?? []
+  const categories = [...(config?.categories ?? [])].sort()
 
   return { config, categories }
 }

@@ -1,7 +1,6 @@
 "use client"
 
-import { useState } from "react"
-import { Tag } from "lucide-react"
+import { X } from "lucide-react"
 import { useLanguage } from "@/lib/i18n-context"
 import {
   Dialog,
@@ -30,22 +29,19 @@ export function AssignCategoryDialog({
   currentCategory,
 }: AssignCategoryDialogProps) {
   const { t } = useLanguage()
-  const [selected, setSelected] = useState<string | undefined>(currentCategory)
 
-  const handleOpenChange = (isOpen: boolean) => {
-    if (!isOpen) {
-      setSelected(currentCategory)
-      onClose()
-    }
+  const handleSelect = (category: string) => {
+    onAssign(category)
+    onClose()
   }
 
-  const handleAssign = () => {
-    onAssign(selected)
+  const handleClear = () => {
+    onAssign(undefined)
     onClose()
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
           <DialogTitle>{t("cashflow.assignCategory")}</DialogTitle>
@@ -57,24 +53,13 @@ export function AssignCategoryDialog({
         <div className="py-4">
           <ScrollArea className="h-[280px] rounded-md border">
             <div className="p-2">
-              <button
-                type="button"
-                onClick={() => setSelected(undefined)}
-                className={`w-full rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-accent ${
-                  selected === undefined ? "bg-accent font-medium" : "font-normal"
-                }`}
-              >
-                <span className="text-muted-foreground italic">
-                  {t("cashflow.noCategory")}
-                </span>
-              </button>
               {categories.map((category) => (
                 <button
                   key={category}
                   type="button"
-                  onClick={() => setSelected(category)}
+                  onClick={() => handleSelect(category)}
                   className={`w-full rounded-md px-3 py-2 text-left text-sm font-mono transition-colors hover:bg-accent ${
-                    selected === category ? "bg-accent font-medium" : "font-normal"
+                    currentCategory === category ? "bg-accent font-medium" : "font-normal"
                   }`}
                 >
                   {category}
@@ -84,13 +69,13 @@ export function AssignCategoryDialog({
           </ScrollArea>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>
-            {t("cashflow.cancel")}
+        <DialogFooter className="flex-row items-center justify-between sm:justify-between">
+          <Button variant="ghost" onClick={handleClear} className="text-muted-foreground">
+            <X className="mr-2 h-4 w-4" />
+            {t("cashflow.clearCategory")}
           </Button>
-          <Button onClick={handleAssign}>
-            <Tag className="mr-2 h-4 w-4" />
-            {t("cashflow.assignCategory")}
+          <Button variant="outline" onClick={onClose}>
+            {t("cashflow.cancel")}
           </Button>
         </DialogFooter>
       </DialogContent>

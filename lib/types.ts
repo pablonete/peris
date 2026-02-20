@@ -103,7 +103,6 @@ export interface CashflowEntry {
   /**
    * Category for grouping and summarising entries (e.g., "tax", "payroll").
    * Supports dot-notation sub-categories (e.g., "tax.vat").
-   * Values come from the global peris.json categories list.
    */
   category?: string
 }

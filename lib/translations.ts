@@ -164,9 +164,9 @@ export const translations = {
         "3mo": "Trimestral",
         "1y": "Anual",
       },
-      assignCategory: "Asignar categoría",
+      assignCategory: "Categoría...",
       assignCategoryDesc: "Selecciona una categoría para este movimiento.",
-      noCategory: "Sin categoría",
+      clearCategory: "Borrar categoría",
       cancel: "Cancelar",
     },
     months: {
@@ -373,9 +373,9 @@ export const translations = {
         "3mo": "Quarterly",
         "1y": "Yearly",
       },
-      assignCategory: "Assign category",
+      assignCategory: "Category...",
       assignCategoryDesc: "Select a category for this entry.",
-      noCategory: "No category",
+      clearCategory: "Clear category",
       cancel: "Cancel",
     },
     months: {

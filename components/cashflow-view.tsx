@@ -63,6 +63,7 @@ export function CashflowView({
       ? selectedBank
       : null
   const showBankColumn = hasMultipleBanks && activeBank === null
+  const showEllipsis = categories.length > 0
 
   if (isPending) {
     return (
@@ -192,7 +193,7 @@ export function CashflowView({
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-right">
                 Balance
               </TableHead>
-              {categories.length > 0 && <TableHead className="w-[40px]" />}
+              {showEllipsis && <TableHead className="w-[40px]" />}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -313,7 +314,7 @@ export function CashflowView({
                   <TableCell className="font-mono text-sm font-semibold text-right">
                     {formatCurrency(entry.balance)}
                   </TableCell>
-                  {categories.length > 0 && (
+                  {showEllipsis && (
                     <TableCell className="text-center">
                       <CashflowRowActions
                         onAssignCategory={() => setAssignCategoryEntry(entry)}
@@ -326,7 +327,7 @@ export function CashflowView({
           </TableBody>
           <TableFooter>
             <TableRow className="border-t-2 border-foreground/20 bg-secondary/30 hover:bg-secondary/30">
-              <TableCell colSpan={categories.length > 0 ? 5 : 4} className="font-semibold text-sm">
+              <TableCell colSpan={showEllipsis ? 5 : 4} className="font-semibold text-sm">
                 Period totals
               </TableCell>
               <TableCell className="font-mono text-xs font-semibold text-right text-[hsl(var(--ledger-green))]">

@@ -108,8 +108,6 @@ finances/
 }
 ```
 
-When categories are defined, a menu appears on each cashflow entry to assign a category. Categories support dot-notation sub-categories (e.g., `tax.vat`). The category is shown below the concept text in the cashflow table.
-
 **invoices.json** - Array of invoices:
 
 ```json
