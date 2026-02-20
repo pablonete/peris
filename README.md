@@ -173,6 +173,7 @@ finances/
 - [Radix UI](https://www.radix-ui.com/) - Accessible component primitives
 - [Recharts](https://recharts.org/) - Data visualization
 - [Vitest](https://vitest.dev/) - Unit testing framework
+- [Storybook](https://storybook.js.org/) - Component development and documentation
 
 ## Getting Started
 
@@ -236,6 +237,8 @@ pnpm test           # Run tests in watch mode
 pnpm test:run       # Run tests once
 pnpm test:ui        # Run tests with UI
 pnpm test:coverage  # Run tests with coverage report
+pnpm storybook      # Start Storybook development server
+pnpm build-storybook # Build Storybook to out/storybook
 ```
 
 ### Project Structure
@@ -259,6 +262,7 @@ The app can be deployed to GitHub Pages:
 1. Enable GitHub Pages in repository settings (Source: GitHub Actions)
 2. Push to `main` branch to trigger automatic deployment
 3. Visit: `https://[username].github.io/peris`
+4. Storybook is available at: `https://[username].github.io/peris/storybook`
 
 ## Contributing
 
