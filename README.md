@@ -7,7 +7,7 @@ A minimalist ledger book application for financial tracking based on GitHub repo
 - 📊 **Quarterly Organization** - Track finances by quarters (Q1-Q4)
 - 💰 **Invoice Management** - Record and monitor sent invoices with payment dates
 - 🧾 **Expense Tracking** - Log business expenses with VAT (multiple), IRPF (15%), payment dates, and the attached document
-- 💵 **Cashflow View** - Monitor bank balance and transaction flow over time with multi-bank support
+- 💵 **Cashflow View** - Monitor bank balance and transaction flow over time with multi-bank support and category tagging
 - 🌍 **Bilingual Support** - Switch between Spanish (ES) and English (EN)
 - 🔗 **GitHub Data Storage** - Store and sync your financial data from GitHub repositories
 
@@ -81,6 +81,7 @@ Your repository structure should look like:
 
 ```
 finances/
+├── peris.json
 ├── 2025.1Q/
 │   ├── invoices.json
 │   ├── expenses.json
@@ -91,6 +92,23 @@ finances/
 │   └── cashflow.json
 └── ...
 ```
+
+**peris.json** - Optional global configuration at the root of the data path:
+
+```json
+{
+  "categories": [
+    "tax",
+    "tax.vat",
+    "tax.labour-retention",
+    "payroll",
+    "internet",
+    "bank"
+  ]
+}
+```
+
+When categories are defined, a menu appears on each cashflow entry to assign a category. Categories support dot-notation sub-categories (e.g., `tax.vat`). The category is shown below the concept text in the cashflow table.
 
 **invoices.json** - Array of invoices:
 
@@ -139,7 +157,8 @@ finances/
       "bankName": "Unicaja",
       "bankSequence": 1,
       "income": 1210,
-      "balance": 6210
+      "balance": 6210,
+      "category": "tax.vat"
     }
   ]
 }

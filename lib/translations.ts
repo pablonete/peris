@@ -164,6 +164,10 @@ export const translations = {
         "3mo": "Trimestral",
         "1y": "Anual",
       },
+      assignCategory: "Asignar categoría",
+      assignCategoryDesc: "Selecciona una categoría para este movimiento.",
+      noCategory: "Sin categoría",
+      cancel: "Cancelar",
     },
     months: {
       "1": "Ene - Mar",
@@ -369,6 +373,10 @@ export const translations = {
         "3mo": "Quarterly",
         "1y": "Yearly",
       },
+      assignCategory: "Assign category",
+      assignCategoryDesc: "Select a category for this entry.",
+      noCategory: "No category",
+      cancel: "Cancel",
     },
     months: {
       "1": "Jan - Mar",
