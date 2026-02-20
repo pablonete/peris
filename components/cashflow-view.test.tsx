@@ -8,6 +8,7 @@ vi.mock("@/lib/use-data", () => ({
     activeStorage: { name: "Test", url: "https://github.com/test/repo" },
     companyName: "Test Co",
     quarters: ["2025.1Q"],
+    categories: [],
     isDirtyFile: vi.fn().mockReturnValue(false),
   }),
 }))
@@ -34,13 +35,6 @@ vi.mock("@/lib/use-storage-data", () => ({
     },
     isPending: false,
     error: null,
-  }),
-}))
-
-vi.mock("@/lib/use-peris-config", () => ({
-  usePerisConfig: () => ({
-    config: null,
-    categories: [],
   }),
 }))
 

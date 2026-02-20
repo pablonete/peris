@@ -9,7 +9,6 @@ import {
 } from "@/lib/cashflow-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useData } from "@/lib/use-data"
-import { usePerisConfig } from "@/lib/use-peris-config"
 import { CashflowEntry } from "@/lib/types"
 import {
   Table,
@@ -42,9 +41,15 @@ export function CashflowView({
   onNavigateToQuarter,
 }: CashflowViewProps) {
   const { t } = useLanguage()
-  const { activeStorage, companyName, quarters, isDirtyFile, getEditingFile, setEditingFile } = useData()
+  const {
+    companyName,
+    quarters,
+    isDirtyFile,
+    getEditingFile,
+    setEditingFile,
+    categories,
+  } = useData()
   const { content, isPending, error } = useStorageData(quarterId, "cashflow")
-  const { categories } = usePerisConfig()
   const isEditing = isDirtyFile(quarterId, "cashflow")
 
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
@@ -110,12 +115,15 @@ export function CashflowView({
   const handleAssignCategory = (category: string | undefined) => {
     if (!assignCategoryEntry) return
     const nextEntries = entries.map((e) =>
-      e.id === assignCategoryEntry.id
-        ? { ...e, category }
-        : e
+      e.id === assignCategoryEntry.id ? { ...e, category } : e
     )
     const editingFile = getEditingFile(quarterId, "cashflow")
-    setEditingFile(quarterId, "cashflow", { ...content!, entries: nextEntries }, editingFile?.sha)
+    setEditingFile(
+      quarterId,
+      "cashflow",
+      { ...content!, entries: nextEntries },
+      editingFile?.sha
+    )
     setAssignCategoryEntry(null)
   }
 
@@ -320,7 +328,10 @@ export function CashflowView({
           </TableBody>
           <TableFooter>
             <TableRow className="border-t-2 border-foreground/20 bg-secondary/30 hover:bg-secondary/30">
-              <TableCell colSpan={showEllipsis ? 5 : 4} className="font-semibold text-sm">
+              <TableCell
+                colSpan={showEllipsis ? 5 : 4}
+                className="font-semibold text-sm"
+              >
                 Period totals
               </TableCell>
               <TableCell className="font-mono text-xs font-semibold text-right text-[hsl(var(--ledger-green))]">
