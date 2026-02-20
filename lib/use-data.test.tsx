@@ -20,12 +20,12 @@ describe("useData", () => {
     expect(result.current).toHaveProperty("getFileUrl")
   })
 
-  it("returns default companyName from sample storage", () => {
+  it("returns empty companyName when no peris config is loaded", () => {
     const { result } = renderHook(() => useData(), {
       wrapper: DataTestProviders,
     })
 
-    expect(result.current.companyName).toBe("Sample Data")
+    expect(result.current.companyName).toBe("")
   })
 
   it("isDirtyFile returns false when no files are being edited", () => {

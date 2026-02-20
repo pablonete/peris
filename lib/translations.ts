@@ -20,7 +20,6 @@ export const translations = {
         "Crea un nuevo trimestre con archivos de datos iniciales vacíos.",
       year: "Año",
       quarter: "Trimestre",
-      companyName: "Nombre de la empresa",
       create: "Crear",
       creating: "Creando...",
       cancel: "Cancelar",
@@ -30,7 +29,6 @@ export const translations = {
         invalidYear: "Año inválido (debe estar entre 2000-2100)",
         invalidQuarter: "Trimestre inválido (debe ser 1, 2, 3 o 4)",
         duplicate: "Este trimestre ya existe",
-        companyRequired: "El nombre de la empresa es requerido",
       },
     },
     welcome: {
@@ -231,7 +229,6 @@ export const translations = {
       newQuarterDesc: "Create a new quarter with empty initial data files.",
       year: "Year",
       quarter: "Quarter",
-      companyName: "Company Name",
       create: "Create",
       creating: "Creating...",
       cancel: "Cancel",
@@ -241,7 +238,6 @@ export const translations = {
         invalidYear: "Invalid year (must be between 2000-2100)",
         invalidQuarter: "Invalid quarter (must be 1, 2, 3, or 4)",
         duplicate: "This quarter already exists",
-        companyRequired: "Company name is required",
       },
     },
     welcome: {

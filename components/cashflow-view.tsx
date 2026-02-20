@@ -55,7 +55,7 @@ export function CashflowView({
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
   const [assignCategoryEntry, setAssignCategoryEntry] =
     useState<CashflowEntry | null>(null)
-  const entries = content?.entries ?? []
+  const entries = content ?? []
   const uniqueBanks = Array.from(
     new Set(
       entries
@@ -121,7 +121,7 @@ export function CashflowView({
     setEditingFile(
       quarterId,
       "cashflow",
-      { ...content!, entries: nextEntries },
+      nextEntries,
       editingFile?.sha
     )
     setAssignCategoryEntry(null)

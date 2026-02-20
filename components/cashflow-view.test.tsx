@@ -15,24 +15,21 @@ vi.mock("@/lib/use-data", () => ({
 
 vi.mock("@/lib/use-storage-data", () => ({
   useStorageData: () => ({
-    content: {
-      companyName: "Test Co",
-      entries: [
-        {
-          id: "1",
-          date: "2025-01-01",
-          concept: "Carry over",
-          balance: 5000,
-        },
-        {
-          id: "2",
-          date: "2025-01-15",
-          concept: "Client payment",
-          income: 1210,
-          balance: 6210,
-        },
-      ],
-    },
+    content: [
+      {
+        id: "1",
+        date: "2025-01-01",
+        concept: "Carry over",
+        balance: 5000,
+      },
+      {
+        id: "2",
+        date: "2025-01-15",
+        concept: "Client payment",
+        income: 1210,
+        balance: 6210,
+      },
+    ],
     isPending: false,
     error: null,
   }),

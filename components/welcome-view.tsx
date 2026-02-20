@@ -43,7 +43,7 @@ function useQuarterSummary(qId: string) {
     (sum, exp) => sum + exp.total,
     0
   )
-  const entries = cashflowQuery.content.entries
+  const entries = cashflowQuery.content
   const openingBalance = getCashflowOpeningBalance(entries)
   const closingBalance = entries[entries.length - 1]?.balance ?? openingBalance
   const net = totalInvoiced - totalExpenses
