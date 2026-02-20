@@ -37,6 +37,13 @@ vi.mock("@/lib/use-storage-data", () => ({
   }),
 }))
 
+vi.mock("@/lib/use-peris-config", () => ({
+  usePerisConfig: () => ({
+    config: null,
+    categories: [],
+  }),
+}))
+
 describe("CashflowView", () => {
   it("renders the cashflow heading and entries", () => {
     render(
