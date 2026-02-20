@@ -231,7 +231,10 @@ export function CashflowView({
                     </div>
                   </TableCell>
                   <TableCell className="font-mono text-xs">
-                    <span>{formatDate(entry.date)}</span>
+                    <span className="flex items-center gap-2">
+                      <span>{formatDate(entry.date)}</span>
+                      <PeriodicityBadge periodicity={entry.periodicity} />
+                    </span>
                   </TableCell>
                   <TableCell className={cn("text-sm", isCarryOver && "italic")}>
                     {isCarryOver ? (
@@ -260,10 +263,7 @@ export function CashflowView({
                       )
                     ) : (
                       <div>
-                        <span className="flex items-center gap-2">
-                          <PeriodicityBadge periodicity={entry.periodicity} />
-                          {entry.concept}
-                        </span>
+                        <span>{entry.concept}</span>
                         {entry.category && (
                           <span className="font-mono text-[10px] text-muted-foreground/70 mt-0.5 block">
                             {entry.category}
