@@ -2,8 +2,8 @@
 
 import { useStorage } from "@/lib/storage-context"
 import { useEditingState } from "@/lib/editing-state-context"
-import { useStorageData } from "@/lib/use-storage-data"
 import { useStorageQuarters } from "@/lib/use-storage-quarters"
+import { usePerisConfig } from "@/lib/use-peris-config"
 import { Invoice, Expense } from "@/lib/types"
 import { CashflowFileData } from "@/lib/github-storage"
 
@@ -42,6 +42,7 @@ export function useData() {
     isPending: quartersPending,
     error: quartersError,
   } = useStorageQuarters()
+  const { categories } = usePerisConfig()
 
   const companyName = activeStorage?.name || ""
 
@@ -79,6 +80,7 @@ export function useData() {
     addStorage,
     removeStorage,
     companyName,
+    categories,
 
     // Quarters
     quarters,
