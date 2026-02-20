@@ -134,15 +134,10 @@ export function CashflowView({
             {t("cashflow.balanceMismatch")
               .replace("{expected}", formatCurrency(calculatedClosingBalance))
               .replace("{actual}", formatCurrency(actualClosingBalance))
-              .replace(
-                "{diff}",
-                formatCurrency(Math.abs(balanceDifference))
-              )
+              .replace("{diff}", formatCurrency(Math.abs(balanceDifference)))
               .replace(
                 "{direction}",
-                balanceDifference > 0
-                  ? t("cashflow.over")
-                  : t("cashflow.under")
+                balanceDifference > 0 ? t("cashflow.over") : t("cashflow.under")
               )}
           </AlertDescription>
         </Alert>
@@ -231,7 +226,14 @@ export function CashflowView({
                         t("cashflow.carryOver")
                       )
                     ) : (
-                      entry.concept
+                      <span className="flex items-baseline gap-2">
+                        {entry.concept}
+                        {entry.periodicity && (
+                          <span className="font-mono text-[10px] text-muted-foreground/60">
+                            {t(`cashflow.periodicity.${entry.periodicity}`)}
+                          </span>
+                        )}
+                      </span>
                     )}
                   </TableCell>
                   <TableCell className="text-center">

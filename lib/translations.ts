@@ -154,6 +154,11 @@ export const translations = {
         "Descuadre de saldo detectado: El saldo de cierre esperado es {expected} (apertura + ingresos - gastos), pero el saldo de cierre real de los movimientos es {actual}. Diferencia: {diff} {direction}.",
       over: "de más",
       under: "de menos",
+      periodicity: {
+        "1mo": "mensual",
+        "3mo": "trimestral",
+        "1y": "anual",
+      },
     },
     months: {
       "1": "Ene - Mar",
@@ -349,6 +354,11 @@ export const translations = {
         "Balance mismatch detected: Expected closing balance is {expected} (opening + income - expense), but actual closing balance from entries is {actual}. Difference: {diff} {direction}.",
       over: "over",
       under: "under",
+      periodicity: {
+        "1mo": "monthly",
+        "3mo": "quarterly",
+        "1y": "yearly",
+      },
     },
     months: {
       "1": "Jan - Mar",
