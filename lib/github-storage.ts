@@ -2,12 +2,6 @@
 
 import { Octokit } from "@octokit/rest"
 import { parseStorageUrl } from "./storage-types"
-import { QuarterData, Invoice, Expense, CashflowEntry } from "./types"
-
-export interface CashflowFileData {
-  companyName: string
-  entries: CashflowEntry[]
-}
 
 export class GitHubStorageService {
   private octokit: Octokit

@@ -112,6 +112,8 @@ export interface CashflowEntry {
  * Provides shared settings that apply across all quarters.
  */
 export interface PerisConfig {
+  /** Company name displayed in headers across all quarters */
+  companyName?: string
   /** Suggested category names for tagging cashflow entries */
   categories?: string[]
 }

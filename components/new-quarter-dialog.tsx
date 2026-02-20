@@ -55,21 +55,19 @@ export function NewQuarterDialog({ existingQuarters }: NewQuarterDialogProps) {
   const [open, setOpen] = useState(false)
   const [year, setYear] = useState("")
   const [quarter, setQuarter] = useState("")
-  const [companyName, setCompanyName] = useState("")
 
   const error = validateQuarterFormat(year, quarter, existingQuarters, t)
-  const isValid = !error && year && quarter && companyName.trim()
+  const isValid = !error && year && quarter
 
   const handleCreate = () => {
     if (!isValid) return
 
     const quarterId = `${year}.${quarter}Q`
 
-    createNewQuarter(quarterId, companyName.trim())
+    createNewQuarter(quarterId)
 
     setYear("")
     setQuarter("")
-    setCompanyName("")
     setOpen(false)
   }
 
@@ -118,15 +116,6 @@ export function NewQuarterDialog({ existingQuarters }: NewQuarterDialogProps) {
                 max="4"
               />
             </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="companyName">{t("quarters.companyName")}</Label>
-            <Input
-              id="companyName"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-            />
           </div>
 
           {year && quarter && (

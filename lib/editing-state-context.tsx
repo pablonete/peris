@@ -2,8 +2,7 @@
 
 import React, { createContext, useContext, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import { Invoice, Expense } from "./types"
-import { CashflowFileData } from "./github-storage"
+import { Invoice, Expense, CashflowEntry } from "./types"
 import { commitEditingFiles } from "./github-data"
 import { useStorage } from "./storage-context"
 
@@ -12,7 +11,7 @@ type LedgerFileName = "invoices" | "expenses" | "cashflow"
 interface EditingFile {
   quarterId: string
   fileName: LedgerFileName
-  data: Invoice[] | Expense[] | CashflowFileData
+  data: Invoice[] | Expense[] | CashflowEntry[]
   sha?: string
 }
 
@@ -35,7 +34,7 @@ interface EditingStateContextType {
   setEditingFile: (
     quarterId: string,
     fileName: LedgerFileName,
-    data: Invoice[] | Expense[] | CashflowFileData,
+    data: Invoice[] | Expense[] | CashflowEntry[],
     sha?: string
   ) => void
   addAttachment: (
@@ -48,7 +47,7 @@ interface EditingStateContextType {
     filename: string
   ) => EditingAttachment | undefined
   removeAttachment: (quarterId: string, filename: string) => void
-  createNewQuarter: (quarterId: string, companyName: string) => void
+  createNewQuarter: (quarterId: string) => void
   clearAllEditing: () => void
   commitChanges: () => Promise<void>
 }
@@ -87,7 +86,7 @@ export function EditingStateProvider({
   const setEditingFile = (
     quarterId: string,
     fileName: LedgerFileName,
-    data: Invoice[] | Expense[] | CashflowFileData,
+    data: Invoice[] | Expense[] | CashflowEntry[],
     sha?: string
   ) => {
     setEditingFiles((prev) => {
@@ -137,13 +136,10 @@ export function EditingStateProvider({
     })
   }
 
-  const createNewQuarter = (quarterId: string, companyName: string) => {
+  const createNewQuarter = (quarterId: string) => {
     setEditingFile(quarterId, "invoices", [])
     setEditingFile(quarterId, "expenses", [])
-    setEditingFile(quarterId, "cashflow", {
-      companyName,
-      entries: [],
-    })
+    setEditingFile(quarterId, "cashflow", [])
   }
 
   const clearAllEditing = () => {

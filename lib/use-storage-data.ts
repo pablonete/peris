@@ -4,8 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useStorage } from "@/lib/storage-context"
 import { useEditingState } from "@/lib/editing-state-context"
 import { loadFileFromQuarter } from "@/lib/github-data"
-import { Invoice, Expense } from "@/lib/types"
-import { CashflowFileData } from "@/lib/github-storage"
+import { Invoice, Expense, CashflowEntry } from "@/lib/types"
 
 type LedgerFileName = "invoices" | "expenses" | "cashflow"
 
@@ -20,7 +19,7 @@ type UseStorageDataResult<T extends LedgerFileName> = T extends "invoices"
   ? StorageDataResult<Invoice[]>
   : T extends "expenses"
     ? StorageDataResult<Expense[]>
-    : StorageDataResult<CashflowFileData>
+    : StorageDataResult<CashflowEntry[]>
 
 /**
  * Helper to get the SHA for a file from the query cache

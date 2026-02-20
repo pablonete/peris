@@ -4,8 +4,7 @@ import { useStorage } from "@/lib/storage-context"
 import { useEditingState } from "@/lib/editing-state-context"
 import { useStorageQuarters } from "@/lib/use-storage-quarters"
 import { usePerisConfig } from "@/lib/use-peris-config"
-import { Invoice, Expense } from "@/lib/types"
-import { CashflowFileData } from "@/lib/github-storage"
+import { Invoice, Expense, CashflowEntry } from "@/lib/types"
 
 type LedgerFileName = "invoices" | "expenses" | "cashflow"
 
@@ -13,7 +12,7 @@ type FileContent<T extends LedgerFileName> = T extends "invoices"
   ? Invoice[]
   : T extends "expenses"
     ? Expense[]
-    : CashflowFileData
+    : CashflowEntry[]
 
 export function useData() {
   const {
@@ -42,9 +41,9 @@ export function useData() {
     isPending: quartersPending,
     error: quartersError,
   } = useStorageQuarters()
-  const { categories } = usePerisConfig()
+  const { config, categories } = usePerisConfig()
 
-  const companyName = activeStorage?.name || ""
+  const companyName = config?.companyName ?? ""
 
   const isDirtyFile = (quarterId: string, type: LedgerFileName): boolean => {
     return !!getEditingFile(quarterId, type)
