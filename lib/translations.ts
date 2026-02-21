@@ -166,6 +166,10 @@ export const translations = {
       assignCategoryDesc: "Selecciona una categoría para este movimiento.",
       clearCategory: "Borrar categoría",
       cancel: "Cancelar",
+      categoryBreakdown: "Gastos por categoría",
+      groupByFirstLevel: "Primer nivel",
+      groupByFullCategory: "Categoría completa",
+      noCategory: "Sin categoría",
     },
     months: {
       "1": "Ene - Mar",
@@ -373,6 +377,10 @@ export const translations = {
       assignCategoryDesc: "Select a category for this entry.",
       clearCategory: "Clear category",
       cancel: "Cancel",
+      categoryBreakdown: "Expenses by category",
+      groupByFirstLevel: "First level",
+      groupByFullCategory: "Full category",
+      noCategory: "No category",
     },
     months: {
       "1": "Jan - Mar",

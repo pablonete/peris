@@ -24,6 +24,7 @@ import { ErrorBanner } from "@/components/error-banner"
 import { CashflowBankFilter } from "@/components/cashflow-bank-filter"
 import { CashflowRowActions } from "@/components/cashflow-row-actions"
 import { AssignCategoryDialog } from "@/components/assign-category-dialog"
+import { CashflowCategoryChart } from "@/components/cashflow-category-chart"
 import { SummaryCard } from "@/components/summary-card"
 import { EditingIndicator } from "@/components/editing-indicator"
 import { PeriodicityBadge } from "@/components/periodicity-badge"
@@ -347,6 +348,8 @@ export function CashflowView({
           </TableFooter>
         </Table>
       </div>
+
+      <CashflowCategoryChart entries={filteredEntries} />
 
       {assignCategoryEntry && (
         <AssignCategoryDialog

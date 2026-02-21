@@ -5,6 +5,7 @@ import {
   getCashflowClosingBalance,
   getBankColor,
   getBankColorClass,
+  getCashflowTotalsByCategory,
 } from "./cashflow-utils"
 import { CashflowEntry } from "./types"
 
@@ -569,6 +570,128 @@ describe("cashflow-utils", () => {
       expect(getBankColorClass("Delta", banks)).toBe(
         "bg-[hsl(var(--ledger-blue))]"
       )
+    })
+  })
+
+  describe("getCashflowTotalsByCategory", () => {
+    const entries: CashflowEntry[] = [
+      {
+        id: "1",
+        date: "2025-01-10",
+        concept: "Tax payment",
+        expense: 200,
+        balance: 4800,
+        category: "tax.vat",
+      },
+      {
+        id: "2",
+        date: "2025-01-15",
+        concept: "VAT Q4",
+        expense: 300,
+        balance: 4500,
+        category: "tax.vat",
+      },
+      {
+        id: "3",
+        date: "2025-01-20",
+        concept: "Salary",
+        expense: 1000,
+        balance: 3500,
+        category: "payroll.salary",
+      },
+      {
+        id: "4",
+        date: "2025-01-25",
+        concept: "Misc",
+        expense: 50,
+        balance: 3450,
+      },
+      {
+        id: "5",
+        date: "2025-01-28",
+        concept: "Invoice",
+        income: 500,
+        balance: 3950,
+        category: "tax.vat",
+      },
+    ]
+
+    it("groups expenses by first-level category in first-level mode", () => {
+      const result = getCashflowTotalsByCategory(entries, "first-level")
+      const tax = result.find((r) => r.category === "tax")
+      const payroll = result.find((r) => r.category === "payroll")
+      expect(tax?.expensesTotal).toBe(500)
+      expect(payroll?.expensesTotal).toBe(1000)
+    })
+
+    it("keeps full category name in full mode", () => {
+      const result = getCashflowTotalsByCategory(entries, "full")
+      const taxVat = result.find((r) => r.category === "tax.vat")
+      const payrollSalary = result.find((r) => r.category === "payroll.salary")
+      expect(taxVat?.expensesTotal).toBe(500)
+      expect(payrollSalary?.expensesTotal).toBe(1000)
+    })
+
+    it("aggregates income by category", () => {
+      const result = getCashflowTotalsByCategory(entries, "first-level")
+      const tax = result.find((r) => r.category === "tax")
+      expect(tax?.invoicesTotal).toBe(500)
+    })
+
+    it("includes no-category entries with empty string key", () => {
+      const result = getCashflowTotalsByCategory(entries, "first-level")
+      const noCategory = result.find((r) => r.category === "")
+      expect(noCategory?.expensesTotal).toBe(50)
+    })
+
+    it("sorts entries by expensesTotal descending", () => {
+      const result = getCashflowTotalsByCategory(entries, "first-level")
+      for (let i = 0; i < result.length - 1; i++) {
+        expect(result[i].expensesTotal).toBeGreaterThanOrEqual(
+          result[i + 1].expensesTotal
+        )
+      }
+    })
+
+    it("returns empty array when no entries have income or expense", () => {
+      const carryOver: CashflowEntry[] = [
+        { id: "1", date: "2025-01-01", concept: "Carry over", balance: 5000 },
+      ]
+      expect(getCashflowTotalsByCategory(carryOver, "full")).toEqual([])
+    })
+
+    it("includes income-only categories", () => {
+      const incomeEntries: CashflowEntry[] = [
+        {
+          id: "1",
+          date: "2025-01-10",
+          concept: "Invoice",
+          income: 1000,
+          balance: 6000,
+          category: "services",
+        },
+      ]
+      const result = getCashflowTotalsByCategory(incomeEntries, "full")
+      expect(result).toHaveLength(1)
+      expect(result[0].invoicesTotal).toBe(1000)
+      expect(result[0].expensesTotal).toBe(0)
+    })
+
+    it("includes expense-only categories", () => {
+      const expenseEntries: CashflowEntry[] = [
+        {
+          id: "1",
+          date: "2025-01-10",
+          concept: "Rent",
+          expense: 800,
+          balance: 4200,
+          category: "facilities",
+        },
+      ]
+      const result = getCashflowTotalsByCategory(expenseEntries, "full")
+      expect(result).toHaveLength(1)
+      expect(result[0].expensesTotal).toBe(800)
+      expect(result[0].invoicesTotal).toBe(0)
     })
   })
 })

@@ -1,5 +1,13 @@
 import { CashflowEntry } from "./types"
 
+export type CategoryGroupMode = "first-level" | "full"
+
+export interface CategoryTotal {
+  category: string
+  invoicesTotal: number
+  expensesTotal: number
+}
+
 const BANK_COLORS = ["blue", "green", "red"] as const
 type BankColor = (typeof BANK_COLORS)[number]
 
@@ -107,4 +115,49 @@ export function getBankColorClass(
     case "red":
       return "bg-[hsl(var(--ledger-red))]"
   }
+}
+
+/**
+ * Aggregates cashflow entries by category, summing both income and expense totals.
+ * Entries without a category use an empty string key.
+ * Results are sorted by expensesTotal descending.
+ *
+ * @param entries - Array of cashflow entries
+ * @param mode - "first-level" groups by the segment before the first dot; "full" keeps the literal name
+ * @returns Sorted array of category totals
+ */
+export function getCashflowTotalsByCategory(
+  entries: CashflowEntry[],
+  mode: CategoryGroupMode
+): CategoryTotal[] {
+  const expenses = new Map<string, number>()
+  const incomes = new Map<string, number>()
+
+  for (const entry of entries) {
+    const key = resolveCategoryKey(entry.category, mode)
+    if (entry.expense) {
+      expenses.set(key, (expenses.get(key) ?? 0) + entry.expense)
+    }
+    if (entry.income) {
+      incomes.set(key, (incomes.get(key) ?? 0) + entry.income)
+    }
+  }
+
+  const allKeys = new Set([...expenses.keys(), ...incomes.keys()])
+
+  return Array.from(allKeys)
+    .map((category) => ({
+      category,
+      invoicesTotal: incomes.get(category) ?? 0,
+      expensesTotal: expenses.get(category) ?? 0,
+    }))
+    .sort((a, b) => b.expensesTotal - a.expensesTotal)
+}
+
+function resolveCategoryKey(
+  category: string | undefined,
+  mode: CategoryGroupMode
+): string {
+  if (!category) return ""
+  return mode === "first-level" ? category.split(".")[0] : category
 }
