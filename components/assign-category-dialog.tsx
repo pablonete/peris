@@ -59,7 +59,9 @@ export function AssignCategoryDialog({
                   type="button"
                   onClick={() => handleSelect(category)}
                   className={`w-full rounded-md px-3 py-2 text-left text-sm font-mono transition-colors hover:bg-accent ${
-                    currentCategory === category ? "bg-accent font-medium" : "font-normal"
+                    currentCategory === category
+                      ? "bg-accent font-medium"
+                      : "font-normal"
                   }`}
                 >
                   {category}
@@ -70,7 +72,11 @@ export function AssignCategoryDialog({
         </div>
 
         <DialogFooter className="flex-row items-center justify-between sm:justify-between">
-          <Button variant="ghost" onClick={handleClear} className="text-muted-foreground">
+          <Button
+            variant="ghost"
+            onClick={handleClear}
+            className="text-muted-foreground"
+          >
             <X className="mr-2 h-4 w-4" />
             {t("cashflow.clearCategory")}
           </Button>
