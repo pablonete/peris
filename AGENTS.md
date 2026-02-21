@@ -43,6 +43,15 @@ This is Peris - a minimalist ledger book application for personal accounting and
 - **Test providers**: Use `TestProviders` from `test/test-utils.tsx` when components need i18n context
 - **Never mock nested components**: Only mock data-access modules (e.g. `useData`, `useStorageData`, `getOrphanFiles`) and framework infrastructure (e.g. `next/navigation`). Always render real sub-components.
 - **Stable mock references**: When mocking data hooks that return objects, declare constants inside the factory closure to ensure stable references across renders (prevents infinite re-render loops caused by unstable `useEffect` dependencies)
+- **ResizeObserver**: Already mocked globally in `test/setup.ts`, so chart components using Recharts can be rendered in tests without additional setup.
+
+### Storybook Guidelines
+
+- **Story files**: Place story files next to the component with `.stories.tsx` extension
+- **Storybook framework**: Uses `@storybook/nextjs-vite`; stories are discovered from `components/**/*.stories.@(ts|tsx)`
+- **i18n decorator**: Wrap stories with `LanguageProvider` from `@/lib/i18n-context` when the component uses `useLanguage()` or any i18n-dependent child
+- **Write stories for**: All new visual/interactive components, especially chart components and UI widgets
+- **Story coverage**: Include stories for the main use case, edge cases (empty state, single item), and representative data
 
 ### Internationalization (i18n)
 

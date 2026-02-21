@@ -7,10 +7,11 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  ReferenceLine,
   ResponsiveContainer,
 } from "recharts"
 import {
-  getCashflowExpenseTotalsByCategory,
+  getCashflowTotalsByCategory,
   CategoryGroupMode,
 } from "@/lib/cashflow-utils"
 import { CashflowEntry } from "@/lib/types"
@@ -26,14 +27,21 @@ export function CashflowCategoryChart({ entries }: CashflowCategoryChartProps) {
   const { t } = useLanguage()
   const [mode, setMode] = useState<CategoryGroupMode>("first-level")
 
-  const data = getCashflowExpenseTotalsByCategory(entries, mode)
+  const data = getCashflowTotalsByCategory(entries, mode)
 
   if (data.length === 0) return null
 
   const chartData = data.map((item) => ({
     category: item.category || t("cashflow.noCategory"),
-    total: item.total,
+    income: -item.invoicesTotal,
+    expenses: item.expensesTotal,
   }))
+
+  const maxValue = Math.max(
+    ...chartData.map((d) => d.expenses),
+    ...chartData.map((d) => -d.income)
+  )
+  const domain: [number, number] = [-maxValue * 1.05, maxValue * 1.05]
 
   const chartHeight = Math.max(120, chartData.length * 36 + 40)
 
@@ -72,25 +80,34 @@ export function CashflowCategoryChart({ entries }: CashflowCategoryChartProps) {
           >
             <XAxis
               type="number"
-              tickFormatter={(v) => formatCurrency(v)}
-              tick={{ fontSize: 10, fontFamily: "var(--font-ibm-plex-mono)" }}
+              domain={domain}
+              tickFormatter={(v) => formatCurrency(Math.abs(v))}
+              tick={{ fontSize: 12, fontFamily: "var(--font-ibm-plex-mono)" }}
             />
             <YAxis
               type="category"
               dataKey="category"
               width={140}
-              tick={{ fontSize: 11 }}
+              tick={{ fontSize: 12 }}
             />
+            <ReferenceLine x={0} stroke="hsl(var(--border))" />
             <Tooltip
-              formatter={(value) => [
-                formatCurrency(value as number),
-                t("cashflow.expenses"),
+              formatter={(value, dataKey) => [
+                formatCurrency(Math.abs(value as number)),
+                dataKey === "income"
+                  ? t("cashflow.invoiced")
+                  : t("cashflow.expenses"),
               ]}
               labelStyle={{ fontSize: 11 }}
               contentStyle={{ fontSize: 11 }}
             />
             <Bar
-              dataKey="total"
+              dataKey="income"
+              fill="hsl(var(--ledger-green))"
+              radius={[2, 0, 0, 2]}
+            />
+            <Bar
+              dataKey="expenses"
               fill="hsl(var(--ledger-red))"
               radius={[0, 2, 2, 0]}
             />
