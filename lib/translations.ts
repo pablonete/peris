@@ -170,6 +170,7 @@ export const translations = {
       groupByFirstLevel: "Primer nivel",
       groupByFullCategory: "Categoría completa",
       noCategory: "Sin categoría",
+      showGhostEntries: "Mostrar entradas fantasma",
     },
     months: {
       "1": "Ene - Mar",
@@ -381,6 +382,7 @@ export const translations = {
       groupByFirstLevel: "First level",
       groupByFullCategory: "Full category",
       noCategory: "No category",
+      showGhostEntries: "Show ghost entries",
     },
     months: {
       "1": "Jan - Mar",

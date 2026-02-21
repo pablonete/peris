@@ -25,7 +25,7 @@ type UseStorageDataResult<T extends LedgerFileName> = T extends "invoices"
  * Helper to get the SHA for a file from the query cache
  */
 export function useFileSha(
-  quarterId: string,
+  quarterId: string | null,
   type: LedgerFileName
 ): string | undefined {
   const queryClient = useQueryClient()
@@ -40,18 +40,18 @@ export function useFileSha(
 }
 
 export function useStorageData<T extends LedgerFileName>(
-  quarterId: string,
+  quarterId: string | null,
   type: T
 ) {
   const { activeStorage } = useStorage()
   const { getEditingFile } = useEditingState()
 
-  const editingFile = getEditingFile(quarterId, type)
+  const editingFile = quarterId ? getEditingFile(quarterId, type) : undefined
 
   const query = useQuery({
     queryKey: ["loadFile", activeStorage?.name, quarterId, type],
-    queryFn: () => loadFileFromQuarter(activeStorage, quarterId, type),
-    enabled: !!activeStorage && !editingFile,
+    queryFn: () => loadFileFromQuarter(activeStorage, quarterId!, type),
+    enabled: !!activeStorage && !!quarterId && !editingFile,
   })
 
   if (editingFile) {

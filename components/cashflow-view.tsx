@@ -6,6 +6,8 @@ import {
   getCashflowOpeningBalance,
   getCashflowClosingBalance,
   getBankColorClass,
+  generateGhostEntries,
+  GhostCashflowEntry,
 } from "@/lib/cashflow-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useData } from "@/lib/use-data"
@@ -20,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 import { ErrorBanner } from "@/components/error-banner"
 import { CashflowBankFilter } from "@/components/cashflow-bank-filter"
 import { CashflowRowActions } from "@/components/cashflow-row-actions"
@@ -35,6 +38,18 @@ import { FileText, Receipt } from "lucide-react"
 interface CashflowViewProps {
   quarterId: string
   onNavigateToQuarter?: (quarterId: string) => void
+}
+
+function getYearAgoQuarterId(quarterId: string): string {
+  const match = quarterId.match(/^(\d{4})\.(\d)Q$/)
+  if (!match) return quarterId
+  return `${parseInt(match[1], 10) - 1}.${match[2]}Q`
+}
+
+type DisplayEntry = CashflowEntry | GhostCashflowEntry
+
+function isGhost(entry: DisplayEntry): entry is GhostCashflowEntry {
+  return "isGhost" in entry && entry.isGhost === true
 }
 
 export function CashflowView({
@@ -56,6 +71,22 @@ export function CashflowView({
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
   const [assignCategoryEntry, setAssignCategoryEntry] =
     useState<CashflowEntry | null>(null)
+  const [showGhosts, setShowGhosts] = useState(false)
+
+  const currentQuarterIndex = quarters.indexOf(quarterId)
+  const previousQuarterId =
+    currentQuarterIndex > 0 ? quarters[currentQuarterIndex - 1] : null
+  const yearAgoQuarterId = getYearAgoQuarterId(quarterId)
+
+  const { content: previousContent } = useStorageData(
+    previousQuarterId,
+    "cashflow"
+  )
+  const { content: yearAgoContent } = useStorageData(
+    yearAgoQuarterId,
+    "cashflow"
+  )
+
   const entries = content ?? []
   const uniqueBanks = Array.from(
     new Set(
@@ -92,10 +123,6 @@ export function CashflowView({
     )
   }
 
-  const currentQuarterIndex = quarters.indexOf(quarterId)
-  const previousQuarterId =
-    currentQuarterIndex > 0 ? quarters[currentQuarterIndex - 1] : null
-
   // Filter entries by selected bank
   const filteredEntries = activeBank
     ? entries.filter((entry) => entry.bankName === activeBank)
@@ -113,18 +140,24 @@ export function CashflowView({
   const balanceDifference = actualClosingBalance - calculatedClosingBalance
   const balanceMismatch = Math.abs(balanceDifference) >= 0.005
 
+  const ghostEntries: GhostCashflowEntry[] = showGhosts
+    ? generateGhostEntries(
+        entries,
+        previousContent ?? [],
+        yearAgoContent ?? [],
+        quarterId
+      ).filter((g) => !activeBank || g.bankName === activeBank)
+    : []
+
+  const displayEntries: DisplayEntry[] = [...filteredEntries, ...ghostEntries]
+
   const handleAssignCategory = (category: string | undefined) => {
     if (!assignCategoryEntry) return
     const nextEntries = entries.map((e) =>
       e.id === assignCategoryEntry.id ? { ...e, category } : e
     )
     const editingFile = getEditingFile(quarterId, "cashflow")
-    setEditingFile(
-      quarterId,
-      "cashflow",
-      nextEntries,
-      editingFile?.sha
-    )
+    setEditingFile(quarterId, "cashflow", nextEntries, editingFile?.sha)
     setAssignCategoryEntry(null)
   }
 
@@ -174,11 +207,21 @@ export function CashflowView({
         </Alert>
       )}
 
-      <CashflowBankFilter
-        banks={uniqueBanks}
-        activeBank={activeBank}
-        onSelect={setSelectedBank}
-      />
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <CashflowBankFilter
+          banks={uniqueBanks}
+          activeBank={activeBank}
+          onSelect={setSelectedBank}
+        />
+        <Button
+          variant={showGhosts ? "default" : "outline"}
+          size="sm"
+          className="h-6 shrink-0 px-2 font-mono text-[10px]"
+          onClick={() => setShowGhosts((v) => !v)}
+        >
+          {t("cashflow.showGhostEntries")}
+        </Button>
+      </div>
 
       <div className="rounded-sm border border-border bg-card">
         <Table>
@@ -207,14 +250,17 @@ export function CashflowView({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredEntries.map((entry, idx) => {
-              const isCarryOver = idx === 0 && entry.concept === "Carry over"
+            {displayEntries.map((entry, idx) => {
+              const ghost = isGhost(entry)
+              const isCarryOver =
+                !ghost && idx === 0 && entry.concept === "Carry over"
               return (
                 <TableRow
                   key={entry.id}
                   className={cn(
                     "border-b border-dashed border-[hsl(var(--ledger-line))] hover:bg-secondary/50",
-                    isCarryOver && "bg-secondary/40 font-semibold"
+                    isCarryOver && "bg-secondary/40 font-semibold",
+                    ghost && "opacity-40"
                   )}
                 >
                   <TableCell className="text-xs text-muted-foreground">
@@ -232,7 +278,7 @@ export function CashflowView({
                           )}
                         </>
                       ) : null}
-                      {entry.bankSequence != null ? (
+                      {!ghost && entry.bankSequence != null ? (
                         <span className="font-mono text-[10px] text-muted-foreground/60">
                           {String(entry.bankSequence).padStart(4, "0")}
                         </span>
@@ -283,12 +329,12 @@ export function CashflowView({
                   </TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-1">
-                      {entry.invoiceId && (
+                      {!ghost && entry.invoiceId && (
                         <span className="inline-flex text-[hsl(var(--ledger-green))]">
                           <FileText className="h-4 w-4" />
                         </span>
                       )}
-                      {entry.expenseId && (
+                      {!ghost && entry.expenseId && (
                         <span className="inline-flex text-[hsl(var(--ledger-red))]">
                           <Receipt className="h-4 w-4" />
                         </span>
@@ -314,13 +360,17 @@ export function CashflowView({
                     )}
                   </TableCell>
                   <TableCell className="font-mono text-sm font-semibold text-right">
-                    {formatCurrency(entry.balance)}
+                    {ghost ? "—" : formatCurrency(entry.balance)}
                   </TableCell>
                   {showEllipsis && (
                     <TableCell className="text-center">
-                      <CashflowRowActions
-                        onAssignCategory={() => setAssignCategoryEntry(entry)}
-                      />
+                      {!ghost && (
+                        <CashflowRowActions
+                          onAssignCategory={() =>
+                            setAssignCategoryEntry(entry as CashflowEntry)
+                          }
+                        />
+                      )}
                     </TableCell>
                   )}
                 </TableRow>

@@ -2,6 +2,8 @@ import { CashflowEntry } from "./types"
 
 export type CategoryGroupMode = "first-level" | "full"
 
+export type GhostCashflowEntry = CashflowEntry & { isGhost: true }
+
 export interface CategoryTotal {
   category: string
   invoicesTotal: number
@@ -160,4 +162,134 @@ function resolveCategoryKey(
 ): string {
   if (!category) return ""
   return mode === "first-level" ? category.split(".")[0] : category
+}
+
+function parseQuarterId(quarterId: string): { year: number; quarter: number } {
+  const match = quarterId.match(/^(\d{4})\.(\d)Q$/)
+  if (!match) return { year: 0, quarter: 0 }
+  return { year: parseInt(match[1], 10), quarter: parseInt(match[2], 10) }
+}
+
+function getQuarterEnd(year: number, quarter: number): Date {
+  const endMonth = quarter * 3
+  return new Date(year, endMonth, 0)
+}
+
+function parseEntryDate(dateStr: string): Date {
+  return new Date(dateStr + "T00:00:00")
+}
+
+function formatDateISO(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
+}
+
+function addMonths(date: Date, months: number): Date {
+  const d = new Date(date)
+  d.setMonth(d.getMonth() + months)
+  return d
+}
+
+function addYears(date: Date, years: number): Date {
+  const d = new Date(date)
+  d.setFullYear(d.getFullYear() + years)
+  return d
+}
+
+function addDays(date: Date, days: number): Date {
+  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000)
+}
+
+function makeGhostEntry(source: CashflowEntry, date: Date): GhostCashflowEntry {
+  return {
+    ...source,
+    id: `ghost-${source.id}-${formatDateISO(date)}`,
+    date: formatDateISO(date),
+    balance: 0,
+    invoiceId: undefined,
+    expenseId: undefined,
+    bankSequence: undefined,
+    isGhost: true,
+  }
+}
+
+/**
+ * Generates ghost (forecast) entries for a quarter based on periodic source entries.
+ *
+ * Ghost entries are derived from:
+ * - `1mo` entries within 30 days before the last real entry (from current or previous quarter)
+ * - `3mo` entries from the previous quarter within 3 months before the last entry
+ * - `1y` entries from the year-ago same quarter within 1 year before the last entry
+ *
+ * Only ghosts strictly after the last real entry date and within the current quarter are returned.
+ */
+export function generateGhostEntries(
+  currentEntries: CashflowEntry[],
+  previousEntries: CashflowEntry[],
+  yearAgoEntries: CashflowEntry[],
+  quarterId: string
+): GhostCashflowEntry[] {
+  const { year, quarter } = parseQuarterId(quarterId)
+  if (!year) return []
+
+  const quarterEnd = getQuarterEnd(year, quarter)
+
+  const realEntries = currentEntries.filter(
+    (e) => e.concept !== "Carry over" && (e.income != null || e.expense != null)
+  )
+  if (realEntries.length === 0) return []
+
+  const lastEntryDate = parseEntryDate(realEntries[realEntries.length - 1].date)
+
+  const thirtyDaysBeforeLast = addDays(lastEntryDate, -30)
+  const source1mo: CashflowEntry[] = [
+    ...currentEntries.filter(
+      (e) =>
+        e.periodicity === "1mo" && parseEntryDate(e.date) > thirtyDaysBeforeLast
+    ),
+    ...previousEntries.filter(
+      (e) =>
+        e.periodicity === "1mo" && parseEntryDate(e.date) > thirtyDaysBeforeLast
+    ),
+  ]
+
+  const threeMonthsBefore = addMonths(lastEntryDate, -3)
+  const source3mo = previousEntries.filter(
+    (e) => e.periodicity === "3mo" && parseEntryDate(e.date) > threeMonthsBefore
+  )
+
+  const oneYearBefore = addYears(lastEntryDate, -1)
+  const source1y = yearAgoEntries.filter(
+    (e) => e.periodicity === "1y" && parseEntryDate(e.date) > oneYearBefore
+  )
+
+  const ghosts: GhostCashflowEntry[] = []
+
+  for (const source of source1mo) {
+    const sourceDate = parseEntryDate(source.date)
+    for (let i = 1; i <= 3; i++) {
+      const ghostDate = addMonths(sourceDate, i)
+      if (ghostDate <= lastEntryDate) continue
+      if (ghostDate > quarterEnd) break
+      ghosts.push(makeGhostEntry(source, ghostDate))
+    }
+  }
+
+  for (const source of source3mo) {
+    const ghostDate = addMonths(parseEntryDate(source.date), 3)
+    if (ghostDate > lastEntryDate && ghostDate <= quarterEnd) {
+      ghosts.push(makeGhostEntry(source, ghostDate))
+    }
+  }
+
+  for (const source of source1y) {
+    const ghostDate = addYears(parseEntryDate(source.date), 1)
+    if (ghostDate > lastEntryDate && ghostDate <= quarterEnd) {
+      ghosts.push(makeGhostEntry(source, ghostDate))
+    }
+  }
+
+  return ghosts.sort((a, b) => a.date.localeCompare(b.date))
 }

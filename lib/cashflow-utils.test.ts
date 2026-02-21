@@ -6,6 +6,7 @@ import {
   getBankColor,
   getBankColorClass,
   getCashflowTotalsByCategory,
+  generateGhostEntries,
 } from "./cashflow-utils"
 import { CashflowEntry } from "./types"
 
@@ -692,6 +693,286 @@ describe("cashflow-utils", () => {
       expect(result).toHaveLength(1)
       expect(result[0].expensesTotal).toBe(800)
       expect(result[0].invoicesTotal).toBe(0)
+    })
+  })
+
+  describe("generateGhostEntries", () => {
+    const carryOver: CashflowEntry = {
+      id: "co",
+      date: "2025-07-01",
+      concept: "Carry over",
+      balance: 5000,
+    }
+
+    it("returns empty when no real entries", () => {
+      const result = generateGhostEntries([carryOver], [], [], "2025.3Q")
+      expect(result).toHaveLength(0)
+    })
+
+    it("returns empty when no periodic source entries", () => {
+      const entries: CashflowEntry[] = [
+        carryOver,
+        {
+          id: "1",
+          date: "2025-07-18",
+          concept: "Rent",
+          expense: 500,
+          balance: 4500,
+        },
+      ]
+      const result = generateGhostEntries(entries, [], [], "2025.3Q")
+      expect(result).toHaveLength(0)
+    })
+
+    it("generates ghost from 1mo entry in current quarter", () => {
+      const entries: CashflowEntry[] = [
+        carryOver,
+        {
+          id: "1",
+          date: "2025-07-15",
+          concept: "Monthly rent",
+          expense: 500,
+          balance: 4500,
+          periodicity: "1mo",
+        },
+      ]
+      const result = generateGhostEntries(entries, [], [], "2025.3Q")
+      const dates = result.map((g) => g.date)
+      expect(dates).toContain("2025-08-15")
+      expect(dates).toContain("2025-09-15")
+      expect(result.every((g) => g.isGhost)).toBe(true)
+    })
+
+    it("generates up to 3 ghost entries per 1mo source within the quarter", () => {
+      const entries: CashflowEntry[] = [
+        carryOver,
+        {
+          id: "1",
+          date: "2025-07-05",
+          concept: "Monthly sub",
+          expense: 100,
+          balance: 4900,
+          periodicity: "1mo",
+        },
+      ]
+      const result = generateGhostEntries(entries, [], [], "2025.3Q")
+      expect(result.length).toBeLessThanOrEqual(3)
+      expect(result.every((g) => g.date > "2025-07-05")).toBe(true)
+      expect(result.every((g) => g.date <= "2025-09-30")).toBe(true)
+    })
+
+    it("discards ghost entries on or before the last real entry date", () => {
+      const entries: CashflowEntry[] = [
+        carryOver,
+        {
+          id: "1",
+          date: "2025-07-15",
+          concept: "Monthly rent",
+          expense: 500,
+          balance: 4500,
+          periodicity: "1mo",
+        },
+        {
+          id: "2",
+          date: "2025-08-20",
+          concept: "Another payment",
+          expense: 200,
+          balance: 4300,
+        },
+      ]
+      const result = generateGhostEntries(entries, [], [], "2025.3Q")
+      expect(result.every((g) => g.date > "2025-08-20")).toBe(true)
+    })
+
+    it("generates ghost from 1mo entry in previous quarter within 30-day window", () => {
+      const currentEntries: CashflowEntry[] = [
+        carryOver,
+        {
+          id: "1",
+          date: "2025-07-18",
+          concept: "Invoice",
+          income: 1000,
+          balance: 6000,
+        },
+      ]
+      const previousEntries: CashflowEntry[] = [
+        {
+          id: "p1",
+          date: "2025-06-20",
+          concept: "Monthly rent",
+          expense: 500,
+          balance: 4500,
+          periodicity: "1mo",
+        },
+      ]
+      const result = generateGhostEntries(
+        currentEntries,
+        previousEntries,
+        [],
+        "2025.3Q"
+      )
+      expect(result.some((g) => g.date === "2025-07-20")).toBe(true)
+      expect(result.some((g) => g.date === "2025-08-20")).toBe(true)
+    })
+
+    it("ignores 1mo entries from previous quarter outside the 30-day window", () => {
+      const currentEntries: CashflowEntry[] = [
+        carryOver,
+        {
+          id: "1",
+          date: "2025-07-18",
+          concept: "Invoice",
+          income: 1000,
+          balance: 6000,
+        },
+      ]
+      const previousEntries: CashflowEntry[] = [
+        {
+          id: "p1",
+          date: "2025-06-01",
+          concept: "Old monthly rent",
+          expense: 500,
+          balance: 4500,
+          periodicity: "1mo",
+        },
+      ]
+      const result = generateGhostEntries(
+        currentEntries,
+        previousEntries,
+        [],
+        "2025.3Q"
+      )
+      expect(result.every((g) => g.concept !== "Old monthly rent")).toBe(true)
+    })
+
+    it("generates ghost from 3mo entry in previous quarter", () => {
+      const currentEntries: CashflowEntry[] = [
+        carryOver,
+        {
+          id: "1",
+          date: "2025-07-18",
+          concept: "Invoice",
+          income: 1000,
+          balance: 6000,
+        },
+      ]
+      const previousEntries: CashflowEntry[] = [
+        {
+          id: "p1",
+          date: "2025-05-15",
+          concept: "Quarterly tax",
+          expense: 1000,
+          balance: 4000,
+          periodicity: "3mo",
+        },
+      ]
+      const result = generateGhostEntries(
+        currentEntries,
+        previousEntries,
+        [],
+        "2025.3Q"
+      )
+      expect(result.some((g) => g.date === "2025-08-15")).toBe(true)
+    })
+
+    it("generates ghost from 1y entry in year-ago quarter", () => {
+      const currentEntries: CashflowEntry[] = [
+        carryOver,
+        {
+          id: "1",
+          date: "2025-07-18",
+          concept: "Invoice",
+          income: 1000,
+          balance: 6000,
+        },
+      ]
+      const yearAgoEntries: CashflowEntry[] = [
+        {
+          id: "ya1",
+          date: "2024-08-10",
+          concept: "Annual insurance",
+          expense: 1200,
+          balance: 3800,
+          periodicity: "1y",
+        },
+      ]
+      const result = generateGhostEntries(
+        currentEntries,
+        [],
+        yearAgoEntries,
+        "2025.3Q"
+      )
+      expect(result.some((g) => g.date === "2025-08-10")).toBe(true)
+    })
+
+    it("ghost entries have isGhost flag and no invoiceId/expenseId/bankSequence", () => {
+      const entries: CashflowEntry[] = [
+        carryOver,
+        {
+          id: "1",
+          date: "2025-07-15",
+          concept: "Monthly rent",
+          expense: 500,
+          balance: 4500,
+          periodicity: "1mo",
+          invoiceId: "inv-1",
+          expenseId: "exp-1",
+          bankSequence: 5,
+        },
+      ]
+      const result = generateGhostEntries(entries, [], [], "2025.3Q")
+      expect(result.length).toBeGreaterThan(0)
+      for (const g of result) {
+        expect(g.isGhost).toBe(true)
+        expect(g.invoiceId).toBeUndefined()
+        expect(g.expenseId).toBeUndefined()
+        expect(g.bankSequence).toBeUndefined()
+      }
+    })
+
+    it("returns empty when invalid quarterId", () => {
+      const result = generateGhostEntries(
+        [
+          {
+            id: "1",
+            date: "2025-07-15",
+            concept: "X",
+            expense: 100,
+            balance: 0,
+            periodicity: "1mo",
+          },
+        ],
+        [],
+        [],
+        "invalid"
+      )
+      expect(result).toHaveLength(0)
+    })
+
+    it("ghost entries are sorted by date", () => {
+      const entries: CashflowEntry[] = [
+        carryOver,
+        {
+          id: "1",
+          date: "2025-07-01",
+          concept: "Monthly rent",
+          expense: 500,
+          balance: 4500,
+          periodicity: "1mo",
+        },
+        {
+          id: "2",
+          date: "2025-07-05",
+          concept: "Monthly sub",
+          expense: 100,
+          balance: 4400,
+          periodicity: "1mo",
+        },
+      ]
+      const result = generateGhostEntries(entries, [], [], "2025.3Q")
+      for (let i = 0; i < result.length - 1; i++) {
+        expect(result[i].date <= result[i + 1].date).toBe(true)
+      }
     })
   })
 })
