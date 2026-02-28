@@ -83,27 +83,45 @@ export async function commitEditingFiles(
     data: any
     sha?: string
   }>,
-  attachments: EditingAttachment[] = []
+  attachments: EditingAttachment[] = [],
+  perisConfig?: { data: PerisConfig; sha?: string }
 ): Promise<void> {
   const service = new GitHubStorageService(storage.url)
 
   const uniqueQuarters = Array.from(
     new Set(editingFiles.map((f) => f.quarterId))
   )
-  const fileCount = editingFiles.length + attachments.length
-  const message =
-    uniqueQuarters.length === 1
-      ? `Update ${uniqueQuarters[0]} (${fileCount} files)`
-      : `Update ${uniqueQuarters.length} quarters (${fileCount} files)`
+  const fileCount =
+    editingFiles.length + attachments.length + (perisConfig ? 1 : 0)
+  let message: string
+  if (uniqueQuarters.length === 0 && perisConfig) {
+    message = "Add peris.json"
+  } else if (uniqueQuarters.length === 1) {
+    message = `Update ${uniqueQuarters[0]} (${fileCount} files)`
+  } else {
+    message = `Update ${uniqueQuarters.length} quarters (${fileCount} files)`
+  }
 
   await service.commitMultipleFiles(
-    editingFiles.map((file) => ({
-      quarterId: file.quarterId,
-      fileName: `${file.fileName}.json`,
-      content: file.data,
-      sha: file.sha,
-      isBinary: false,
-    })),
+    [
+      ...editingFiles.map((file) => ({
+        quarterId: file.quarterId,
+        fileName: `${file.fileName}.json`,
+        content: file.data,
+        sha: file.sha,
+        isBinary: false as const,
+      })),
+      ...(perisConfig
+        ? [
+            {
+              fileName: "peris.json",
+              content: perisConfig.data,
+              sha: perisConfig.sha,
+              isBinary: false as const,
+            },
+          ]
+        : []),
+    ],
     attachments.map((att) => ({
       quarterId: att.quarterId,
       fileName: `expenses/${att.filename}`,

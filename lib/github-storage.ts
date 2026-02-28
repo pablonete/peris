@@ -176,7 +176,7 @@ export class GitHubStorageService {
    */
   async commitMultipleFiles(
     jsonFiles: Array<{
-      quarterId: string
+      quarterId?: string
       fileName: string
       content: any
       sha?: string
@@ -224,9 +224,13 @@ export class GitHubStorageService {
 
       const tree = await Promise.all(
         allFiles.map(async (file) => {
-          const filePath = this.dataPath
-            ? `${this.dataPath}/${file.quarterId}/${file.fileName}`
-            : `${file.quarterId}/${file.fileName}`
+          const filePath = file.quarterId
+            ? this.dataPath
+              ? `${this.dataPath}/${file.quarterId}/${file.fileName}`
+              : `${file.quarterId}/${file.fileName}`
+            : this.dataPath
+              ? `${this.dataPath}/${file.fileName}`
+              : file.fileName
 
           let blobSha: string
 

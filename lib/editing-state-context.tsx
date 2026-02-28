@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import { Invoice, Expense, CashflowEntry } from "./types"
+import { Invoice, Expense, CashflowEntry, PerisConfig } from "./types"
 import { commitEditingFiles } from "./github-data"
 import { useStorage } from "./storage-context"
 
@@ -24,6 +24,7 @@ interface EditingAttachment {
 interface EditingStateContextType {
   editingFiles: Map<string, EditingFile>
   editingAttachments: Map<string, EditingAttachment>
+  editingConfig: { data: PerisConfig; sha?: string } | null
   editingCount: number
   isCommitting: boolean
   error: string | null
@@ -37,6 +38,7 @@ interface EditingStateContextType {
     data: Invoice[] | Expense[] | CashflowEntry[],
     sha?: string
   ) => void
+  setEditingConfig: (data: PerisConfig, sha?: string) => void
   addAttachment: (
     quarterId: string,
     filename: string,
@@ -73,6 +75,10 @@ export function EditingStateProvider({
   const [editingAttachments, setEditingAttachments] = useState<
     Map<string, EditingAttachment>
   >(new Map())
+  const [editingConfig, setEditingConfigState] = useState<{
+    data: PerisConfig
+    sha?: string
+  } | null>(null)
   const [isCommitting, setIsCommitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -99,6 +105,10 @@ export function EditingStateProvider({
       })
       return newMap
     })
+  }
+
+  const setEditingConfig = (data: PerisConfig, sha?: string) => {
+    setEditingConfigState({ data, sha })
   }
 
   const getAttachmentKey = (quarterId: string, filename: string): string => {
@@ -145,9 +155,10 @@ export function EditingStateProvider({
   const clearAllEditing = () => {
     setEditingFiles(new Map())
     setEditingAttachments(new Map())
+    setEditingConfigState(null)
   }
 
-  const editingCount = editingFiles.size
+  const editingCount = editingFiles.size + (editingConfig ? 1 : 0)
 
   const commitChanges = async (): Promise<void> => {
     setError(null)
@@ -159,7 +170,8 @@ export function EditingStateProvider({
       await commitEditingFiles(
         activeStorage,
         filesToCommit,
-        attachmentsToCommit
+        attachmentsToCommit,
+        editingConfig ?? undefined
       )
       clearAllEditing()
       await queryClient.invalidateQueries()
@@ -176,11 +188,13 @@ export function EditingStateProvider({
       value={{
         editingFiles,
         editingAttachments,
+        editingConfig,
         editingCount,
         isCommitting,
         error,
         getEditingFile,
         setEditingFile,
+        setEditingConfig,
         addAttachment,
         getAttachment,
         removeAttachment,

@@ -83,7 +83,7 @@ export function CashflowView({
     "cashflow"
   )
 
-  const entries = content ?? []
+  const entries = Array.isArray(content) ? content : []
   const uniqueBanks = Array.from(
     new Set(
       entries
