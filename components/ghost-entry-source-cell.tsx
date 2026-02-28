@@ -36,7 +36,10 @@ export function GhostEntrySourceCell({
         </>
       )}
       {originalSequence != null && (
-        <span className="font-mono text-[10px] text-muted-foreground/60">
+        <span
+          className="font-mono text-[10px] text-muted-foreground/60"
+          aria-label={`Original entry${fromDifferentQuarter ? ` from ${entry.originalQuarterId}` : ""}, sequence ${String(originalSequence).padStart(4, "0")}`}
+        >
           {fromDifferentQuarter && (
             <span className="mr-1">{entry.originalQuarterId}</span>
           )}

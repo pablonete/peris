@@ -96,7 +96,6 @@ function generateGhostEntriesForBank(
     realEntries.length > 0
       ? parseEntryDate(realEntries[realEntries.length - 1].date)
       : addDays(quarterStart, -1)
-
   const thirtyDaysBeforeLast = addDays(lastEntryDate, -30)
   const source1mo: Array<{ entry: CashflowEntry; sourceQuarterId: string }> = [
     ...bankCurrentEntries
@@ -203,8 +202,6 @@ export function generateGhostEntries(
       )
     )
   )
-
-  if (allBankKeys.length === 0) return []
 
   const allGhosts: GhostCashflowEntry[] = []
 
