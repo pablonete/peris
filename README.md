@@ -146,20 +146,18 @@ finances/
 **cashflow.json** - Array of transactions with metadata:
 
 ```json
-{
-  "companyName": "Your Company Name",
-  "entries": [
-    {
-      "date": "2025-01-15",
-      "concept": "Invoice received",
-      "bankName": "Unicaja",
-      "bankSequence": 1,
-      "income": 1210,
-      "balance": 6210,
-      "category": "tax.vat"
-    }
-  ]
-}
+[
+  {
+    "date": "2025-01-15",
+    "concept": "Invoice received",
+    "bankName": "Unicaja",
+    "bankSequence": 1,
+    "income": 1210,
+    "balance": 6210,
+    "periodicity": "3mo",
+    "category": "tax.vat"
+  }
+]
 ```
 
 ### Security Considerations
