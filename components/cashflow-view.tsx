@@ -7,6 +7,12 @@ import {
   getCashflowClosingBalance,
   getBankColorClass,
 } from "@/lib/cashflow-utils"
+import {
+  generateGhostEntries,
+  GhostCashflowEntry,
+  isGhostEntry,
+} from "@/lib/ghost-entries"
+import { getPreviousQuarterId, getYearAgoQuarterId } from "@/lib/quarter-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useData } from "@/lib/use-data"
 import { CashflowEntry } from "@/lib/types"
@@ -20,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 import { ErrorBanner } from "@/components/error-banner"
 import { CashflowBankFilter } from "@/components/cashflow-bank-filter"
 import { CashflowRowActions } from "@/components/cashflow-row-actions"
@@ -28,6 +35,11 @@ import { CashflowCategoryChart } from "@/components/cashflow-category-chart"
 import { SummaryCard } from "@/components/summary-card"
 import { EditingIndicator } from "@/components/editing-indicator"
 import { PeriodicityBadge } from "@/components/periodicity-badge"
+import {
+  GhostEntrySourceCell,
+  RegularEntrySourceCell,
+} from "@/components/cashflow-cells"
+import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/i18n-context"
 import { FileText, Receipt } from "lucide-react"
@@ -37,6 +49,8 @@ interface CashflowViewProps {
   onNavigateToQuarter?: (quarterId: string) => void
 }
 
+type DisplayEntry = CashflowEntry | GhostCashflowEntry
+
 export function CashflowView({
   quarterId,
   onNavigateToQuarter,
@@ -44,7 +58,6 @@ export function CashflowView({
   const { t } = useLanguage()
   const {
     companyName,
-    quarters,
     isDirtyFile,
     getEditingFile,
     setEditingFile,
@@ -56,6 +69,20 @@ export function CashflowView({
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
   const [assignCategoryEntry, setAssignCategoryEntry] =
     useState<CashflowEntry | null>(null)
+  const [showGhosts, setShowGhosts] = useState(false)
+
+  const previousQuarterId = getPreviousQuarterId(quarterId)
+  const yearAgoQuarterId = getYearAgoQuarterId(quarterId)
+
+  const { content: previousQuarterContent } = useStorageData(
+    previousQuarterId,
+    "cashflow"
+  )
+  const { content: previousYearContent } = useStorageData(
+    yearAgoQuarterId,
+    "cashflow"
+  )
+
   const entries = content ?? []
   const uniqueBanks = Array.from(
     new Set(
@@ -92,10 +119,6 @@ export function CashflowView({
     )
   }
 
-  const currentQuarterIndex = quarters.indexOf(quarterId)
-  const previousQuarterId =
-    currentQuarterIndex > 0 ? quarters[currentQuarterIndex - 1] : null
-
   // Filter entries by selected bank
   const filteredEntries = activeBank
     ? entries.filter((entry) => entry.bankName === activeBank)
@@ -113,18 +136,24 @@ export function CashflowView({
   const balanceDifference = actualClosingBalance - calculatedClosingBalance
   const balanceMismatch = Math.abs(balanceDifference) >= 0.005
 
+  const ghostEntries: GhostCashflowEntry[] = showGhosts
+    ? generateGhostEntries(
+        entries,
+        previousQuarterContent,
+        previousYearContent,
+        quarterId
+      ).filter((g) => !activeBank || g.bankName === activeBank)
+    : []
+
+  const displayEntries: DisplayEntry[] = [...filteredEntries, ...ghostEntries]
+
   const handleAssignCategory = (category: string | undefined) => {
     if (!assignCategoryEntry) return
     const nextEntries = entries.map((e) =>
       e.id === assignCategoryEntry.id ? { ...e, category } : e
     )
     const editingFile = getEditingFile(quarterId, "cashflow")
-    setEditingFile(
-      quarterId,
-      "cashflow",
-      nextEntries,
-      editingFile?.sha
-    )
+    setEditingFile(quarterId, "cashflow", nextEntries, editingFile?.sha)
     setAssignCategoryEntry(null)
   }
 
@@ -174,11 +203,13 @@ export function CashflowView({
         </Alert>
       )}
 
-      <CashflowBankFilter
-        banks={uniqueBanks}
-        activeBank={activeBank}
-        onSelect={setSelectedBank}
-      />
+      <div className="mb-4">
+        <CashflowBankFilter
+          banks={uniqueBanks}
+          activeBank={activeBank}
+          onSelect={setSelectedBank}
+        />
+      </div>
 
       <div className="rounded-sm border border-border bg-card">
         <Table>
@@ -207,37 +238,32 @@ export function CashflowView({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredEntries.map((entry, idx) => {
-              const isCarryOver = idx === 0 && entry.concept === "Carry over"
+            {displayEntries.map((entry, idx) => {
+              const ghost = isGhostEntry(entry)
+              const isCarryOver =
+                !ghost && idx === 0 && entry.concept === "Carry over"
               return (
                 <TableRow
                   key={entry.id}
                   className={cn(
                     "border-b border-dashed border-[hsl(var(--ledger-line))] hover:bg-secondary/50",
-                    isCarryOver && "bg-secondary/40 font-semibold"
+                    isCarryOver && "bg-secondary/40 font-semibold",
+                    ghost && "opacity-40"
                   )}
                 >
                   <TableCell className="text-xs text-muted-foreground">
-                    <div className="flex items-baseline gap-2">
-                      {showBankColumn ? (
-                        <>
-                          <span>{entry.bankName || "—"}</span>
-                          {entry.bankName && (
-                            <span
-                              className={cn(
-                                "inline-block h-2.5 w-2.5",
-                                getBankColorClass(entry.bankName, uniqueBanks)
-                              )}
-                            />
-                          )}
-                        </>
-                      ) : null}
-                      {entry.bankSequence != null ? (
-                        <span className="font-mono text-[10px] text-muted-foreground/60">
-                          {String(entry.bankSequence).padStart(4, "0")}
-                        </span>
-                      ) : null}
-                    </div>
+                    {ghost ? (
+                      <GhostEntrySourceCell
+                        entry={entry as GhostCashflowEntry}
+                        currentQuarterId={quarterId}
+                      />
+                    ) : (
+                      <RegularEntrySourceCell
+                        entry={entry as CashflowEntry}
+                        uniqueBanks={uniqueBanks}
+                        showBankColumn={showBankColumn}
+                      />
+                    )}
                   </TableCell>
                   <TableCell className="font-mono text-xs">
                     <span className="flex items-center gap-2">
@@ -247,29 +273,23 @@ export function CashflowView({
                   </TableCell>
                   <TableCell className={cn("text-sm", isCarryOver && "italic")}>
                     {isCarryOver ? (
-                      previousQuarterId ? (
-                        <span>
-                          {t("cashflow.carryOverFrom")}{" "}
-                          {onNavigateToQuarter ? (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                onNavigateToQuarter(previousQuarterId)
-                              }
-                              className="font-mono underline decoration-dotted underline-offset-2 transition-colors hover:text-foreground/70"
-                              aria-label={`${t("cashflow.carryOverFrom")} ${previousQuarterId}`}
-                            >
-                              {previousQuarterId}
-                            </button>
-                          ) : (
-                            <span className="font-mono">
-                              {previousQuarterId}
-                            </span>
-                          )}
-                        </span>
-                      ) : (
-                        t("cashflow.carryOver")
-                      )
+                      <span>
+                        {t("cashflow.carryOverFrom")}{" "}
+                        {onNavigateToQuarter ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onNavigateToQuarter(previousQuarterId)
+                            }
+                            className="font-mono underline decoration-dotted underline-offset-2 transition-colors hover:text-foreground/70"
+                            aria-label={`${t("cashflow.carryOverFrom")} ${previousQuarterId}`}
+                          >
+                            {previousQuarterId}
+                          </button>
+                        ) : (
+                          <span className="font-mono">{previousQuarterId}</span>
+                        )}
+                      </span>
                     ) : (
                       <div>
                         <span>{entry.concept}</span>
@@ -283,12 +303,12 @@ export function CashflowView({
                   </TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-1">
-                      {entry.invoiceId && (
+                      {!ghost && entry.invoiceId && (
                         <span className="inline-flex text-[hsl(var(--ledger-green))]">
                           <FileText className="h-4 w-4" />
                         </span>
                       )}
-                      {entry.expenseId && (
+                      {!ghost && entry.expenseId && (
                         <span className="inline-flex text-[hsl(var(--ledger-red))]">
                           <Receipt className="h-4 w-4" />
                         </span>
@@ -318,9 +338,13 @@ export function CashflowView({
                   </TableCell>
                   {showEllipsis && (
                     <TableCell className="text-center">
-                      <CashflowRowActions
-                        onAssignCategory={() => setAssignCategoryEntry(entry)}
-                      />
+                      {!ghost && (
+                        <CashflowRowActions
+                          onAssignCategory={() =>
+                            setAssignCategoryEntry(entry as CashflowEntry)
+                          }
+                        />
+                      )}
                     </TableCell>
                   )}
                 </TableRow>
@@ -333,7 +357,25 @@ export function CashflowView({
                 colSpan={showEllipsis ? 5 : 4}
                 className="font-semibold text-sm"
               >
-                Period totals
+                <div className="flex items-center justify-between">
+                  <span>Period totals</span>
+                  <Button
+                    variant={showGhosts ? "default" : "outline"}
+                    size="sm"
+                    className="h-6 shrink-0 px-2 font-mono text-[10px]"
+                    onClick={() => setShowGhosts((v) => !v)}
+                  >
+                    {t("cashflow.predictEntries")}
+                    {ghostEntries.length > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className="ml-1 h-4 px-1.5 font-mono text-[9px]"
+                      >
+                        {ghostEntries.length}
+                      </Badge>
+                    )}
+                  </Button>
+                </div>
               </TableCell>
               <TableCell className="font-mono text-xs font-semibold text-right text-[hsl(var(--ledger-green))]">
                 {formatCurrency(totalIncome)}
