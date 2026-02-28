@@ -28,9 +28,9 @@ function useQuarterSummary(qId: string) {
 
   if (
     loading ||
-    !invoicesQuery.content ||
-    !expensesQuery.content ||
-    !cashflowQuery.content
+    !Array.isArray(invoicesQuery.content) ||
+    !Array.isArray(expensesQuery.content) ||
+    !Array.isArray(cashflowQuery.content)
   ) {
     return null
   }
