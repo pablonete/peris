@@ -5,7 +5,7 @@ import { GhostCashflowEntry } from "@/lib/ghost-entries"
 import { getBankColorClass } from "@/lib/cashflow-utils"
 import { cn } from "@/lib/utils"
 
-interface SourceCellBaseProps {
+interface RegularEntrySourceCellProps {
   entry: CashflowEntry
   uniqueBanks: string[]
   showBankColumn: boolean
@@ -15,7 +15,7 @@ export function RegularEntrySourceCell({
   entry,
   uniqueBanks,
   showBankColumn,
-}: SourceCellBaseProps) {
+}: RegularEntrySourceCellProps) {
   return (
     <div className="flex items-baseline gap-2">
       {showBankColumn && (
@@ -43,45 +43,25 @@ export function RegularEntrySourceCell({
 interface GhostEntrySourceCellProps {
   entry: GhostCashflowEntry
   currentQuarterId: string
-  uniqueBanks: string[]
-  showBankColumn: boolean
 }
 
 export function GhostEntrySourceCell({
   entry,
   currentQuarterId,
-  uniqueBanks,
-  showBankColumn,
 }: GhostEntrySourceCellProps) {
-  const originalSequence = entry.originalEntry.bankSequence
+  const originalSequence = entry.originalEntry.bankSequence || ""
+  const paddedSequence = String(originalSequence).padStart(4, "0")
   const fromDifferentQuarter = entry.originalQuarterId !== currentQuarterId
+  const ariaLabel = `Original entry${fromDifferentQuarter ? ` from ${entry.originalQuarterId}` : ""}, sequence ${paddedSequence}`
 
   return (
     <div className="flex items-baseline gap-2">
-      {showBankColumn && (
-        <>
-          <span>{entry.bankName || "—"}</span>
-          {entry.bankName && (
-            <span
-              className={cn(
-                "inline-block h-2.5 w-2.5",
-                getBankColorClass(entry.bankName, uniqueBanks)
-              )}
-            />
-          )}
-        </>
-      )}
-      {originalSequence != null && (
-        <span
-          className="font-mono text-[10px] text-muted-foreground/60"
-          aria-label={`Original entry${fromDifferentQuarter ? ` from ${entry.originalQuarterId}` : ""}, sequence ${String(originalSequence).padStart(4, "0")}`}
-        >
-          {fromDifferentQuarter && (
-            <span className="mr-1">{entry.originalQuarterId}</span>
-          )}
-          {String(originalSequence).padStart(4, "0")}
-        </span>
-      )}
+      <span className="font-mono" aria-label={ariaLabel}>
+        {fromDifferentQuarter && (
+          <span className="mr-1">{entry.originalQuarterId}</span>
+        )}
+        {paddedSequence}
+      </span>
     </div>
   )
 }

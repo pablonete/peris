@@ -256,30 +256,13 @@ export function CashflowView({
                       <GhostEntrySourceCell
                         entry={entry as GhostCashflowEntry}
                         currentQuarterId={quarterId}
+                      />
+                    ) : (
+                      <RegularEntrySourceCell
+                        entry={entry as CashflowEntry}
                         uniqueBanks={uniqueBanks}
                         showBankColumn={showBankColumn}
                       />
-                    ) : (
-                      <div className="flex items-baseline gap-2">
-                        {showBankColumn ? (
-                          <>
-                            <span>{entry.bankName || "—"}</span>
-                            {entry.bankName && (
-                              <span
-                                className={cn(
-                                  "inline-block h-2.5 w-2.5",
-                                  getBankColorClass(entry.bankName, uniqueBanks)
-                                )}
-                              />
-                            )}
-                          </>
-                        ) : null}
-                        {entry.bankSequence != null ? (
-                          <span className="font-mono text-[10px] text-muted-foreground/60">
-                            {String(entry.bankSequence).padStart(4, "0")}
-                          </span>
-                        ) : null}
-                      </div>
                     )}
                   </TableCell>
                   <TableCell className="font-mono text-xs">
