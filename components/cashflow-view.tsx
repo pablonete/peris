@@ -5,15 +5,13 @@ import { formatCurrency, formatDate } from "@/lib/ledger-utils"
 import {
   getCashflowOpeningBalance,
   getCashflowClosingBalance,
-  getBankColorClass,
 } from "@/lib/cashflow-utils"
 import {
   generateGhostEntries,
   GhostCashflowEntry,
   isGhostEntry,
-  getPreviousQuarterId,
-  getYearAgoQuarterId,
 } from "@/lib/ghost-entries"
+import { getPreviousQuarterId, getYearAgoQuarterId } from "@/lib/quarter-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useData } from "@/lib/use-data"
 import { CashflowEntry } from "@/lib/types"
@@ -36,7 +34,11 @@ import { CashflowCategoryChart } from "@/components/cashflow-category-chart"
 import { SummaryCard } from "@/components/summary-card"
 import { EditingIndicator } from "@/components/editing-indicator"
 import { PeriodicityBadge } from "@/components/periodicity-badge"
-import { GhostEntrySourceCell } from "@/components/ghost-entry-source-cell"
+import {
+  GhostEntrySourceCell,
+  RegularEntrySourceCell,
+} from "@/components/cashflow-cells"
+import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/i18n-context"
 import { FileText, Receipt } from "lucide-react"
@@ -200,20 +202,12 @@ export function CashflowView({
         </Alert>
       )}
 
-      <div className="mb-4 flex items-center justify-between gap-4">
+      <div className="mb-4">
         <CashflowBankFilter
           banks={uniqueBanks}
           activeBank={activeBank}
           onSelect={setSelectedBank}
         />
-        <Button
-          variant={showGhosts ? "default" : "outline"}
-          size="sm"
-          className="h-6 shrink-0 px-2 font-mono text-[10px]"
-          onClick={() => setShowGhosts((v) => !v)}
-        >
-          {t("cashflow.predictEntries")}
-        </Button>
       </div>
 
       <div className="rounded-sm border border-border bg-card">
@@ -379,7 +373,25 @@ export function CashflowView({
                 colSpan={showEllipsis ? 5 : 4}
                 className="font-semibold text-sm"
               >
-                Period totals
+                <div className="flex items-center justify-between">
+                  <span>Period totals</span>
+                  <Button
+                    variant={showGhosts ? "default" : "outline"}
+                    size="sm"
+                    className="h-6 shrink-0 px-2 font-mono text-[10px]"
+                    onClick={() => setShowGhosts((v) => !v)}
+                  >
+                    {t("cashflow.predictEntries")}
+                    {ghostEntries.length > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className="ml-1 h-4 px-1.5 font-mono text-[9px]"
+                      >
+                        {ghostEntries.length}
+                      </Badge>
+                    )}
+                  </Button>
+                </div>
               </TableCell>
               <TableCell className="font-mono text-xs font-semibold text-right text-[hsl(var(--ledger-green))]">
                 {formatCurrency(totalIncome)}

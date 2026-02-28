@@ -1,31 +1,8 @@
 import { describe, it, expect } from "vitest"
-import {
-  generateGhostEntries,
-  getPreviousQuarterId,
-  getYearAgoQuarterId,
-  isGhostEntry,
-} from "./ghost-entries"
+import { generateGhostEntries, isGhostEntry } from "./ghost-entries"
 import { CashflowEntry } from "./types"
 
 describe("ghost-entries", () => {
-  describe("getPreviousQuarterId", () => {
-    it("returns previous quarter in same year", () => {
-      expect(getPreviousQuarterId("2025.3Q")).toBe("2025.2Q")
-      expect(getPreviousQuarterId("2025.2Q")).toBe("2025.1Q")
-    })
-
-    it("rolls back to Q4 of previous year for Q1", () => {
-      expect(getPreviousQuarterId("2025.1Q")).toBe("2024.4Q")
-    })
-  })
-
-  describe("getYearAgoQuarterId", () => {
-    it("returns the same quarter one year earlier", () => {
-      expect(getYearAgoQuarterId("2025.3Q")).toBe("2024.3Q")
-      expect(getYearAgoQuarterId("2025.1Q")).toBe("2024.1Q")
-    })
-  })
-
   describe("isGhostEntry", () => {
     it("returns false for regular entries", () => {
       const entry: CashflowEntry = {

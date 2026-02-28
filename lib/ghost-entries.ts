@@ -6,6 +6,7 @@ import {
   addYears,
   addDays,
 } from "./date-utils"
+import { getPreviousQuarterId, getYearAgoQuarterId } from "./quarter-utils"
 
 export type GhostCashflowEntry = CashflowEntry & {
   isGhost: true
@@ -19,19 +20,12 @@ export function isGhostEntry(
   return "isGhost" in entry && (entry as GhostCashflowEntry).isGhost === true
 }
 
-export function getPreviousQuarterId(quarterId: string): string {
-  const match = quarterId.match(/^(\d{4})\.(\d)Q$/)
-  if (!match) return quarterId
-  const year = parseInt(match[1], 10)
-  const quarter = parseInt(match[2], 10)
-  if (quarter === 1) return `${year - 1}.4Q`
-  return `${year}.${quarter - 1}Q`
-}
-
-export function getYearAgoQuarterId(quarterId: string): string {
-  const match = quarterId.match(/^(\d{4})\.(\d)Q$/)
-  if (!match) return quarterId
-  return `${parseInt(match[1], 10) - 1}.${match[2]}Q`
+interface QuarterInfo {
+  quarterId: string
+  previousQuarterId: string
+  yearAgoQuarterId: string
+  quarterEnd: Date
+  quarterStart: Date
 }
 
 function parseQuarterId(quarterId: string): { year: number; quarter: number } {
@@ -67,28 +61,32 @@ function makeGhostEntry(
   }
 }
 
+function assignGhostBalances(
+  ghosts: GhostCashflowEntry[],
+  lastBalance: number
+): void {
+  let balance = lastBalance
+  for (const ghost of ghosts) {
+    balance += (ghost.income ?? 0) - (ghost.expense ?? 0)
+    ghost.balance = balance
+  }
+}
+
 function generateGhostEntriesForBank(
-  bankKey: string,
   currentEntries: CashflowEntry[],
   previousEntries: CashflowEntry[],
   yearAgoEntries: CashflowEntry[],
-  currentQuarterId: string,
-  previousQuarterId: string,
-  yearAgoQuarterId: string,
-  quarterEnd: Date,
-  quarterStart: Date
+  quarterInfo: QuarterInfo
 ): GhostCashflowEntry[] {
-  const bankCurrentEntries = currentEntries.filter(
-    (e) => (e.bankName ?? "") === bankKey
-  )
-  const bankPreviousEntries = previousEntries.filter(
-    (e) => (e.bankName ?? "") === bankKey
-  )
-  const bankYearAgoEntries = yearAgoEntries.filter(
-    (e) => (e.bankName ?? "") === bankKey
-  )
+  const {
+    quarterId,
+    previousQuarterId,
+    yearAgoQuarterId,
+    quarterEnd,
+    quarterStart,
+  } = quarterInfo
 
-  const realEntries = bankCurrentEntries.filter(
+  const realEntries = currentEntries.filter(
     (e) => e.concept !== "Carry over" && (e.income != null || e.expense != null)
   )
 
@@ -96,16 +94,17 @@ function generateGhostEntriesForBank(
     realEntries.length > 0
       ? parseEntryDate(realEntries[realEntries.length - 1].date)
       : addDays(quarterStart, -1)
+
   const thirtyDaysBeforeLast = addDays(lastEntryDate, -30)
   const source1mo: Array<{ entry: CashflowEntry; sourceQuarterId: string }> = [
-    ...bankCurrentEntries
+    ...currentEntries
       .filter(
         (e) =>
           e.periodicity === "1mo" &&
           parseEntryDate(e.date) > thirtyDaysBeforeLast
       )
-      .map((entry) => ({ entry, sourceQuarterId: currentQuarterId })),
-    ...bankPreviousEntries
+      .map((entry) => ({ entry, sourceQuarterId: quarterId })),
+    ...previousEntries
       .filter(
         (e) =>
           e.periodicity === "1mo" &&
@@ -115,7 +114,7 @@ function generateGhostEntriesForBank(
   ]
 
   const threeMonthsBefore = addMonths(lastEntryDate, -3)
-  const source3mo = bankPreviousEntries
+  const source3mo = previousEntries
     .filter(
       (e) =>
         e.periodicity === "3mo" && parseEntryDate(e.date) > threeMonthsBefore
@@ -123,7 +122,7 @@ function generateGhostEntriesForBank(
     .map((entry) => ({ entry, sourceQuarterId: previousQuarterId }))
 
   const oneYearBefore = addYears(lastEntryDate, -1)
-  const source1y = bankYearAgoEntries
+  const source1y = yearAgoEntries
     .filter(
       (e) => e.periodicity === "1y" && parseEntryDate(e.date) > oneYearBefore
     )
@@ -155,29 +154,19 @@ function generateGhostEntriesForBank(
     }
   }
 
-  return ghosts
-}
+  ghosts.sort((a, b) => a.date.localeCompare(b.date))
+  const lastBalance =
+    currentEntries.length > 0
+      ? currentEntries[currentEntries.length - 1].balance
+      : 0
+  assignGhostBalances(ghosts, lastBalance)
 
-function assignGhostBalances(
-  ghosts: GhostCashflowEntry[],
-  currentEntries: CashflowEntry[]
-): void {
-  const bankBalances = new Map<string, number>()
-  for (const entry of currentEntries) {
-    bankBalances.set(entry.bankName ?? "", entry.balance)
-  }
-  for (const ghost of ghosts) {
-    const bankKey = ghost.bankName ?? ""
-    const prev = bankBalances.get(bankKey) ?? 0
-    const next = prev + (ghost.income ?? 0) - (ghost.expense ?? 0)
-    ghost.balance = next
-    bankBalances.set(bankKey, next)
-  }
+  return ghosts
 }
 
 /**
  * Generates ghost (forecast) entries for a quarter based on periodic source entries.
- * Results are sorted by date with balances assigned incrementally per bank.
+ * Results are grouped by bank (sorted within each bank by date).
  */
 export function generateGhostEntries(
   currentEntries: CashflowEntry[],
@@ -190,10 +179,13 @@ export function generateGhostEntries(
 
   const prevEntries = previousEntries ?? []
   const yearEntries = yearAgoEntries ?? []
-  const previousQuarterId = getPreviousQuarterId(quarterId)
-  const yearAgoQuarterId = getYearAgoQuarterId(quarterId)
-  const quarterEnd = getQuarterEnd(year, quarter)
-  const quarterStart = getQuarterStart(year, quarter)
+  const quarterInfo: QuarterInfo = {
+    quarterId,
+    previousQuarterId: getPreviousQuarterId(quarterId),
+    yearAgoQuarterId: getYearAgoQuarterId(quarterId),
+    quarterEnd: getQuarterEnd(year, quarter),
+    quarterStart: getQuarterStart(year, quarter),
+  }
 
   const allBankKeys = Array.from(
     new Set(
@@ -207,21 +199,13 @@ export function generateGhostEntries(
 
   for (const bankKey of allBankKeys) {
     const bankGhosts = generateGhostEntriesForBank(
-      bankKey,
-      currentEntries,
-      prevEntries,
-      yearEntries,
-      quarterId,
-      previousQuarterId,
-      yearAgoQuarterId,
-      quarterEnd,
-      quarterStart
+      currentEntries.filter((e) => (e.bankName ?? "") === bankKey),
+      prevEntries.filter((e) => (e.bankName ?? "") === bankKey),
+      yearEntries.filter((e) => (e.bankName ?? "") === bankKey),
+      quarterInfo
     )
     allGhosts.push(...bankGhosts)
   }
-
-  allGhosts.sort((a, b) => a.date.localeCompare(b.date))
-  assignGhostBalances(allGhosts, currentEntries)
 
   return allGhosts
 }
