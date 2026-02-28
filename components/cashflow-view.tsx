@@ -5,6 +5,7 @@ import { formatCurrency, formatDate } from "@/lib/ledger-utils"
 import {
   getCashflowOpeningBalance,
   getCashflowClosingBalance,
+  getBankColorClass,
 } from "@/lib/cashflow-utils"
 import {
   generateGhostEntries,
