@@ -170,6 +170,7 @@ export const translations = {
       groupByFirstLevel: "Primer nivel",
       groupByFullCategory: "Categoría completa",
       noCategory: "Sin categoría",
+      predictEntries: "Predecir entradas",
     },
     months: {
       "1": "Ene - Mar",
@@ -381,6 +382,7 @@ export const translations = {
       groupByFirstLevel: "First level",
       groupByFullCategory: "Full category",
       noCategory: "No category",
+      predictEntries: "Predict entries",
     },
     months: {
       "1": "Jan - Mar",

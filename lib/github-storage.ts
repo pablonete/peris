@@ -130,9 +130,7 @@ export class GitHubStorageService {
    * Fetches a file from the repository root (or dataPath root)
    */
   async fetchRootFile(fileName: string): Promise<{ data: any; sha: string }> {
-    const filePath = this.dataPath
-      ? `${this.dataPath}/${fileName}`
-      : fileName
+    const filePath = this.dataPath ? `${this.dataPath}/${fileName}` : fileName
 
     return this.fetchFilePath(filePath)
   }

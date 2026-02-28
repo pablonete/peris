@@ -27,6 +27,8 @@ This is Peris - a minimalist ledger book application for personal accounting and
 - **Avoid useMemo/useCallback**: This project uses React Compiler which automatically optimizes these patterns. Extract complex logic to separate functions instead.
 - **Extract logic to functions**: Keep component bodies clean by extracting grouping, filtering, and transformation logic to separate functions outside the component.
 - **Pure utility functions**: Extract pure functions that work with model types (from `lib/types.ts`) to separate modules in `lib/` with unit tests. These functions should be stateless, side-effect free, and easy to test. Examples: `lib/ledger-utils.ts`, `lib/cashflow-utils.ts`, `lib/vat-subtotals.ts`.
+- **Module size limit**: Keep individual `lib/` modules under 200 lines. When a module grows beyond that, split it into focused sub-modules (e.g. `date-utils.ts`, `ghost-entries.ts`, `quarter-utils.ts`).
+- **Extract complex table cell content to components**: When a table cell contains logic that varies significantly between row types, group related cell components into a shared file (e.g. `components/cashflow-cells.tsx` contains both `RegularEntrySourceCell` and `GhostEntrySourceCell`).
 
 ### Testing Guidelines
 

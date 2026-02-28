@@ -2,6 +2,9 @@ import { CashflowEntry } from "./types"
 
 export type CategoryGroupMode = "first-level" | "full"
 
+export type { GhostCashflowEntry } from "./ghost-entries"
+export { generateGhostEntries } from "./ghost-entries"
+
 export interface CategoryTotal {
   category: string
   invoicesTotal: number
