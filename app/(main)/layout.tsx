@@ -32,8 +32,8 @@ function LayoutContent({
   const selectedView = (
     ["invoices", "expenses", "cashflow"].includes(lastSegment ?? "")
       ? lastSegment
-      : null
-  ) as ViewType | null
+      : "invoices"
+  ) as ViewType
 
   const { getEditingFile } = useData()
 
@@ -58,7 +58,7 @@ function LayoutContent({
       >
         <LedgerSidebar
           selectedQuarter={selectedQuarter}
-          selectedView={selectedView ?? "invoices"}
+          selectedView={selectedView}
         />
       </div>
 
@@ -84,7 +84,7 @@ function LayoutContent({
           </Link>
         </div>
 
-        {selectedQuarter && selectedView && (
+        {selectedQuarter && (
           <ViewTabs
             quarterId={selectedQuarter}
             selectedView={selectedView}
