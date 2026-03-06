@@ -4,7 +4,7 @@ import { useData } from "@/lib/use-data"
 import { useStorageData } from "@/lib/use-storage-data"
 import { formatCurrency } from "@/lib/ledger-utils"
 import { getCashflowOpeningBalance } from "@/lib/cashflow-utils"
-import type { ViewType } from "@/components/ledger-sidebar"
+import type { ViewType } from "@/lib/view-type"
 import { useLanguage } from "@/lib/i18n-context"
 
 interface WelcomeViewProps {

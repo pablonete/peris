@@ -9,14 +9,11 @@ import { ErrorBanner } from "./error-banner"
 import { NewQuarterDialog } from "./new-quarter-dialog"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-
-export type ViewType = "invoices" | "expenses" | "cashflow"
-
-const DEFAULT_VIEW: ViewType = "invoices"
+import { ViewType } from "@/lib/view-type"
 
 interface LedgerSidebarProps {
   selectedQuarter: string
-  selectedView: ViewType | null
+  selectedView: ViewType
 }
 
 export function LedgerSidebar({
@@ -209,17 +206,16 @@ function CollapsedYearRow({
   quarters: string[]
   hasEdits: boolean
   formatQuarterLabel: (qId: string) => string
-  selectedView: ViewType | null
+  selectedView: ViewType
   router: ReturnType<typeof useRouter>
 }) {
-  const targetView = selectedView || DEFAULT_VIEW
   return (
     <li>
       <div className="flex items-center rounded-sm transition-colors hover:bg-sidebar-accent/50">
         <button
           type="button"
           onClick={() => {
-            router.push(`/${targetView}?q=${quarters[0]}`)
+            router.push(`/${selectedView}?q=${quarters[0]}`)
           }}
           className="flex flex-1 items-center gap-2 px-3 py-2.5 text-left text-sm transition-colors text-sidebar-foreground/80"
         >
@@ -241,7 +237,7 @@ function CollapsedYearRow({
                 key={qId}
                 type="button"
                 onClick={() => {
-                  router.push(`/${targetView}?q=${qId}`)
+                  router.push(`/${selectedView}?q=${qId}`)
                 }}
                 className="rounded-sm px-1.5 py-1 text-[10px] font-medium transition-colors text-sidebar-foreground/50 hover:text-sidebar-accent-foreground"
                 title={formatQuarterLabel(qId)}
@@ -302,17 +298,16 @@ function NonSelectedQuarterRow({
   quarterId: string
   hasEdits: boolean
   formatQuarterLabel: (qId: string) => string
-  selectedView: ViewType | null
+  selectedView: ViewType
   router: ReturnType<typeof useRouter>
 }) {
-  const targetView = selectedView || DEFAULT_VIEW
   return (
     <li>
       <div className="flex items-center rounded-sm transition-colors hover:bg-sidebar-accent/50">
         <button
           type="button"
           onClick={() => {
-            router.push(`/${targetView}?q=${quarterId}`)
+            router.push(`/${selectedView}?q=${quarterId}`)
           }}
           className="flex flex-1 items-center gap-2 px-3 py-2.5 text-left text-sm text-sidebar-foreground/80"
         >

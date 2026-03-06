@@ -1,13 +1,14 @@
 "use client"
 
 import { Suspense, useState } from "react"
-import { LedgerSidebar, ViewType } from "@/components/ledger-sidebar"
+import { LedgerSidebar } from "@/components/ledger-sidebar"
+import { ViewTabs } from "@/components/view-tabs"
 import { ErrorBanner } from "@/components/error-banner"
 import { useEditingState } from "@/lib/editing-state-context"
 import { useData } from "@/lib/use-data"
 import { useLanguage } from "@/lib/i18n-context"
-import { cn } from "@/lib/utils"
-import { FileText, Receipt, ArrowRightLeft, Menu, X } from "lucide-react"
+import { ViewType } from "@/lib/view-type"
+import { Menu, X } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 
@@ -35,11 +36,6 @@ function LayoutContent({
   ) as ViewType | null
 
   const { getEditingFile } = useData()
-  const viewTabs: { key: ViewType; label: string; icon: typeof FileText }[] = [
-    { key: "invoices", label: t("sidebar.invoices"), icon: FileText },
-    { key: "expenses", label: t("sidebar.expenses"), icon: Receipt },
-    { key: "cashflow", label: t("sidebar.cashflow"), icon: ArrowRightLeft },
-  ]
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -62,7 +58,7 @@ function LayoutContent({
       >
         <LedgerSidebar
           selectedQuarter={selectedQuarter}
-          selectedView={selectedView}
+          selectedView={selectedView ?? "invoices"}
         />
       </div>
 
@@ -88,35 +84,13 @@ function LayoutContent({
           </Link>
         </div>
 
-        {selectedQuarter && (
-          <div className="flex border-b border-border bg-card px-2 shrink-0">
-            {viewTabs.map(({ key, label, icon: Icon }) => {
-              const isActive = selectedView === key
-              const isEditing = !!getEditingFile(selectedQuarter, key)
-              return (
-                <Link
-                  key={key}
-                  href={`/${key}?q=${selectedQuarter}`}
-                  onClick={() => setSidebarOpen(false)}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors",
-                    isActive
-                      ? "border-foreground text-foreground"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  {label}
-                  {isEditing && (
-                    <span
-                      className="h-2 w-2 rounded-full bg-[hsl(var(--ledger-blue))]"
-                      aria-label="Has unsaved changes"
-                    />
-                  )}
-                </Link>
-              )
-            })}
-          </div>
+        {selectedQuarter && selectedView && (
+          <ViewTabs
+            quarterId={selectedQuarter}
+            selectedView={selectedView}
+            getEditingFile={getEditingFile}
+            onTabClick={() => setSidebarOpen(false)}
+          />
         )}
 
         <div className="flex-1 overflow-y-auto">

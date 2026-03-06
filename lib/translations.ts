@@ -212,6 +212,7 @@ export const translations = {
     views: {
       selectQuarter:
         "Selecciona un trimestre en la barra lateral para ver los datos.",
+      unsavedChanges: "Cambios sin guardar",
     },
   },
   en: {
@@ -424,6 +425,7 @@ export const translations = {
     },
     views: {
       selectQuarter: "Select a quarter from the sidebar to view data.",
+      unsavedChanges: "Has unsaved changes",
     },
   },
 }
