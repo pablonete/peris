@@ -224,8 +224,9 @@ pnpm dev
 
 ### Navigation
 
-- Use the **sidebar** to switch between quarters and views
-- Click on **quarter names** to expand and view available reports
+- Use the **sidebar** to switch between quarters
+- Once a quarter is selected, use the **tabs at the top** (Invoices, Expenses, Cashflow) to switch views
+- The active view is preserved when switching quarters
 
 ### Language Toggle
 

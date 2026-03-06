@@ -1,10 +1,13 @@
 "use client"
 
 import { Suspense, useState } from "react"
-import { LedgerSidebar, ViewType } from "@/components/ledger-sidebar"
+import { LedgerSidebar } from "@/components/ledger-sidebar"
+import { ViewTabs } from "@/components/view-tabs"
 import { ErrorBanner } from "@/components/error-banner"
 import { useEditingState } from "@/lib/editing-state-context"
+import { useData } from "@/lib/use-data"
 import { useLanguage } from "@/lib/i18n-context"
+import { ViewType } from "@/lib/view-type"
 import { Menu, X } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
@@ -29,8 +32,10 @@ function LayoutContent({
   const selectedView = (
     ["invoices", "expenses", "cashflow"].includes(lastSegment ?? "")
       ? lastSegment
-      : null
-  ) as ViewType | null
+      : "invoices"
+  ) as ViewType
+
+  const { getEditingFile } = useData()
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -54,11 +59,10 @@ function LayoutContent({
         <LedgerSidebar
           selectedQuarter={selectedQuarter}
           selectedView={selectedView}
-          onSidebarClose={() => setSidebarOpen(false)}
         />
       </div>
 
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex flex-col flex-1 min-h-0">
         <div className="flex items-center border-b border-border bg-card px-4 py-3 lg:hidden">
           <button
             type="button"
@@ -80,29 +84,40 @@ function LayoutContent({
           </Link>
         </div>
 
-        <div
-          className="min-h-full px-6 py-8 lg:px-10 lg:py-10"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(to bottom, transparent, transparent 31px, hsl(30 15% 80% / 0.4) 31px, hsl(30 15% 80% / 0.4) 32px)",
-            backgroundSize: "100% 32px",
-          }}
-        >
+        {selectedQuarter && (
+          <ViewTabs
+            quarterId={selectedQuarter}
+            selectedView={selectedView}
+            getEditingFile={getEditingFile}
+            onTabClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        <div className="flex-1 overflow-y-auto">
           <div
-            className="relative"
+            className="min-h-full px-6 py-8 lg:px-10 lg:py-10"
             style={{
-              borderLeft: "2px solid hsl(0 60% 38% / 0.2)",
-              paddingLeft: "1.5rem",
+              backgroundImage:
+                "repeating-linear-gradient(to bottom, transparent, transparent 31px, hsl(30 15% 80% / 0.4) 31px, hsl(30 15% 80% / 0.4) 32px)",
+              backgroundSize: "100% 32px",
             }}
           >
-            {error && (
-              <ErrorBanner
-                title={t("storage.error.saving")}
-                message={error}
-                className="mb-6"
-              />
-            )}
-            {children}
+            <div
+              className="relative"
+              style={{
+                borderLeft: "2px solid hsl(0 60% 38% / 0.2)",
+                paddingLeft: "1.5rem",
+              }}
+            >
+              {error && (
+                <ErrorBanner
+                  title={t("storage.error.saving")}
+                  message={error}
+                  className="mb-6"
+                />
+              )}
+              {children}
+            </div>
           </div>
         </div>
       </main>
