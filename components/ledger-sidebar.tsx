@@ -1,7 +1,7 @@
 "use client"
 import { cn } from "@/lib/utils"
 import { useData } from "@/lib/use-data"
-import { FileText, Receipt, ArrowRightLeft, BookOpen } from "lucide-react"
+import { BookOpen } from "lucide-react"
 import { useLanguage } from "@/lib/i18n-context"
 import { StorageSelector } from "./storage-selector"
 import { CommitButton } from "./commit-button"
@@ -12,26 +12,20 @@ import { useRouter } from "next/navigation"
 
 export type ViewType = "invoices" | "expenses" | "cashflow"
 
+const DEFAULT_VIEW: ViewType = "invoices"
+
 interface LedgerSidebarProps {
   selectedQuarter: string
   selectedView: ViewType | null
-  onSidebarClose?: () => void
 }
 
 export function LedgerSidebar({
   selectedQuarter,
   selectedView,
-  onSidebarClose,
 }: LedgerSidebarProps) {
   const { language, setLanguage, t } = useLanguage()
   const router = useRouter()
   const { quarters, quartersError, isDirtyFile, getEditingFile } = useData()
-
-  const viewItems: { key: ViewType; label: string; icon: typeof FileText }[] = [
-    { key: "invoices", label: t("sidebar.invoices"), icon: FileText },
-    { key: "expenses", label: t("sidebar.expenses"), icon: Receipt },
-    { key: "cashflow", label: t("sidebar.cashflow"), icon: ArrowRightLeft },
-  ]
 
   const quartersByYear = groupQuartersByYear(quarters)
   const sortedYears = getSortedYears(quartersByYear)
@@ -101,6 +95,7 @@ export function LedgerSidebar({
                   quarters={yearQuarters}
                   hasEdits={hasYearEdits}
                   formatQuarterLabel={formatQuarterLabel}
+                  selectedView={selectedView}
                   router={router}
                 />
               )
@@ -126,11 +121,6 @@ export function LedgerSidebar({
                             quarterId={qId}
                             hasEdits={hasEdits}
                             formatQuarterLabel={formatQuarterLabel}
-                            viewItems={viewItems}
-                            selectedView={selectedView}
-                            getEditingFile={getEditingFile}
-                            onSidebarClose={onSidebarClose}
-                            t={t}
                           />
                         )
                       }
@@ -141,10 +131,8 @@ export function LedgerSidebar({
                           quarterId={qId}
                           hasEdits={hasEdits}
                           formatQuarterLabel={formatQuarterLabel}
-                          viewItems={viewItems}
-                          getEditingFile={getEditingFile}
+                          selectedView={selectedView}
                           router={router}
-                          t={t}
                         />
                       )
                     })}
@@ -214,21 +202,24 @@ function CollapsedYearRow({
   quarters,
   hasEdits,
   formatQuarterLabel,
+  selectedView,
   router,
 }: {
   year: string
   quarters: string[]
   hasEdits: boolean
   formatQuarterLabel: (qId: string) => string
+  selectedView: ViewType | null
   router: ReturnType<typeof useRouter>
 }) {
+  const targetView = selectedView || DEFAULT_VIEW
   return (
     <li>
       <div className="flex items-center rounded-sm transition-colors hover:bg-sidebar-accent/50">
         <button
           type="button"
           onClick={() => {
-            router.push(`/invoices?q=${quarters[0]}`)
+            router.push(`/${targetView}?q=${quarters[0]}`)
           }}
           className="flex flex-1 items-center gap-2 px-3 py-2.5 text-left text-sm transition-colors text-sidebar-foreground/80"
         >
@@ -250,7 +241,7 @@ function CollapsedYearRow({
                 key={qId}
                 type="button"
                 onClick={() => {
-                  router.push(`/invoices?q=${qId}`)
+                  router.push(`/${targetView}?q=${qId}`)
                 }}
                 className="rounded-sm px-1.5 py-1 text-[10px] font-medium transition-colors text-sidebar-foreground/50 hover:text-sidebar-accent-foreground"
                 title={formatQuarterLabel(qId)}
@@ -265,25 +256,15 @@ function CollapsedYearRow({
   )
 }
 
-// Component: Selected quarter row (with expanded view menu)
+// Component: Selected quarter row
 function SelectedQuarterRow({
   quarterId,
   hasEdits,
   formatQuarterLabel,
-  viewItems,
-  selectedView,
-  getEditingFile,
-  onSidebarClose,
-  t,
 }: {
   quarterId: string
   hasEdits: boolean
   formatQuarterLabel: (qId: string) => string
-  viewItems: { key: ViewType; label: string; icon: typeof FileText }[]
-  selectedView: ViewType | null
-  getEditingFile: ReturnType<typeof useData>["getEditingFile"]
-  onSidebarClose?: () => void
-  t: (key: string) => string
 }) {
   return (
     <li>
@@ -306,66 +287,32 @@ function SelectedQuarterRow({
           </span>
         </span>
       </button>
-
-      {/* Sub-items */}
-      <ul className="ml-3 mt-1 flex flex-col gap-0.5 border-l border-sidebar-border pl-3">
-        {viewItems.map(({ key, label, icon: Icon }) => {
-          const isActive = selectedView === key
-          const isEditing = !!getEditingFile(quarterId, key)
-          return (
-            <li key={key}>
-              <Link
-                href={`/${key}?q=${quarterId}`}
-                onClick={onSidebarClose}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-sm px-3 py-2 text-left text-sm transition-colors",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {label}
-                {isEditing && (
-                  <span
-                    className="h-2 w-2 rounded-full bg-[hsl(var(--ledger-blue))]"
-                    aria-label="Editing"
-                  />
-                )}
-              </Link>
-            </li>
-          )
-        })}
-      </ul>
     </li>
   )
 }
 
-// Component: Non-selected quarter row (with icon buttons)
+// Component: Non-selected quarter row
 function NonSelectedQuarterRow({
   quarterId,
   hasEdits,
   formatQuarterLabel,
-  viewItems,
-  getEditingFile,
+  selectedView,
   router,
-  t,
 }: {
   quarterId: string
   hasEdits: boolean
   formatQuarterLabel: (qId: string) => string
-  viewItems: { key: ViewType; label: string; icon: typeof FileText }[]
-  getEditingFile: ReturnType<typeof useData>["getEditingFile"]
+  selectedView: ViewType | null
   router: ReturnType<typeof useRouter>
-  t: (key: string) => string
 }) {
+  const targetView = selectedView || DEFAULT_VIEW
   return (
     <li>
       <div className="flex items-center rounded-sm transition-colors hover:bg-sidebar-accent/50">
         <button
           type="button"
           onClick={() => {
-            router.push(`/invoices?q=${quarterId}`)
+            router.push(`/${targetView}?q=${quarterId}`)
           }}
           className="flex flex-1 items-center gap-2 px-3 py-2.5 text-left text-sm text-sidebar-foreground/80"
         >
@@ -384,30 +331,6 @@ function NonSelectedQuarterRow({
             </span>
           </span>
         </button>
-        <div className="flex gap-0.5 pr-3">
-          {viewItems.map(({ key, icon: Icon }) => {
-            const isEditing = !!getEditingFile(quarterId, key)
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => {
-                  router.push(`/${key}?q=${quarterId}`)
-                }}
-                className="relative flex items-center justify-center rounded-sm p-1.5 transition-colors text-sidebar-foreground/50 hover:text-sidebar-accent-foreground"
-                title={t(`sidebar.${key}`)}
-              >
-                <Icon className="h-4 w-4" />
-                {isEditing && (
-                  <span
-                    className="absolute -mt-2 -mr-2 h-1.5 w-1.5 rounded-full bg-[hsl(var(--ledger-blue))]"
-                    aria-label="Editing"
-                  />
-                )}
-              </button>
-            )
-          })}
-        </div>
       </div>
     </li>
   )
