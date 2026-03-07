@@ -26,9 +26,11 @@ This is Peris - a minimalist ledger book application for personal accounting and
 - **Code comments**: Set a high bar - only explain non-obvious logic or the "why", never describe what code obviously does. Self-explanatory code with clear variable/function names is preferred over comments.
 - **Avoid useMemo/useCallback**: This project uses React Compiler which automatically optimizes these patterns. Extract complex logic to separate functions instead.
 - **Extract logic to functions**: Keep component bodies clean by extracting grouping, filtering, and transformation logic to separate functions outside the component.
+- **Avoid duplicate variants of storage/data helpers**: When a new method only differs by path or file kind, extend the existing helper with a parameter instead of adding a near-identical variant.
 - **Pure utility functions**: Extract pure functions that work with model types (from `lib/types.ts`) to separate modules in `lib/` with unit tests. These functions should be stateless, side-effect free, and easy to test. Examples: `lib/ledger-utils.ts`, `lib/cashflow-utils.ts`, `lib/vat-subtotals.ts`.
 - **Module size limit**: Keep individual `lib/` modules under 200 lines. When a module grows beyond that, split it into focused sub-modules (e.g. `date-utils.ts`, `ghost-entries.ts`, `quarter-utils.ts`).
 - **Extract complex table cell content to components**: When a table cell contains logic that varies significantly between row types, group related cell components into a shared file (e.g. `components/cashflow-cells.tsx` contains both `RegularEntrySourceCell` and `GhostEntrySourceCell`).
+- **Use view-specific subfolders for multi-part UI**: When a feature adds several components, hooks, or summaries tied to one view, group them in a dedicated subfolder such as `components/cashflow/` instead of growing the root `components/` folder.
 
 ### Testing Guidelines
 
@@ -41,6 +43,7 @@ This is Peris - a minimalist ledger book application for personal accounting and
   - Prefer testing actual behavior over implementation details
   - Use descriptive test names that explain what is being tested
   - Keep tests simple and focused on one thing
+  - Split default rendering coverage from secondary workflows when they represent different usage paths
 - **Running tests**: Use `pnpm test` for watch mode, `pnpm test:run` for CI, `pnpm test:coverage` for coverage reports
 - **Test providers**: Use `TestProviders` from `test/test-utils.tsx` when components need i18n context
 - **Never mock nested components**: Only mock data-access modules (e.g. `useData`, `useStorageData`, `getOrphanFiles`) and framework infrastructure (e.g. `next/navigation`). Always render real sub-components.

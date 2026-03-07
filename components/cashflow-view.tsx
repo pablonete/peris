@@ -32,6 +32,7 @@ import { CashflowBankFilter } from "@/components/cashflow-bank-filter"
 import { CashflowRowActions } from "@/components/cashflow-row-actions"
 import { AssignCategoryDialog } from "@/components/assign-category-dialog"
 import { CashflowCategoryChart } from "@/components/cashflow-category-chart"
+import { ImportCashflowDialog } from "@/components/cashflow/import-cashflow-dialog"
 import { SummaryCard } from "@/components/summary-card"
 import { EditingIndicator } from "@/components/editing-indicator"
 import { PeriodicityBadge } from "@/components/periodicity-badge"
@@ -160,10 +161,13 @@ export function CashflowView({
   return (
     <div>
       <div className="mb-6 border-b-2 border-foreground/20 pb-4">
-        <h2 className="flex items-center gap-2 text-2xl font-bold tracking-wide text-foreground">
-          {t("cashflow.cashflow")}
-          <EditingIndicator isEditing={isEditing} />
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="flex items-center gap-2 text-2xl font-bold tracking-wide text-foreground">
+            {t("cashflow.cashflow")}
+            <EditingIndicator isEditing={isEditing} />
+          </h2>
+          <ImportCashflowDialog quarterId={quarterId} entries={entries} />
+        </div>
         <p className="font-mono text-xs text-muted-foreground">
           {quarterId} &middot; {companyName} &middot; {entries.length}{" "}
           {t("cashflow.movements")}

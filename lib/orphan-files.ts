@@ -1,7 +1,7 @@
 "use client"
 
 import { Invoice, Expense } from "./types"
-import { GitHubStorageService } from "./github-storage"
+import { listFilesInStorage } from "./github-data"
 import { Storage } from "./storage-types"
 
 /**
@@ -13,8 +13,7 @@ export async function getOrphanFiles(
   type: "invoices" | "expenses",
   linkedItems: Invoice[] | Expense[]
 ): Promise<string[]> {
-  const service = new GitHubStorageService(storage.url)
-  const allFiles = await service.listFilesInFolder(quarterId, type)
+  const allFiles = await listFilesInStorage(storage, `${quarterId}/${type}`)
 
   const linkedFilenames = new Set(
     linkedItems
