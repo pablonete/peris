@@ -10,6 +10,12 @@ export interface EditingAttachment {
   content: ArrayBuffer
 }
 
+export interface EditingRootTextFile {
+  path: string
+  content: string
+  sha?: string
+}
+
 /**
  * Lists available quarters in a storage
  */
@@ -75,6 +81,28 @@ export async function loadPerisConfig(
   }
 }
 
+export async function listRootFolderFiles(
+  storage: Storage,
+  folderPath: string
+): Promise<string[]> {
+  const service = new GitHubStorageService(storage.url)
+  return await service.listRootFolderFiles(folderPath)
+}
+
+export async function loadRootTextFile(
+  storage: Storage,
+  filePath: string
+): Promise<{ data: string | null; sha?: string; error?: string }> {
+  try {
+    const service = new GitHubStorageService(storage.url)
+    const result = await service.fetchRootTextFile(filePath)
+    return { data: result.data, sha: result.sha }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    return { data: null, error: message }
+  }
+}
+
 export async function commitEditingFiles(
   storage: Storage,
   editingFiles: Array<{
@@ -84,7 +112,8 @@ export async function commitEditingFiles(
     sha?: string
   }>,
   attachments: EditingAttachment[] = [],
-  perisConfig?: { data: PerisConfig; sha?: string }
+  perisConfig?: { data: PerisConfig; sha?: string },
+  rootTextFiles: EditingRootTextFile[] = []
 ): Promise<void> {
   const service = new GitHubStorageService(storage.url)
 
@@ -92,7 +121,10 @@ export async function commitEditingFiles(
     new Set(editingFiles.map((f) => f.quarterId))
   )
   const fileCount =
-    editingFiles.length + attachments.length + (perisConfig ? 1 : 0)
+    editingFiles.length +
+    attachments.length +
+    rootTextFiles.length +
+    (perisConfig ? 1 : 0)
   let message: string
   if (uniqueQuarters.length === 0 && perisConfig) {
     message = "Add peris.json"
@@ -121,6 +153,13 @@ export async function commitEditingFiles(
             },
           ]
         : []),
+      ...rootTextFiles.map((file) => ({
+        fileName: file.path,
+        content: file.content,
+        sha: file.sha,
+        isBinary: false as const,
+        contentType: "text" as const,
+      })),
     ],
     attachments.map((att) => ({
       quarterId: att.quarterId,

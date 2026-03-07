@@ -21,9 +21,16 @@ interface EditingAttachment {
   content: ArrayBuffer
 }
 
+interface EditingRootTextFile {
+  path: string
+  content: string
+  sha?: string
+}
+
 interface EditingStateContextType {
   editingFiles: Map<string, EditingFile>
   editingAttachments: Map<string, EditingAttachment>
+  editingRootTextFiles: Map<string, EditingRootTextFile>
   editingConfig: { data: PerisConfig; sha?: string } | null
   editingCount: number
   isCommitting: boolean
@@ -49,6 +56,8 @@ interface EditingStateContextType {
     filename: string
   ) => EditingAttachment | undefined
   removeAttachment: (quarterId: string, filename: string) => void
+  getEditingRootTextFile: (path: string) => EditingRootTextFile | undefined
+  setEditingRootTextFile: (path: string, content: string, sha?: string) => void
   createNewQuarter: (quarterId: string) => void
   clearAllEditing: () => void
   commitChanges: () => Promise<void>
@@ -74,6 +83,9 @@ export function EditingStateProvider({
   )
   const [editingAttachments, setEditingAttachments] = useState<
     Map<string, EditingAttachment>
+  >(new Map())
+  const [editingRootTextFiles, setEditingRootTextFiles] = useState<
+    Map<string, EditingRootTextFile>
   >(new Map())
   const [editingConfig, setEditingConfigState] = useState<{
     data: PerisConfig
@@ -146,6 +158,24 @@ export function EditingStateProvider({
     })
   }
 
+  const getEditingRootTextFile = (
+    path: string
+  ): EditingRootTextFile | undefined => {
+    return editingRootTextFiles.get(path)
+  }
+
+  const setEditingRootTextFile = (
+    path: string,
+    content: string,
+    sha?: string
+  ) => {
+    setEditingRootTextFiles((prev) => {
+      const newMap = new Map(prev)
+      newMap.set(path, { path, content, sha })
+      return newMap
+    })
+  }
+
   const createNewQuarter = (quarterId: string) => {
     setEditingFile(quarterId, "invoices", [])
     setEditingFile(quarterId, "expenses", [])
@@ -155,10 +185,12 @@ export function EditingStateProvider({
   const clearAllEditing = () => {
     setEditingFiles(new Map())
     setEditingAttachments(new Map())
+    setEditingRootTextFiles(new Map())
     setEditingConfigState(null)
   }
 
-  const editingCount = editingFiles.size + (editingConfig ? 1 : 0)
+  const editingCount =
+    editingFiles.size + editingRootTextFiles.size + (editingConfig ? 1 : 0)
 
   const commitChanges = async (): Promise<void> => {
     setError(null)
@@ -167,11 +199,13 @@ export function EditingStateProvider({
     try {
       const filesToCommit = Array.from(editingFiles.values())
       const attachmentsToCommit = Array.from(editingAttachments.values())
+      const rootTextFilesToCommit = Array.from(editingRootTextFiles.values())
       await commitEditingFiles(
         activeStorage,
         filesToCommit,
         attachmentsToCommit,
-        editingConfig ?? undefined
+        editingConfig ?? undefined,
+        rootTextFilesToCommit
       )
       clearAllEditing()
       await queryClient.invalidateQueries()
@@ -188,6 +222,7 @@ export function EditingStateProvider({
       value={{
         editingFiles,
         editingAttachments,
+        editingRootTextFiles,
         editingConfig,
         editingCount,
         isCommitting,
@@ -198,6 +233,8 @@ export function EditingStateProvider({
         addAttachment,
         getAttachment,
         removeAttachment,
+        getEditingRootTextFile,
+        setEditingRootTextFile,
         createNewQuarter,
         clearAllEditing,
         commitChanges,

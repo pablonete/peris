@@ -113,6 +113,38 @@ export class GitHubStorageService {
   }
 
   /**
+   * Lists all files in a folder relative to the data path root.
+   */
+  async listRootFolderFiles(folderPath: string): Promise<string[]> {
+    const fullPath = this.dataPath
+      ? `${this.dataPath}/${folderPath}`
+      : folderPath
+
+    try {
+      const response = await this.octokit.rest.repos.getContent({
+        owner: this.owner,
+        repo: this.repo,
+        path: fullPath,
+      })
+
+      if (!Array.isArray(response.data)) {
+        return []
+      }
+
+      return response.data
+        .filter((item) => (item as any).type === "file")
+        .map((item) => (item as any).name)
+    } catch (error) {
+      const err = error as any
+      if (err.status === 404) {
+        return []
+      }
+      console.error(`Error listing files in ${fullPath}:`, error)
+      return []
+    }
+  }
+
+  /**
    * Fetches a file from the quarter folder
    */
   async fetchQuarterFile(
@@ -135,28 +167,25 @@ export class GitHubStorageService {
     return this.fetchFilePath(filePath)
   }
 
+  /**
+   * Fetches a text file from the repository root (or dataPath root).
+   */
+  async fetchRootTextFile(
+    fileName: string
+  ): Promise<{ data: string; sha: string }> {
+    const filePath = this.dataPath ? `${this.dataPath}/${fileName}` : fileName
+    return this.fetchTextFilePath(filePath)
+  }
+
   private async fetchFilePath(
     filePath: string
   ): Promise<{ data: any; sha: string }> {
     try {
-      const response = await this.octokit.rest.repos.getContent({
-        owner: this.owner,
-        repo: this.repo,
-        path: filePath,
-      })
-
-      if (typeof response.data === "object" && !Array.isArray(response.data)) {
-        const fileData = response.data as any
-        const content = Buffer.from(fileData.content, "base64").toString(
-          "utf-8"
-        )
-        return {
-          data: JSON.parse(content),
-          sha: fileData.sha,
-        }
+      const result = await this.fetchTextFilePath(filePath)
+      return {
+        data: JSON.parse(result.data),
+        sha: result.sha,
       }
-
-      throw new Error(`Invalid response for ${filePath}`)
     } catch (error) {
       const err = error as any
       if (err.status === 404) {
@@ -171,6 +200,34 @@ export class GitHubStorageService {
     }
   }
 
+  private async fetchTextFilePath(
+    filePath: string
+  ): Promise<{ data: string; sha: string }> {
+    try {
+      const response = await this.octokit.rest.repos.getContent({
+        owner: this.owner,
+        repo: this.repo,
+        path: filePath,
+      })
+
+      if (typeof response.data === "object" && !Array.isArray(response.data)) {
+        const fileData = response.data as any
+        return {
+          data: Buffer.from(fileData.content, "base64").toString("utf-8"),
+          sha: fileData.sha,
+        }
+      }
+
+      throw new Error(`Invalid response for ${filePath}`)
+    } catch (error) {
+      const err = error as any
+      if (err.status === 404) {
+        throw new Error(`File ${filePath} does not exist`)
+      }
+      throw error
+    }
+  }
+
   /**
    * Commits multiple files (JSON and binary) in a single commit using Git Data API
    */
@@ -181,9 +238,10 @@ export class GitHubStorageService {
       content: any
       sha?: string
       isBinary: false
+      contentType?: "json" | "text"
     }>,
     binaryFiles: Array<{
-      quarterId: string
+      quarterId?: string
       fileName: string
       content: ArrayBuffer
       isBinary: true
@@ -258,7 +316,9 @@ export class GitHubStorageService {
               owner: this.owner,
               repo: this.repo,
               content: Buffer.from(
-                JSON.stringify(file.content, null, 2)
+                file.contentType === "text"
+                  ? String(file.content)
+                  : JSON.stringify(file.content, null, 2)
               ).toString("base64"),
               encoding: "base64",
             })

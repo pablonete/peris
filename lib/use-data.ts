@@ -29,6 +29,8 @@ export function useData() {
     addAttachment,
     getAttachment,
     removeAttachment,
+    getEditingRootTextFile,
+    setEditingRootTextFile,
     createNewQuarter,
     clearAllEditing,
     commitChanges,
@@ -103,6 +105,8 @@ export function useData() {
     addAttachment,
     getAttachment,
     removeAttachment,
+    getEditingRootTextFile,
+    setEditingRootTextFile,
 
     // Internal access (for gradual migration - these will be used directly)
     getEditingFile,
