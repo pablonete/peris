@@ -1,7 +1,9 @@
 import { getQuarterFromDate } from "./ledger-utils"
-import { getCashflowPreviousBalance } from "./cashflow-utils"
+import {
+  belongsToCashflowBank,
+  getCashflowPreviousBalance,
+} from "./cashflow-utils"
 import { generateNextId } from "./id-utils"
-import { belongsToImportedBank } from "./cashflow-import-bank"
 import {
   CashflowImportBank,
   getCashflowImportDefinition,
@@ -54,7 +56,7 @@ export function importCashflowFile({
   const movements = definition.parse(csvContent)
   const bankName = resolveImportedBankName(entries, definition.label)
   const targetEntries = entries.filter((entry) =>
-    belongsToImportedBank(entry, bankName)
+    belongsToCashflowBank(entry, bankName)
   )
   const openingBalance = targetEntries.length
     ? getCashflowPreviousBalance(targetEntries[0])

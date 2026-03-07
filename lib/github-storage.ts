@@ -4,8 +4,9 @@ import { Octokit } from "@octokit/rest"
 import { parseStorageUrl } from "./storage-types"
 
 /**
- * Minimal shape used from GitHub's contents API for both files and directories.
- * Directory entries use `type` and `name`, while file entries also expose `content` and `sha`.
+ * Minimal shape used from GitHub's contents API for both list and file responses.
+ * `type` and `name` are present on directory listings, while `content` and `sha`
+ * are only returned when requesting an individual file.
  */
 interface GitHubContentEntry {
   type?: string
@@ -64,11 +65,10 @@ export class GitHubStorageService {
    */
   async listQuarters(): Promise<string[]> {
     try {
-      const path = this.dataPath || ""
       const response = await this.octokit.rest.repos.getContent({
         owner: this.owner,
         repo: this.repo,
-        path: path || "/",
+        path: this.dataPath || "/",
       })
 
       if (!Array.isArray(response.data)) {
@@ -76,14 +76,16 @@ export class GitHubStorageService {
       }
 
       return response.data
-        .filter(
-          (item) =>
-            castToGitHubContentEntry(item).type === "dir" &&
-            castToGitHubContentEntry(item).name?.match(/^\d{4}\.\d[QqTt]$/)
-        )
+        .filter((item) => {
+          const contentItem = item as GitHubContentEntry
+          return (
+            contentItem.type === "dir" &&
+            contentItem.name?.match(/^\d{4}\.\d[QqTt]$/)
+          )
+        })
         .flatMap((item) => {
-          const name = castToGitHubContentEntry(item).name
-          return name ? [name] : []
+          const contentItem = item as GitHubContentEntry
+          return contentItem.name ? [contentItem.name] : []
         })
     } catch (error) {
       console.error("Error listing quarters:", error)
@@ -92,50 +94,10 @@ export class GitHubStorageService {
   }
 
   /**
-   * Lists all files in a specific folder within a quarter
+   * Lists all files inside a folder relative to the configured data path.
    */
-  async listFilesInFolder(
-    quarterId: string,
-    folderType: "invoices" | "expenses"
-  ): Promise<string[]> {
-    const folderPath = this.dataPath
-      ? `${this.dataPath}/${quarterId}/${folderType}`
-      : `${quarterId}/${folderType}`
-
-    try {
-      const response = await this.octokit.rest.repos.getContent({
-        owner: this.owner,
-        repo: this.repo,
-        path: folderPath,
-      })
-
-      if (!Array.isArray(response.data)) {
-        return []
-      }
-
-      return response.data
-        .filter((item) => castToGitHubContentEntry(item).type === "file")
-        .flatMap((item) => {
-          const name = castToGitHubContentEntry(item).name
-          return name ? [name] : []
-        })
-    } catch (error) {
-      const err = error as any
-      if (err.status === 404) {
-        return []
-      }
-      console.error(`Error listing files in ${folderPath}:`, error)
-      return []
-    }
-  }
-
-  /**
-   * Lists all files in a folder relative to the data path root.
-   */
-  async listRootFolderFiles(folderPath: string): Promise<string[]> {
-    const fullPath = this.dataPath
-      ? `${this.dataPath}/${folderPath}`
-      : folderPath
+  async listFiles(folderPath: string): Promise<string[]> {
+    const fullPath = this.resolvePath(folderPath)
 
     try {
       const response = await this.octokit.rest.repos.getContent({
@@ -149,10 +111,10 @@ export class GitHubStorageService {
       }
 
       return response.data
-        .filter((item) => castToGitHubContentEntry(item).type === "file")
+        .filter((item) => (item as GitHubContentEntry).type === "file")
         .flatMap((item) => {
-          const name = castToGitHubContentEntry(item).name
-          return name ? [name] : []
+          const contentItem = item as GitHubContentEntry
+          return contentItem.name ? [contentItem.name] : []
         })
     } catch (error) {
       const err = error as any
@@ -165,106 +127,34 @@ export class GitHubStorageService {
   }
 
   /**
-   * Fetches a file from the quarter folder
+   * Fetches a JSON file relative to the configured data path.
    */
-  async fetchQuarterFile(
-    quarterId: string,
-    fileName: string
-  ): Promise<{ data: any; sha: string }> {
-    const filePath = this.dataPath
-      ? `${this.dataPath}/${quarterId}/${fileName}`
-      : `${quarterId}/${fileName}`
-
-    return this.fetchFilePath(filePath)
+  async fetchJsonFile(filePath: string): Promise<{ data: any; sha: string }> {
+    return this.fetchJsonFilePath(this.resolvePath(filePath))
   }
 
   /**
-   * Fetches a file from the repository root (or dataPath root)
+   * Fetches a UTF-8 text file relative to the configured data path.
    */
-  async fetchRootFile(fileName: string): Promise<{ data: any; sha: string }> {
-    const filePath = this.dataPath ? `${this.dataPath}/${fileName}` : fileName
-
-    return this.fetchFilePath(filePath)
-  }
-
-  /**
-   * Fetches a text file from the repository root (or dataPath root).
-   */
-  async fetchRootTextFile(
-    fileName: string
-  ): Promise<{ data: string; sha: string }> {
-    const filePath = this.dataPath ? `${this.dataPath}/${fileName}` : fileName
-    return this.fetchTextFilePath(filePath)
-  }
-
-  private async fetchFilePath(
-    filePath: string
-  ): Promise<{ data: any; sha: string }> {
-    try {
-      const result = await this.fetchTextFilePath(filePath)
-      return {
-        data: JSON.parse(result.data),
-        sha: result.sha,
-      }
-    } catch (error) {
-      const err = error as any
-      if (err.status === 404) {
-        throw new Error(`File ${filePath} does not exist`)
-      }
-      if (err instanceof SyntaxError) {
-        throw new Error(`Invalid JSON in ${filePath}: ${err.message}`)
-      }
-      throw new Error(
-        `Failed to fetch ${filePath}: ${err.message || String(error)}`
-      )
-    }
-  }
-
-  private async fetchTextFilePath(
+  async fetchTextFile(
     filePath: string
   ): Promise<{ data: string; sha: string }> {
-    try {
-      const response = await this.octokit.rest.repos.getContent({
-        owner: this.owner,
-        repo: this.repo,
-        path: filePath,
-      })
-
-      if (typeof response.data === "object" && !Array.isArray(response.data)) {
-        const fileData = castToGitHubContentEntry(response.data)
-        return {
-          data: Buffer.from(fileData.content ?? "", "base64").toString("utf-8"),
-          sha: fileData.sha ?? "",
-        }
-      }
-
-      throw new Error(`Invalid response for ${filePath}`)
-    } catch (error) {
-      const err = error as any
-      if (err.status === 404) {
-        throw new Error(`File ${filePath} does not exist`)
-      }
-      throw error
-    }
+    return this.fetchTextFilePath(this.resolvePath(filePath))
   }
 
   /**
-   * Commits multiple files (JSON and binary) in a single commit using Git Data API
+   * Commits multiple files (JSON/text and binary) in a single commit using Git Data API
    */
   async commitMultipleFiles(
-    jsonFiles: Array<{
-      quarterId?: string
-      fileName: string
+    textFiles: Array<{
+      path: string
       content: any
       sha?: string
-      isBinary: false
       contentType?: "json" | "text"
     }>,
     binaryFiles: Array<{
-      quarterId?: string
-      fileName: string
+      path: string
       content: ArrayBuffer
-      isBinary: true
     }> = [],
     message: string
   ): Promise<void> {
@@ -290,7 +180,7 @@ export class GitHubStorageService {
       const baseTreeSha = commit.data.tree.sha
 
       const allFiles = [
-        ...jsonFiles.map((file) => ({
+        ...textFiles.map((file) => ({
           ...file,
           isBinary: false as const,
         })),
@@ -302,24 +192,22 @@ export class GitHubStorageService {
 
       const tree = await Promise.all(
         allFiles.map(async (file) => {
-          const filePath = file.quarterId
-            ? this.dataPath
-              ? `${this.dataPath}/${file.quarterId}/${file.fileName}`
-              : `${file.quarterId}/${file.fileName}`
-            : this.dataPath
-              ? `${this.dataPath}/${file.fileName}`
-              : file.fileName
-
+          const fullPath = this.resolvePath(file.path)
           let blobSha: string
 
           if (file.isBinary) {
-            // For binary files, convert ArrayBuffer to base64 in chunks
-            const binaryFile = file as any
-            const uint8Array = new Uint8Array(binaryFile.content)
+            const uint8Array = new Uint8Array(file.content)
             const chunkSize = 0x8000
             let binaryString = ""
-            for (let i = 0; i < uint8Array.length; i += chunkSize) {
-              const chunk = uint8Array.subarray(i, i + chunkSize)
+            for (
+              let byteOffset = 0;
+              byteOffset < uint8Array.length;
+              byteOffset += chunkSize
+            ) {
+              const chunk = uint8Array.subarray(
+                byteOffset,
+                byteOffset + chunkSize
+              )
               binaryString += String.fromCharCode(...chunk)
             }
             const base64Content = btoa(binaryString)
@@ -346,7 +234,7 @@ export class GitHubStorageService {
           }
 
           return {
-            path: filePath,
+            path: fullPath,
             mode: "100644" as const,
             type: "blob" as const,
             sha: blobSha,
@@ -380,8 +268,59 @@ export class GitHubStorageService {
       throw new Error(`Failed to commit files: ${err.message || String(error)}`)
     }
   }
-}
 
-function castToGitHubContentEntry(value: unknown): GitHubContentEntry {
-  return value as GitHubContentEntry
+  private resolvePath(path: string): string {
+    return this.dataPath ? `${this.dataPath}/${path}` : path
+  }
+
+  private async fetchJsonFilePath(
+    filePath: string
+  ): Promise<{ data: any; sha: string }> {
+    try {
+      const result = await this.fetchTextFilePath(filePath)
+      return {
+        data: JSON.parse(result.data),
+        sha: result.sha,
+      }
+    } catch (error) {
+      const err = error as any
+      if (err.status === 404) {
+        throw new Error(`File ${filePath} does not exist`)
+      }
+      if (err instanceof SyntaxError) {
+        throw new Error(`Invalid JSON in ${filePath}: ${err.message}`)
+      }
+      throw new Error(
+        `Failed to fetch ${filePath}: ${err.message || String(error)}`
+      )
+    }
+  }
+
+  private async fetchTextFilePath(
+    filePath: string
+  ): Promise<{ data: string; sha: string }> {
+    try {
+      const response = await this.octokit.rest.repos.getContent({
+        owner: this.owner,
+        repo: this.repo,
+        path: filePath,
+      })
+
+      if (typeof response.data === "object" && !Array.isArray(response.data)) {
+        const fileData = response.data as GitHubContentEntry
+        return {
+          data: Buffer.from(fileData.content ?? "", "base64").toString("utf-8"),
+          sha: fileData.sha ?? "",
+        }
+      }
+
+      throw new Error(`Invalid response for ${filePath}`)
+    } catch (error) {
+      const err = error as any
+      if (err.status === 404) {
+        throw new Error(`File ${filePath} does not exist`)
+      }
+      throw error
+    }
+  }
 }

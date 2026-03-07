@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useStorage } from "@/lib/storage-context"
 import { useEditingState } from "@/lib/editing-state-context"
-import { loadPerisConfig } from "@/lib/github-data"
+import { loadJsonFile } from "@/lib/github-data"
 import { PerisConfig } from "@/lib/types"
 
 export function usePerisConfig(): {
@@ -16,7 +16,7 @@ export function usePerisConfig(): {
 
   const query = useQuery({
     queryKey: ["perisConfig", activeStorage?.name],
-    queryFn: () => loadPerisConfig(activeStorage!),
+    queryFn: () => loadJsonFile<PerisConfig>(activeStorage!, "peris.json"),
     enabled: !!activeStorage,
     staleTime: 5 * 60 * 1000,
   })
@@ -24,10 +24,21 @@ export function usePerisConfig(): {
   const fetchedConfig = query.data?.data ?? null
 
   useEffect(() => {
-    if (!isSample && query.isSuccess && fetchedConfig === null && editingConfig === null) {
+    if (
+      !isSample &&
+      query.isSuccess &&
+      fetchedConfig === null &&
+      editingConfig === null
+    ) {
       setEditingConfig({})
     }
-  }, [isSample, query.isSuccess, fetchedConfig, editingConfig, setEditingConfig])
+  }, [
+    isSample,
+    query.isSuccess,
+    fetchedConfig,
+    editingConfig,
+    setEditingConfig,
+  ])
 
   const config = editingConfig?.data ?? fetchedConfig
   const categories = [...(config?.categories ?? [])].sort()

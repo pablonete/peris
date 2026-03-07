@@ -2,16 +2,22 @@
 
 import React, { createContext, useContext, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import { Invoice, Expense, CashflowEntry, PerisConfig } from "./types"
-import { commitEditingFiles } from "./github-data"
+import {
+  commitEditingFiles,
+  EditingBinaryFile,
+  EditingTextFile,
+} from "./github-data"
 import { useStorage } from "./storage-context"
+import { CashflowEntry, Expense, Invoice, PerisConfig } from "./types"
 
 type LedgerFileName = "invoices" | "expenses" | "cashflow"
+type LedgerFileData = Invoice[] | Expense[] | CashflowEntry[]
+type EditingJsonContent = LedgerFileData | PerisConfig
 
 interface EditingFile {
   quarterId: string
   fileName: LedgerFileName
-  data: Invoice[] | Expense[] | CashflowEntry[]
+  data: LedgerFileData
   sha?: string
 }
 
@@ -21,16 +27,9 @@ interface EditingAttachment {
   content: ArrayBuffer
 }
 
-interface EditingRootTextFile {
-  path: string
-  content: string
-  sha?: string
-}
-
 interface EditingStateContextType {
   editingFiles: Map<string, EditingFile>
   editingAttachments: Map<string, EditingAttachment>
-  editingRootTextFiles: Map<string, EditingRootTextFile>
   editingConfig: { data: PerisConfig; sha?: string } | null
   editingCount: number
   isCommitting: boolean
@@ -42,10 +41,17 @@ interface EditingStateContextType {
   setEditingFile: (
     quarterId: string,
     fileName: LedgerFileName,
-    data: Invoice[] | Expense[] | CashflowEntry[],
+    data: LedgerFileData,
     sha?: string
   ) => void
   setEditingConfig: (data: PerisConfig, sha?: string) => void
+  getEditingTextFile: (path: string) => EditingTextFile | undefined
+  setEditingTextFile: (
+    path: string,
+    content: EditingTextFile["content"],
+    sha?: string,
+    contentType?: "json" | "text"
+  ) => void
   addAttachment: (
     quarterId: string,
     filename: string,
@@ -56,8 +62,6 @@ interface EditingStateContextType {
     filename: string
   ) => EditingAttachment | undefined
   removeAttachment: (quarterId: string, filename: string) => void
-  getEditingRootTextFile: (path: string) => EditingRootTextFile | undefined
-  setEditingRootTextFile: (path: string, content: string, sha?: string) => void
   createNewQuarter: (quarterId: string) => void
   clearAllEditing: () => void
   commitChanges: () => Promise<void>
@@ -67,10 +71,6 @@ const EditingStateContext = createContext<EditingStateContextType | undefined>(
   undefined
 )
 
-function getEditingKey(quarterId: string, fileName: LedgerFileName): string {
-  return `${quarterId}/${fileName}`
-}
-
 export function EditingStateProvider({
   children,
 }: {
@@ -78,53 +78,89 @@ export function EditingStateProvider({
 }) {
   const { activeStorage } = useStorage()
   const queryClient = useQueryClient()
-  const [editingFiles, setEditingFiles] = useState<Map<string, EditingFile>>(
-    new Map()
-  )
-  const [editingAttachments, setEditingAttachments] = useState<
-    Map<string, EditingAttachment>
+  const [editingTextFiles, setEditingTextFiles] = useState<
+    Map<string, EditingTextFile>
   >(new Map())
-  const [editingRootTextFiles, setEditingRootTextFiles] = useState<
-    Map<string, EditingRootTextFile>
+  const [editingBinaryFiles, setEditingBinaryFiles] = useState<
+    Map<string, EditingBinaryFile>
   >(new Map())
-  const [editingConfig, setEditingConfigState] = useState<{
-    data: PerisConfig
-    sha?: string
-  } | null>(null)
   const [isCommitting, setIsCommitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const getEditingTextFile = (path: string): EditingTextFile | undefined => {
+    return editingTextFiles.get(path)
+  }
+
+  const setEditingTextFile = (
+    path: string,
+    content: EditingTextFile["content"],
+    sha?: string,
+    contentType: "json" | "text" = "json"
+  ) => {
+    setEditingTextFiles((prev) => {
+      const next = new Map(prev)
+      next.set(path, { path, content, sha, contentType })
+      return next
+    })
+  }
+
+  const getEditingBinaryFile = (
+    path: string
+  ): EditingBinaryFile | undefined => {
+    return editingBinaryFiles.get(path)
+  }
+
+  const setEditingBinaryFile = (path: string, content: ArrayBuffer) => {
+    setEditingBinaryFiles((prev) => {
+      const next = new Map(prev)
+      next.set(path, { path, content })
+      return next
+    })
+  }
 
   const getEditingFile = (
     quarterId: string,
     fileName: LedgerFileName
   ): EditingFile | undefined => {
-    return editingFiles.get(getEditingKey(quarterId, fileName))
+    const entry = getEditingTextFile(getLedgerFilePath(quarterId, fileName))
+    if (
+      !entry ||
+      entry.contentType === "text" ||
+      !Array.isArray(entry.content)
+    ) {
+      return undefined
+    }
+
+    return {
+      quarterId,
+      fileName,
+      data: entry.content as LedgerFileData,
+      sha: entry.sha,
+    }
   }
 
   const setEditingFile = (
     quarterId: string,
     fileName: LedgerFileName,
-    data: Invoice[] | Expense[] | CashflowEntry[],
+    data: LedgerFileData,
     sha?: string
   ) => {
-    setEditingFiles((prev) => {
-      const newMap = new Map(prev)
-      newMap.set(getEditingKey(quarterId, fileName), {
-        quarterId,
-        fileName,
-        data,
-        sha,
-      })
-      return newMap
-    })
+    setEditingTextFile(getLedgerFilePath(quarterId, fileName), data, sha)
   }
+
+  const configEntry = getEditingTextFile("peris.json")
+  const editingConfig =
+    configEntry &&
+    configEntry.contentType !== "text" &&
+    !Array.isArray(configEntry.content)
+      ? {
+          data: configEntry.content as PerisConfig,
+          sha: configEntry.sha,
+        }
+      : null
 
   const setEditingConfig = (data: PerisConfig, sha?: string) => {
-    setEditingConfigState({ data, sha })
-  }
-
-  const getAttachmentKey = (quarterId: string, filename: string): string => {
-    return `${quarterId}/attachment/${filename}`
+    setEditingTextFile("peris.json", data, sha)
   }
 
   const addAttachment = (
@@ -132,47 +168,30 @@ export function EditingStateProvider({
     filename: string,
     content: ArrayBuffer
   ) => {
-    setEditingAttachments((prev) => {
-      const newMap = new Map(prev)
-      newMap.set(getAttachmentKey(quarterId, filename), {
-        quarterId,
-        filename,
-        content,
-      })
-      return newMap
-    })
+    setEditingBinaryFile(getAttachmentPath(quarterId, filename), content)
   }
 
   const getAttachment = (
     quarterId: string,
     filename: string
   ): EditingAttachment | undefined => {
-    return editingAttachments.get(getAttachmentKey(quarterId, filename))
+    const attachment = getEditingBinaryFile(
+      getAttachmentPath(quarterId, filename)
+    )
+    if (!attachment) return undefined
+
+    return {
+      quarterId,
+      filename,
+      content: attachment.content,
+    }
   }
 
   const removeAttachment = (quarterId: string, filename: string) => {
-    setEditingAttachments((prev) => {
-      const newMap = new Map(prev)
-      newMap.delete(getAttachmentKey(quarterId, filename))
-      return newMap
-    })
-  }
-
-  const getEditingRootTextFile = (
-    path: string
-  ): EditingRootTextFile | undefined => {
-    return editingRootTextFiles.get(path)
-  }
-
-  const setEditingRootTextFile = (
-    path: string,
-    content: string,
-    sha?: string
-  ) => {
-    setEditingRootTextFiles((prev) => {
-      const newMap = new Map(prev)
-      newMap.set(path, { path, content, sha })
-      return newMap
+    setEditingBinaryFiles((prev) => {
+      const next = new Map(prev)
+      next.delete(getAttachmentPath(quarterId, filename))
+      return next
     })
   }
 
@@ -183,29 +202,66 @@ export function EditingStateProvider({
   }
 
   const clearAllEditing = () => {
-    setEditingFiles(new Map())
-    setEditingAttachments(new Map())
-    setEditingRootTextFiles(new Map())
-    setEditingConfigState(null)
+    setEditingTextFiles(new Map())
+    setEditingBinaryFiles(new Map())
   }
 
-  const editingCount =
-    editingFiles.size + editingRootTextFiles.size + (editingConfig ? 1 : 0)
+  const editingFiles = new Map(
+    Array.from(editingTextFiles.values()).flatMap((entry) => {
+      const ledgerInfo = parseLedgerFilePath(entry.path)
+      if (
+        !ledgerInfo ||
+        entry.contentType === "text" ||
+        !Array.isArray(entry.content)
+      ) {
+        return []
+      }
+
+      return [
+        [
+          `${ledgerInfo.quarterId}/${ledgerInfo.fileName}`,
+          {
+            quarterId: ledgerInfo.quarterId,
+            fileName: ledgerInfo.fileName,
+            data: entry.content as LedgerFileData,
+            sha: entry.sha,
+          },
+        ] as const,
+      ]
+    })
+  )
+
+  const editingAttachments = new Map(
+    Array.from(editingBinaryFiles.values()).flatMap((entry) => {
+      const attachmentInfo = parseAttachmentPath(entry.path)
+      if (!attachmentInfo) {
+        return []
+      }
+
+      return [
+        [
+          `${attachmentInfo.quarterId}/attachment/${attachmentInfo.filename}`,
+          {
+            quarterId: attachmentInfo.quarterId,
+            filename: attachmentInfo.filename,
+            content: entry.content,
+          },
+        ] as const,
+      ]
+    })
+  )
+
+  const editingCount = editingTextFiles.size
 
   const commitChanges = async (): Promise<void> => {
     setError(null)
     setIsCommitting(true)
 
     try {
-      const filesToCommit = Array.from(editingFiles.values())
-      const attachmentsToCommit = Array.from(editingAttachments.values())
-      const rootTextFilesToCommit = Array.from(editingRootTextFiles.values())
       await commitEditingFiles(
         activeStorage,
-        filesToCommit,
-        attachmentsToCommit,
-        editingConfig ?? undefined,
-        rootTextFilesToCommit
+        Array.from(editingTextFiles.values()),
+        Array.from(editingBinaryFiles.values())
       )
       clearAllEditing()
       await queryClient.invalidateQueries()
@@ -214,6 +270,7 @@ export function EditingStateProvider({
       setIsCommitting(false)
       throw err
     }
+
     setIsCommitting(false)
   }
 
@@ -222,7 +279,6 @@ export function EditingStateProvider({
       value={{
         editingFiles,
         editingAttachments,
-        editingRootTextFiles,
         editingConfig,
         editingCount,
         isCommitting,
@@ -230,11 +286,11 @@ export function EditingStateProvider({
         getEditingFile,
         setEditingFile,
         setEditingConfig,
+        getEditingTextFile,
+        setEditingTextFile,
         addAttachment,
         getAttachment,
         removeAttachment,
-        getEditingRootTextFile,
-        setEditingRootTextFile,
         createNewQuarter,
         clearAllEditing,
         commitChanges,
@@ -253,4 +309,39 @@ export function useEditingState() {
     )
   }
   return context
+}
+
+function getLedgerFilePath(
+  quarterId: string,
+  fileName: LedgerFileName
+): string {
+  return `${quarterId}/${fileName}.json`
+}
+
+function getAttachmentPath(quarterId: string, filename: string): string {
+  return `${quarterId}/expenses/${filename}`
+}
+
+function parseLedgerFilePath(
+  path: string
+): { quarterId: string; fileName: LedgerFileName } | null {
+  const match = path.match(/^([^/]+)\/(invoices|expenses|cashflow)\.json$/)
+  if (!match) return null
+
+  return {
+    quarterId: match[1],
+    fileName: match[2] as LedgerFileName,
+  }
+}
+
+function parseAttachmentPath(
+  path: string
+): { quarterId: string; filename: string } | null {
+  const match = path.match(/^([^/]+)\/expenses\/(.+)$/)
+  if (!match) return null
+
+  return {
+    quarterId: match[1],
+    filename: match[2],
+  }
 }

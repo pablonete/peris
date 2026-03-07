@@ -4,6 +4,7 @@ import { useStorage } from "@/lib/storage-context"
 import { useEditingState } from "@/lib/editing-state-context"
 import { useStorageQuarters } from "@/lib/use-storage-quarters"
 import { usePerisConfig } from "@/lib/use-peris-config"
+import { listFilesInStorage, loadTextFile } from "@/lib/github-data"
 import { Invoice, Expense, CashflowEntry } from "@/lib/types"
 
 type LedgerFileName = "invoices" | "expenses" | "cashflow"
@@ -29,8 +30,8 @@ export function useData() {
     addAttachment,
     getAttachment,
     removeAttachment,
-    getEditingRootTextFile,
-    setEditingRootTextFile,
+    getEditingTextFile,
+    setEditingTextFile,
     createNewQuarter,
     clearAllEditing,
     commitChanges,
@@ -72,6 +73,24 @@ export function useData() {
     return `https://raw.githubusercontent.com/${owner}/${repo}/main/${quarterId}/${type}/${filename}`
   }
 
+  const listFiles = async (folderPath: string): Promise<string[]> => {
+    if (!activeStorage) {
+      return []
+    }
+
+    return await listFilesInStorage(activeStorage, folderPath)
+  }
+
+  const readTextFile = async (
+    filePath: string
+  ): Promise<{ data: string | null; sha?: string; error?: string }> => {
+    if (!activeStorage) {
+      return { data: null, error: "No active storage" }
+    }
+
+    return await loadTextFile(activeStorage, filePath)
+  }
+
   return {
     // Storage
     activeStorage,
@@ -92,6 +111,8 @@ export function useData() {
     isDirtyFile,
     updateFile,
     getFileUrl,
+    listFiles,
+    readTextFile,
 
     // Editing state
     editingCount,
@@ -105,8 +126,8 @@ export function useData() {
     addAttachment,
     getAttachment,
     removeAttachment,
-    getEditingRootTextFile,
-    setEditingRootTextFile,
+    getEditingTextFile,
+    setEditingTextFile,
 
     // Internal access (for gradual migration - these will be used directly)
     getEditingFile,

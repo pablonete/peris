@@ -1,5 +1,5 @@
 import { parseEntryDate } from "./date-utils"
-import { belongsToImportedBank } from "./cashflow-import-bank"
+import { belongsToCashflowBank } from "./cashflow-utils"
 import { CashflowImportMovement } from "./cashflow-import-definitions"
 import { CashflowEntry } from "./types"
 
@@ -16,10 +16,10 @@ export function normalizeImportedBankEntries(
     entries.map((entry, index) => [entry.id, index])
   )
   const bankEntries = entries.filter((entry) =>
-    belongsToImportedBank(entry, bankName)
+    belongsToCashflowBank(entry, bankName)
   )
   const otherEntries = entries.filter(
-    (entry) => !belongsToImportedBank(entry, bankName)
+    (entry) => !belongsToCashflowBank(entry, bankName)
   )
   const carryOvers = bankEntries.filter(isCarryOverEntry)
   const regularEntries = bankEntries

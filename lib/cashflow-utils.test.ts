@@ -5,6 +5,7 @@ import {
   getCashflowClosingBalance,
   getBankColor,
   getBankColorClass,
+  belongsToCashflowBank,
   getCashflowTotalsByCategory,
 } from "./cashflow-utils"
 import { CashflowEntry } from "./types"
@@ -319,6 +320,49 @@ describe("cashflow-utils", () => {
       expect(unicajaOpening).toBe(5000)
       expect(revolutOpening).toBe(3000)
       expect(allBanksTotal).toBe(sumOfIndividual)
+    })
+  })
+
+  describe("belongsToCashflowBank", () => {
+    it("matches unnamed entries when no bank is selected", () => {
+      expect(
+        belongsToCashflowBank(
+          {
+            id: "1",
+            date: "2025-01-01",
+            concept: "Carry over",
+            balance: 1000,
+          },
+          undefined
+        )
+      ).toBe(true)
+    })
+
+    it("matches entries for a specific bank", () => {
+      expect(
+        belongsToCashflowBank(
+          {
+            id: "1",
+            date: "2025-01-02",
+            concept: "Transfer",
+            bankName: "Revolut",
+            balance: 1200,
+          },
+          "Revolut"
+        )
+      ).toBe(true)
+      expect(
+        belongsToCashflowBank(
+          {
+            id: "2",
+            date: "2025-01-02",
+            concept: "Transfer",
+            bankName: "Unicaja",
+            balance: 1200,
+          },
+          "Revolut"
+        )
+      ).toBe(false)
     })
   })
 

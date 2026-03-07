@@ -181,6 +181,7 @@ export const translations = {
         selectFile: "Selecciona un archivo",
         loadingFiles: "Cargando archivos...",
         noFiles: "No se encontraron archivos CSV en la carpeta import.",
+        availableFiles: "Archivos disponibles",
         running: "Importando...",
         loadError: "No se pudo leer el archivo seleccionado.",
         summaryReady:
@@ -415,6 +416,7 @@ export const translations = {
         selectFile: "Select a file",
         loadingFiles: "Loading files...",
         noFiles: "No CSV files were found in the import folder.",
+        availableFiles: "Available files",
         running: "Importing...",
         loadError: "The selected file could not be read.",
         summaryReady:
