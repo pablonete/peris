@@ -83,8 +83,8 @@ export function ImportCashflowDialog({
 
   useEffect(() => {
     const files = importFilesQuery.data ?? []
-    if (!files.includes(selectedFile)) {
-      setSelectedFile(files[0] ?? "")
+    if (files.length > 0 && !files.includes(selectedFile)) {
+      setSelectedFile(files[0])
     }
   }, [importFilesQuery.data, selectedFile])
 

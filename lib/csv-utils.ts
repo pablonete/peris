@@ -22,14 +22,14 @@ function parseCsvRows(content: string): string[][] {
   let currentValue = ""
   let quoted = false
 
-  for (let index = 0; index < content.length; index += 1) {
+  for (let index = 0; index < content.length; index++) {
     const char = content[index]
     const nextChar = content[index + 1]
 
     if (char === '"') {
       if (quoted && nextChar === '"') {
         currentValue += '"'
-        index += 1
+        index++
         continue
       }
 
@@ -45,7 +45,7 @@ function parseCsvRows(content: string): string[][] {
 
     if ((char === "\n" || char === "\r") && !quoted) {
       if (char === "\r" && nextChar === "\n") {
-        index += 1
+        index++
       }
 
       currentRow.push(currentValue)

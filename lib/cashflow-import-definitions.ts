@@ -40,6 +40,7 @@ const revolutImportDefinition: CashflowImportDefinition = {
   columns: revolutColumns,
   parse(content) {
     return parseCsvRecords(content).map((row, index) => {
+      const externalId = getImportRowId(row, index)
       const startedDate = row[revolutColumns.startedDate]?.trim()
       const completedDate = row[revolutColumns.completedDate]?.trim()
       const amount = parseAmount(row[revolutColumns.amount])
@@ -47,7 +48,7 @@ const revolutImportDefinition: CashflowImportDefinition = {
 
       if (!completedDate || amount == null) {
         return {
-          externalId: row[revolutColumns.id] || `row-${index + 2}`,
+          externalId,
           sourceLine: index + 2,
           date: completedDate || startedDate || "",
           matchDates: compactDates([completedDate, startedDate]),
@@ -59,7 +60,7 @@ const revolutImportDefinition: CashflowImportDefinition = {
 
       if (state !== "COMPLETED") {
         return {
-          externalId: row[revolutColumns.id] || `row-${index + 2}`,
+          externalId,
           sourceLine: index + 2,
           date: completedDate,
           matchDates: compactDates([completedDate, startedDate]),
@@ -70,7 +71,7 @@ const revolutImportDefinition: CashflowImportDefinition = {
       }
 
       return {
-        externalId: row[revolutColumns.id] || `row-${index + 2}`,
+        externalId,
         sourceLine: index + 2,
         date: completedDate,
         matchDates: compactDates([completedDate, startedDate]),
@@ -106,9 +107,24 @@ function getRevolutConcept(row: Record<string, string>): string {
 
 function parseAmount(value: string | undefined): number | undefined {
   if (!value) return undefined
-  const parsed = Number.parseFloat(value.trim().replace(",", "."))
+  const normalized = normalizeAmount(value.trim())
+  const parsed = Number.parseFloat(normalized)
   if (Number.isNaN(parsed)) return undefined
   return Math.round(parsed * 100) / 100
+}
+
+function getImportRowId(row: Record<string, string>, index: number): string {
+  return row[revolutColumns.id] || `row-${index + 2}`
+}
+
+function normalizeAmount(value: string): string {
+  if (value.includes(".") && value.includes(",")) {
+    return value.lastIndexOf(",") > value.lastIndexOf(".")
+      ? value.replaceAll(".", "").replace(",", ".")
+      : value.replaceAll(",", "")
+  }
+
+  return value.includes(",") ? value.replace(",", ".") : value
 }
 
 function compactDates(dates: Array<string | undefined>): string[] {

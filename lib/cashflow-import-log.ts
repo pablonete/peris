@@ -21,10 +21,13 @@ export function buildCashflowImportLogContent(
   const sequences = new Map(
     entries.map((entry) => [entry.id, entry.bankSequence])
   )
-  const details = records.map(
-    (record) =>
-      `${record.action}\tL${record.line}\t${record.date}\t${record.amount}\t${record.concept}\t${record.detail}${sequences.has(record.detail) ? ` (seq ${sequences.get(record.detail) ?? "-"})` : ""}`
-  )
+  const details = records.map((record) => {
+    const sequenceSuffix = sequences.has(record.detail)
+      ? ` (seq ${sequences.get(record.detail) ?? "-"})`
+      : ""
+
+    return `${record.action}\tL${record.line}\t${record.date}\t${record.amount}\t${record.concept}\t${record.detail}${sequenceSuffix}`
+  })
 
   return [
     `Archivo: ${fileName}`,

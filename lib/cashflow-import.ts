@@ -1,6 +1,7 @@
 import { getQuarterFromDate } from "./ledger-utils"
 import { getCashflowPreviousBalance } from "./cashflow-utils"
 import { generateNextId } from "./id-utils"
+import { belongsToImportedBank } from "./cashflow-import-bank"
 import {
   CashflowImportBank,
   getCashflowImportDefinition,
@@ -16,6 +17,7 @@ import {
   resolveImportedBankName,
 } from "./cashflow-import-normalize"
 import { CashflowEntry } from "./types"
+import { CashflowImportLogRecord } from "./cashflow-import-log"
 
 export interface CashflowImportSummary {
   processed: number
@@ -52,14 +54,14 @@ export function importCashflowFile({
   const movements = definition.parse(csvContent)
   const bankName = resolveImportedBankName(entries, definition.label)
   const targetEntries = entries.filter((entry) =>
-    belongsToBank(entry, bankName)
+    belongsToImportedBank(entry, bankName)
   )
   const openingBalance = targetEntries.length
     ? getCashflowPreviousBalance(targetEntries[0])
     : 0
   const matchedIds = new Set<string>()
-  const importedOrder = new Map<string, number>()
-  const logRecords = []
+  const entryImportOrder = new Map<string, number>()
+  const logRecords: CashflowImportLogRecord[] = []
   let nextEntries = [...entries]
   let created = 0
   let existing = 0
@@ -92,7 +94,7 @@ export function importCashflowFile({
     const match = findMatchingEntry(targetEntries, matchedIds, movement)
     if (match) {
       matchedIds.add(match.id)
-      importedOrder.set(match.id, orderIndex)
+      entryImportOrder.set(match.id, orderIndex)
       orderIndex += 1
       existing += 1
       logRecords.push(
@@ -112,7 +114,7 @@ export function importCashflowFile({
     }
     nextEntries = [...nextEntries, newEntry]
     targetEntries.push(newEntry)
-    importedOrder.set(newEntry.id, orderIndex)
+    entryImportOrder.set(newEntry.id, orderIndex)
     orderIndex += 1
     created += 1
     logRecords.push(
@@ -127,7 +129,7 @@ export function importCashflowFile({
     nextEntries,
     bankName,
     openingBalance,
-    importedOrder
+    entryImportOrder
   )
   const sequenceFixed = normalizedEntries.reduce((count, entry) => {
     const previous = sequenceBefore.get(entry.id)
@@ -162,11 +164,4 @@ export function importCashflowFile({
     ),
     logPath: createCashflowImportLogPath(fileName, now),
   }
-}
-
-function belongsToBank(
-  entry: CashflowEntry,
-  bankName: string | undefined
-): boolean {
-  return bankName == null ? !entry.bankName : entry.bankName === bankName
 }

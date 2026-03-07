@@ -1,27 +1,31 @@
 import { parseEntryDate } from "./date-utils"
+import { belongsToImportedBank } from "./cashflow-import-bank"
 import { CashflowImportMovement } from "./cashflow-import-definitions"
 import { CashflowEntry } from "./types"
 
+// Allow a few days of difference because card settlements can be booked after the purchase date.
 const IMPORT_DATE_TOLERANCE_DAYS = 3
 
 export function normalizeImportedBankEntries(
   entries: CashflowEntry[],
   bankName: string | undefined,
   openingBalance: number,
-  importedOrder: Map<string, number>
+  entryImportOrder: Map<string, number>
 ): CashflowEntry[] {
   const originalOrder = new Map(
     entries.map((entry, index) => [entry.id, index])
   )
-  const bankEntries = entries.filter((entry) => belongsToBank(entry, bankName))
+  const bankEntries = entries.filter((entry) =>
+    belongsToImportedBank(entry, bankName)
+  )
   const otherEntries = entries.filter(
-    (entry) => !belongsToBank(entry, bankName)
+    (entry) => !belongsToImportedBank(entry, bankName)
   )
   const carryOvers = bankEntries.filter(isCarryOverEntry)
   const regularEntries = bankEntries
     .filter((entry) => !isCarryOverEntry(entry))
     .sort((left, right) =>
-      compareImportedEntries(left, right, importedOrder, originalOrder)
+      compareImportedEntries(left, right, entryImportOrder, originalOrder)
     )
 
   let balance = openingBalance
@@ -45,7 +49,7 @@ export function normalizeImportedBankEntries(
   return [...otherEntries, ...normalizedBankEntries].sort(
     (left, right) =>
       left.date.localeCompare(right.date) ||
-      compareImportedEntries(left, right, importedOrder, originalOrder)
+      compareImportedEntries(left, right, entryImportOrder, originalOrder)
   )
 }
 
@@ -82,11 +86,11 @@ export function resolveImportedBankName(
 function compareImportedEntries(
   left: CashflowEntry,
   right: CashflowEntry,
-  importedOrder: Map<string, number>,
+  entryImportOrder: Map<string, number>,
   originalOrder: Map<string, number>
 ): number {
-  const leftImported = importedOrder.get(left.id)
-  const rightImported = importedOrder.get(right.id)
+  const leftImported = entryImportOrder.get(left.id)
+  const rightImported = entryImportOrder.get(right.id)
   if (leftImported != null && rightImported != null)
     return leftImported - rightImported
   if (leftImported != null) return -1
@@ -96,13 +100,6 @@ function compareImportedEntries(
       (right.bankSequence ?? Number.MAX_SAFE_INTEGER) ||
     (originalOrder.get(left.id) ?? 0) - (originalOrder.get(right.id) ?? 0)
   )
-}
-
-function belongsToBank(
-  entry: CashflowEntry,
-  bankName: string | undefined
-): boolean {
-  return bankName == null ? !entry.bankName : entry.bankName === bankName
 }
 
 function isCarryOverEntry(entry: CashflowEntry): boolean {

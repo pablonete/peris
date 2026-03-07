@@ -3,6 +3,17 @@
 import { Octokit } from "@octokit/rest"
 import { parseStorageUrl } from "./storage-types"
 
+/**
+ * Minimal shape used from GitHub's contents API for both files and directories.
+ * Directory entries use `type` and `name`, while file entries also expose `content` and `sha`.
+ */
+interface GitHubContentEntry {
+  type?: string
+  name?: string
+  content?: string
+  sha?: string
+}
+
 export class GitHubStorageService {
   private octokit: Octokit
   private owner: string
@@ -67,10 +78,13 @@ export class GitHubStorageService {
       return response.data
         .filter(
           (item) =>
-            (item as any).type === "dir" &&
-            (item as any).name.match(/^\d{4}\.\d[QqTt]$/)
+            castToGitHubContentEntry(item).type === "dir" &&
+            castToGitHubContentEntry(item).name?.match(/^\d{4}\.\d[QqTt]$/)
         )
-        .map((item) => (item as any).name)
+        .flatMap((item) => {
+          const name = castToGitHubContentEntry(item).name
+          return name ? [name] : []
+        })
     } catch (error) {
       console.error("Error listing quarters:", error)
       throw error
@@ -100,8 +114,11 @@ export class GitHubStorageService {
       }
 
       return response.data
-        .filter((item) => (item as any).type === "file")
-        .map((item) => (item as any).name)
+        .filter((item) => castToGitHubContentEntry(item).type === "file")
+        .flatMap((item) => {
+          const name = castToGitHubContentEntry(item).name
+          return name ? [name] : []
+        })
     } catch (error) {
       const err = error as any
       if (err.status === 404) {
@@ -132,8 +149,11 @@ export class GitHubStorageService {
       }
 
       return response.data
-        .filter((item) => (item as any).type === "file")
-        .map((item) => (item as any).name)
+        .filter((item) => castToGitHubContentEntry(item).type === "file")
+        .flatMap((item) => {
+          const name = castToGitHubContentEntry(item).name
+          return name ? [name] : []
+        })
     } catch (error) {
       const err = error as any
       if (err.status === 404) {
@@ -211,10 +231,10 @@ export class GitHubStorageService {
       })
 
       if (typeof response.data === "object" && !Array.isArray(response.data)) {
-        const fileData = response.data as any
+        const fileData = castToGitHubContentEntry(response.data)
         return {
-          data: Buffer.from(fileData.content, "base64").toString("utf-8"),
-          sha: fileData.sha,
+          data: Buffer.from(fileData.content ?? "", "base64").toString("utf-8"),
+          sha: fileData.sha ?? "",
         }
       }
 
@@ -360,4 +380,8 @@ export class GitHubStorageService {
       throw new Error(`Failed to commit files: ${err.message || String(error)}`)
     }
   }
+}
+
+function castToGitHubContentEntry(value: unknown): GitHubContentEntry {
+  return value as GitHubContentEntry
 }
