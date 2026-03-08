@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react"
 import {
   cashflowImportDefinitions,
   CashflowImportBank,
-} from "@/lib/cashflow-import-definitions"
+} from "@/model/cashflow/import-definitions"
 import { CashflowEntry } from "@/lib/types"
 import { useLanguage } from "@/lib/i18n-context"
 import {
@@ -137,18 +137,6 @@ export function ImportCashflowDialog({
                 {t("cashflow.import.noFiles")}
               </p>
             )}
-            {files.length > 0 && (
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">
-                  {t("cashflow.import.availableFiles")}
-                </p>
-                <ul className="space-y-1 font-mono text-xs text-muted-foreground">
-                  {files.map((file) => (
-                    <li key={file}>{file}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
 
           {error && (
@@ -162,21 +150,23 @@ export function ImportCashflowDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
-            {t("cashflow.cancel")}
+            {result ? t("cashflow.import.close") : t("cashflow.cancel")}
           </Button>
-          <Button
-            onClick={runImport}
-            disabled={importing || !selectedFile || filesPending}
-          >
-            {importing ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {t("cashflow.import.running")}
-              </>
-            ) : (
-              t("cashflow.import.action")
-            )}
-          </Button>
+          {!result && (
+            <Button
+              onClick={runImport}
+              disabled={importing || !selectedFile || filesPending}
+            >
+              {importing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t("cashflow.import.running")}
+                </>
+              ) : (
+                t("cashflow.import.action")
+              )}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

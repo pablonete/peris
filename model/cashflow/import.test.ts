@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { importCashflowFile } from "@/lib/cashflow-import"
 import { CashflowEntry } from "@/lib/types"
+import { importCashflowFile } from "@/model/cashflow/import"
 
 const revolutHeader = [
   "Date started (UTC)",

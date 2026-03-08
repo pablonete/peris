@@ -5,11 +5,11 @@ import { useQuery } from "@tanstack/react-query"
 import {
   importCashflowFile,
   CashflowImportSummary,
-} from "@/lib/cashflow-import"
+} from "@/model/cashflow/import"
 import {
   CashflowImportBank,
   getCashflowImportDefinition,
-} from "@/lib/cashflow-import-definitions"
+} from "@/model/cashflow/import-definitions"
 import { useData } from "@/lib/use-data"
 import { useFileSha } from "@/lib/use-storage-data"
 import { CashflowEntry } from "@/lib/types"

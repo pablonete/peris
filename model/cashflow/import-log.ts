@@ -1,6 +1,6 @@
-import { CashflowImportMovement } from "./cashflow-import-definitions"
-import { CashflowEntry } from "./types"
-import type { CashflowImportSummary } from "./cashflow-import"
+import { CashflowEntry } from "@/lib/types"
+import { CashflowImportMovement } from "./import-definitions"
+import type { CashflowImportSummary } from "./import"
 
 export interface CashflowImportLogRecord {
   action: string

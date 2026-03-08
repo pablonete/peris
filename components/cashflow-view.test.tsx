@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { CashflowView } from "@/components/cashflow-view"
@@ -61,6 +61,8 @@ vi.mock("@/lib/use-storage-data", () => ({
   useFileSha: () => "sha-1",
 }))
 
+window.HTMLElement.prototype.scrollIntoView = vi.fn()
+
 describe("CashflowView", () => {
   beforeEach(() => {
     getEditingFileMock.mockReset()
@@ -98,7 +100,49 @@ describe("CashflowView", () => {
 
     await user.click(screen.getByRole("button", { name: "Importar" }))
 
-    expect(await screen.findByText("revolut-feb.csv")).toBeInTheDocument()
+    fireEvent.keyDown(screen.getAllByRole("combobox")[1], {
+      key: "ArrowDown",
+      code: "ArrowDown",
+    })
+
+    expect(
+      await screen.findByRole("option", { name: "revolut-feb.csv" })
+    ).toBeInTheDocument()
+  })
+
+  it("shows Close instead of Import after a successful import", async () => {
+    const user = userEvent.setup()
+    readTextFileMock.mockResolvedValue({
+      data: [
+        "Date started (UTC),Date completed (UTC),ID,State,Description,Reference,Payer,Amount",
+        "2025-01-20,2025-01-20,row-1,COMPLETED,Revolut fee,,, -10.00",
+      ].join("\n"),
+    })
+
+    renderCashflowView()
+
+    await user.click(screen.getByRole("button", { name: "Importar" }))
+
+    fireEvent.keyDown(screen.getAllByRole("combobox")[1], {
+      key: "ArrowDown",
+      code: "ArrowDown",
+    })
+    await user.click(
+      await screen.findByRole("option", { name: "revolut-feb.csv" })
+    )
+
+    const dialog = screen.getByRole("dialog")
+    await user.click(within(dialog).getByRole("button", { name: "Importar" }))
+
+    expect(
+      await within(dialog).findByText("Log que se guardará en el repositorio:")
+    ).toBeInTheDocument()
+    expect(
+      within(dialog).getByRole("button", { name: "Cerrar" })
+    ).toBeInTheDocument()
+    expect(
+      within(dialog).queryByRole("button", { name: "Importar" })
+    ).not.toBeInTheDocument()
   })
 })
 

@@ -1,7 +1,7 @@
-import { parseEntryDate } from "./date-utils"
-import { belongsToCashflowBank } from "./cashflow-utils"
-import { CashflowImportMovement } from "./cashflow-import-definitions"
-import { CashflowEntry } from "./types"
+import { belongsToCashflowBank } from "@/lib/cashflow-utils"
+import { parseEntryDate } from "@/lib/date-utils"
+import { CashflowEntry } from "@/lib/types"
+import { CashflowImportMovement } from "./import-definitions"
 
 // Allow a few days of difference because card settlements can be booked after the purchase date.
 const IMPORT_DATE_TOLERANCE_DAYS = 3

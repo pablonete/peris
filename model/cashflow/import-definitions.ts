@@ -1,4 +1,4 @@
-import { parseCsvRecords } from "./csv-utils"
+import { parseCsvRecords } from "@/lib/csv-utils"
 
 export type CashflowImportBank = "revolut"
 
