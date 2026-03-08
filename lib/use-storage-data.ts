@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useStorage } from "@/lib/storage-context"
 import { useEditingState } from "@/lib/editing-state-context"
-import { loadFileFromQuarter } from "@/lib/github-data"
+import { loadJsonFile } from "@/lib/github-data"
 import { Invoice, Expense, CashflowEntry } from "@/lib/types"
 
 type LedgerFileName = "invoices" | "expenses" | "cashflow"
@@ -50,7 +50,7 @@ export function useStorageData<T extends LedgerFileName>(
 
   const query = useQuery({
     queryKey: ["loadFile", activeStorage?.name, quarterId, type],
-    queryFn: () => loadFileFromQuarter(activeStorage, quarterId, type),
+    queryFn: () => loadJsonFile(activeStorage, `${quarterId}/${type}.json`),
     enabled: !!activeStorage && !editingFile,
   })
 

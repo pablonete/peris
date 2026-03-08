@@ -2,11 +2,16 @@
 
 import { GitHubStorageService } from "./github-storage"
 import { Storage } from "./storage-types"
-import { PerisConfig } from "./types"
 
-export interface EditingAttachment {
-  quarterId: string
-  filename: string
+export interface EditingTextFile {
+  path: string
+  content: any
+  sha?: string
+  contentType?: "json" | "text"
+}
+
+export interface EditingBinaryFile {
+  path: string
   content: ArrayBuffer
 }
 
@@ -35,20 +40,21 @@ export async function validateStorageAccess(storage: Storage): Promise<{
   }
 }
 
-/**
- * Loads a ledger file for a specific quarter
- */
-export async function loadFileFromQuarter<T>(
+export async function listFilesInStorage(
   storage: Storage,
-  quarterId: string,
-  ledgerFileName: string
+  folderPath: string
+): Promise<string[]> {
+  const service = new GitHubStorageService(storage.url)
+  return await service.listFiles(folderPath)
+}
+
+export async function loadJsonFile<T>(
+  storage: Storage,
+  filePath: string
 ): Promise<{ data: T | null; sha?: string; error?: string }> {
   try {
     const service = new GitHubStorageService(storage.url)
-    const result = await service.fetchQuarterFile(
-      quarterId,
-      `${ledgerFileName}.json`
-    )
+    const result = await service.fetchJsonFile(filePath)
     return { data: result.data, sha: result.sha }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
@@ -56,78 +62,52 @@ export async function loadFileFromQuarter<T>(
   }
 }
 
-/**
- * Loads the global peris.json config from the root of the data repository
- */
-export async function loadPerisConfig(
-  storage: Storage
-): Promise<{ data: PerisConfig | null; error?: string }> {
+export async function loadTextFile(
+  storage: Storage,
+  filePath: string
+): Promise<{ data: string | null; sha?: string; error?: string }> {
   try {
     const service = new GitHubStorageService(storage.url)
-    const result = await service.fetchRootFile("peris.json")
-    return { data: result.data }
+    const result = await service.fetchTextFile(filePath)
+    return { data: result.data, sha: result.sha }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    if (message.includes("does not exist")) {
-      return { data: null }
-    }
     return { data: null, error: message }
   }
 }
 
 export async function commitEditingFiles(
   storage: Storage,
-  editingFiles: Array<{
-    quarterId: string
-    fileName: string
-    data: any
-    sha?: string
-  }>,
-  attachments: EditingAttachment[] = [],
-  perisConfig?: { data: PerisConfig; sha?: string }
+  textFiles: EditingTextFile[],
+  binaryFiles: EditingBinaryFile[] = []
 ): Promise<void> {
   const service = new GitHubStorageService(storage.url)
-
-  const uniqueQuarters = Array.from(
-    new Set(editingFiles.map((f) => f.quarterId))
+  const fileCount = textFiles.length + binaryFiles.length
+  const quarterIds = Array.from(
+    new Set(
+      [...textFiles, ...binaryFiles]
+        .map((file) => getQuarterIdFromPath(file.path))
+        .filter((quarterId): quarterId is string => Boolean(quarterId))
+    )
   )
-  const fileCount =
-    editingFiles.length + attachments.length + (perisConfig ? 1 : 0)
-  let message: string
-  if (uniqueQuarters.length === 0 && perisConfig) {
+
+  let message = `Update ${fileCount} files`
+  if (
+    fileCount === 1 &&
+    textFiles.length === 1 &&
+    textFiles[0].path === "peris.json"
+  ) {
     message = "Add peris.json"
-  } else if (uniqueQuarters.length === 1) {
-    message = `Update ${uniqueQuarters[0]} (${fileCount} files)`
-  } else {
-    message = `Update ${uniqueQuarters.length} quarters (${fileCount} files)`
+  } else if (quarterIds.length === 1) {
+    message = `Update ${quarterIds[0]} (${fileCount} files)`
+  } else if (quarterIds.length > 1) {
+    message = `Update ${quarterIds.length} quarters (${fileCount} files)`
   }
 
-  await service.commitMultipleFiles(
-    [
-      ...editingFiles.map((file) => ({
-        quarterId: file.quarterId,
-        fileName: `${file.fileName}.json`,
-        content: file.data,
-        sha: file.sha,
-        isBinary: false as const,
-      })),
-      ...(perisConfig
-        ? [
-            {
-              fileName: "peris.json",
-              content: perisConfig.data,
-              sha: perisConfig.sha,
-              isBinary: false as const,
-            },
-          ]
-        : []),
-    ],
-    attachments.map((att) => ({
-      quarterId: att.quarterId,
-      fileName: `expenses/${att.filename}`,
-      content: att.content,
-      isBinary: true as const,
-    })),
-    message
-  )
+  await service.commitMultipleFiles(textFiles, binaryFiles, message)
+}
+
+function getQuarterIdFromPath(path: string): string | null {
+  const [segment] = path.split("/")
+  return segment.match(/^\d{4}\.\d[QqTt]$/) ? segment : null
 }

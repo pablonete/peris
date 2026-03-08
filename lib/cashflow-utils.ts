@@ -120,6 +120,13 @@ export function getBankColorClass(
   }
 }
 
+export function belongsToCashflowBank(
+  entry: CashflowEntry,
+  bankName: string | undefined
+): boolean {
+  return bankName == null ? !entry.bankName : entry.bankName === bankName
+}
+
 /**
  * Aggregates cashflow entries by category, summing both income and expense totals.
  * Entries without a category use an empty string key.
