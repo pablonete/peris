@@ -63,6 +63,7 @@ export function importCashflowFile({
     : 0
   const matchedIds = new Set<string>()
   const entryImportOrder = new Map<string, number>()
+  const entryBankSequence = new Map<string, number>()
   const logRecords: CashflowImportLogRecord[] = []
   let nextEntries = [...entries]
   let created = 0
@@ -97,6 +98,9 @@ export function importCashflowFile({
     if (match) {
       matchedIds.add(match.id)
       entryImportOrder.set(match.id, orderIndex)
+      if (movement.bankSequence != null) {
+        entryBankSequence.set(match.id, movement.bankSequence)
+      }
       orderIndex += 1
       existing += 1
       logRecords.push(
@@ -117,6 +121,9 @@ export function importCashflowFile({
     nextEntries = [...nextEntries, newEntry]
     targetEntries.push(newEntry)
     entryImportOrder.set(newEntry.id, orderIndex)
+    if (movement.bankSequence != null) {
+      entryBankSequence.set(newEntry.id, movement.bankSequence)
+    }
     orderIndex += 1
     created += 1
     logRecords.push(
@@ -131,7 +138,8 @@ export function importCashflowFile({
     nextEntries,
     bankName,
     openingBalance,
-    entryImportOrder
+    entryImportOrder,
+    entryBankSequence
   )
   const sequenceFixed = normalizedEntries.reduce((count, entry) => {
     const previous = sequenceBefore.get(entry.id)

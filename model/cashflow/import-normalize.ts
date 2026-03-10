@@ -10,7 +10,8 @@ export function normalizeImportedBankEntries(
   entries: CashflowEntry[],
   bankName: string | undefined,
   openingBalance: number,
-  entryImportOrder: Map<string, number>
+  entryImportOrder: Map<string, number>,
+  entryBankSequence: Map<string, number> = new Map()
 ): CashflowEntry[] {
   const originalOrder = new Map(
     entries.map((entry, index) => [entry.id, index])
@@ -25,11 +26,17 @@ export function normalizeImportedBankEntries(
   const regularEntries = bankEntries
     .filter((entry) => !isCarryOverEntry(entry))
     .sort((left, right) =>
-      compareImportedEntries(left, right, entryImportOrder, originalOrder)
+      compareImportedEntries(
+        left,
+        right,
+        entryImportOrder,
+        originalOrder,
+        entryBankSequence
+      )
     )
 
   let balance = openingBalance
-  let bankSequence = 1
+  let autoSequence = 1
   const normalizedBankEntries = [
     ...carryOvers.map((entry) => ({
       ...entry,
@@ -40,16 +47,23 @@ export function normalizeImportedBankEntries(
       balance = roundCurrency(
         balance + (entry.income ?? 0) - (entry.expense ?? 0)
       )
-      const nextEntry = { ...entry, balance, bankSequence, bankName }
-      bankSequence += 1
-      return nextEntry
+      const csvSeq = entryBankSequence.get(entry.id)
+      const bankSeq = csvSeq ?? autoSequence
+      if (csvSeq == null) autoSequence += 1
+      return { ...entry, balance, bankSequence: bankSeq, bankName }
     }),
   ]
 
   return [...otherEntries, ...normalizedBankEntries].sort(
     (left, right) =>
       left.date.localeCompare(right.date) ||
-      compareImportedEntries(left, right, entryImportOrder, originalOrder)
+      compareImportedEntries(
+        left,
+        right,
+        entryImportOrder,
+        originalOrder,
+        entryBankSequence
+      )
   )
 }
 
@@ -87,8 +101,16 @@ function compareImportedEntries(
   left: CashflowEntry,
   right: CashflowEntry,
   entryImportOrder: Map<string, number>,
-  originalOrder: Map<string, number>
+  originalOrder: Map<string, number>,
+  entryBankSequence?: Map<string, number>
 ): number {
+  if (entryBankSequence) {
+    const leftSeq = entryBankSequence.get(left.id)
+    const rightSeq = entryBankSequence.get(right.id)
+    if (leftSeq != null && rightSeq != null) return leftSeq - rightSeq
+    if (leftSeq != null) return -1
+    if (rightSeq != null) return 1
+  }
   const leftImported = entryImportOrder.get(left.id)
   const rightImported = entryImportOrder.get(right.id)
   if (leftImported != null && rightImported != null)

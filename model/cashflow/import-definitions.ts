@@ -11,6 +11,7 @@ export interface CashflowImportMovement {
   income?: number
   expense?: number
   amount: number
+  bankSequence?: number
   skipReason?: string
 }
 
@@ -108,6 +109,9 @@ const unicajaImportDefinition: CashflowImportDefinition = {
       const amount = parseAmount(row[unicajaColumns.amount])
       const externalId =
         row[unicajaColumns.movementNumber]?.trim() || `row-${index + 2}`
+      const bankSequence = parseBankSequence(
+        row[unicajaColumns.movementNumber]?.trim()
+      )
 
       if (!parsedDate || amount == null) {
         return {
@@ -131,6 +135,7 @@ const unicajaImportDefinition: CashflowImportDefinition = {
         amount,
         income: amount > 0 ? amount : undefined,
         expense: amount < 0 ? Math.abs(amount) : undefined,
+        bankSequence,
       }
     })
   },
@@ -194,4 +199,10 @@ function parseDdMmYyyy(date: string): string | undefined {
   const [day, month, year] = parts
   if (!day || !month || !year || year.length !== 4) return undefined
   return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`
+}
+
+function parseBankSequence(value: string | undefined): number | undefined {
+  if (!value) return undefined
+  const parsed = parseInt(value, 10)
+  return Number.isNaN(parsed) ? undefined : parsed
 }

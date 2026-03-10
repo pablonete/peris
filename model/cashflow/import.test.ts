@@ -33,21 +33,6 @@ const revolutHeader = [
   "Spend program",
 ]
 
-const unicajaHeader = [
-  "Fecha de operación",
-  "Fecha valor",
-  "Concepto",
-  "Importe",
-  "Divisa",
-  "Saldo",
-  "Divisa",
-  "Nº mov",
-  "Oficina ",
-  "Categoría",
-  "Código Devolución",
-  "Concepto Devolución",
-]
-
 describe("importCashflowFile", () => {
   it("matches existing Revolut entries, creates missing ones, and resequences the bank ledger", () => {
     const entries: CashflowEntry[] = [
@@ -182,7 +167,7 @@ describe("importCashflowFile", () => {
     expect(result.logContent).toContain("Otro trimestre")
     expect(result.logContent).toContain("Secuencia corregida: 2")
   })
-  it("matches existing Unicaja entries, creates missing ones, and resequences the bank ledger", () => {
+  it("matches existing Unicaja entries, creates missing ones, and uses Nº mov as sequence", () => {
     const entries: CashflowEntry[] = [
       {
         id: "co",
@@ -211,36 +196,13 @@ describe("importCashflowFile", () => {
       },
     ]
 
-    const csvContent = buildUnicajaCsv([
-      {
-        "Fecha de operación": "27/02/2026",
-        "Fecha valor": "27/02/2026",
-        Concepto: "AUTONOMOS 000384 291043657474",
-        Importe: "-422.41",
-        "Nº mov": "3006",
-      },
-      {
-        "Fecha de operación": "27/02/2026",
-        "Fecha valor": "27/02/2026",
-        Concepto: "Préstamo Admin",
-        Importe: "400.00",
-        "Nº mov": "3005",
-      },
-      {
-        "Fecha de operación": "30/01/2026",
-        "Fecha valor": "30/01/2026",
-        Concepto: "AUTONOMOS 000384 291043657474",
-        Importe: "-422.41",
-        "Nº mov": "3004",
-      },
-      {
-        "Fecha de operación": "30/01/2026",
-        "Fecha valor": "30/01/2026",
-        Concepto: "Préstamo Admin tgss",
-        Importe: "500.00",
-        "Nº mov": "3003",
-      },
-    ])
+    const csvContent = [
+      "Fecha de operación,Fecha valor,Concepto,Importe,Divisa,Saldo,Divisa,Nº mov,Oficina ,Categoría,Código Devolución,Concepto Devolución",
+      "27/02/2026,27/02/2026,AUTONOMOS 000654 290102030405,-422.41,EUR,74.25,EUR,3006,8076,,,",
+      "27/02/2026,27/02/2026,Ingreso,400.00,EUR,496.66,EUR,3005,8076,,,",
+      "30/01/2026,30/01/2026,AUTONOMOS 000654 290102030405,-422.41,EUR,96.66,EUR,3004,3001,,,",
+      "30/01/2026,30/01/2026,Ingreso TGSS,500.00,EUR,519.07,EUR,3003,8076,,,",
+    ].join("\n")
 
     const result = importCashflowFile({
       bank: "unicaja",
@@ -262,7 +224,9 @@ describe("importCashflowFile", () => {
 
     expect(
       result.entries
-        .filter((entry) => entry.bankName === "Unicaja" || entry.bankName == null)
+        .filter(
+          (entry) => entry.bankName === "Unicaja" || entry.bankName == null
+        )
         .map(({ date, concept, bankSequence, balance, income, expense }) => ({
           date,
           concept,
@@ -282,35 +246,35 @@ describe("importCashflowFile", () => {
       },
       {
         date: "2026-01-30",
-        concept: "AUTONOMOS",
-        bankSequence: 1,
-        balance: 77.59,
-        income: undefined,
-        expense: 422.41,
-      },
-      {
-        date: "2026-01-30",
         concept: "Préstamo Admin tgss",
-        bankSequence: 2,
-        balance: 577.59,
+        bankSequence: 3003,
+        balance: 1000,
         income: 500,
         expense: undefined,
       },
       {
-        date: "2026-02-27",
-        concept: "AUTONOMOS 000384 291043657474",
-        bankSequence: 3,
-        balance: 155.18,
+        date: "2026-01-30",
+        concept: "AUTONOMOS",
+        bankSequence: 3004,
+        balance: 577.59,
         income: undefined,
         expense: 422.41,
       },
       {
         date: "2026-02-27",
-        concept: "Préstamo Admin",
-        bankSequence: 4,
-        balance: 555.18,
+        concept: "Ingreso",
+        bankSequence: 3005,
+        balance: 977.59,
         income: 400,
         expense: undefined,
+      },
+      {
+        date: "2026-02-27",
+        concept: "AUTONOMOS 000654 290102030405",
+        bankSequence: 3006,
+        balance: 555.18,
+        income: undefined,
+        expense: 422.41,
       },
     ])
 
@@ -323,21 +287,14 @@ describe("importCashflowFile", () => {
 })
 
 function buildCsv(rows: Array<Record<string, string>>): string {
-  return [revolutHeader.join(","), ...rows.map((row) => buildCsvRow(row, revolutHeader))].join(
-    "\n"
-  )
-}
-
-function buildUnicajaCsv(rows: Array<Record<string, string>>): string {
-  return [unicajaHeader.join(","), ...rows.map((row) => buildCsvRow(row, unicajaHeader))].join(
-    "\n"
-  )
+  return [
+    revolutHeader.join(","),
+    ...rows.map((row) => buildCsvRow(row, revolutHeader)),
+  ].join("\n")
 }
 
 function buildCsvRow(row: Record<string, string>, header: string[]): string {
-  return header
-    .map((column) => escapeCsvValue(row[column] ?? ""))
-    .join(",")
+  return header.map((column) => escapeCsvValue(row[column] ?? "")).join(",")
 }
 
 function escapeCsvValue(value: string): string {
