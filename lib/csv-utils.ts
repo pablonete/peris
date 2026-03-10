@@ -38,7 +38,7 @@ function parseCsvRows(content: string): string[][] {
     }
 
     if (char === "," && !quoted) {
-      currentRow.push(currentValue)
+      currentRow.push(currentValue.trim())
       currentValue = ""
       continue
     }
@@ -48,7 +48,7 @@ function parseCsvRows(content: string): string[][] {
         index++
       }
 
-      currentRow.push(currentValue)
+      currentRow.push(currentValue.trim())
       rows.push(currentRow)
       currentRow = []
       currentValue = ""
@@ -59,7 +59,7 @@ function parseCsvRows(content: string): string[][] {
   }
 
   if (currentValue.length > 0 || currentRow.length > 0) {
-    currentRow.push(currentValue)
+    currentRow.push(currentValue.trim())
     rows.push(currentRow)
   }
 
