@@ -1,6 +1,6 @@
 import { parseCsvRecords } from "@/lib/csv-utils"
 
-export type CashflowImportBank = "revolut"
+export type CashflowImportBank = "revolut" | "unicaja"
 
 export interface CashflowImportMovement {
   externalId: string
@@ -84,7 +84,62 @@ const revolutImportDefinition: CashflowImportDefinition = {
   },
 }
 
-export const cashflowImportDefinitions = [revolutImportDefinition]
+const unicajaColumns = {
+  operationDate: "Fecha de operación",
+  valueDate: "Fecha valor",
+  concept: "Concepto",
+  amount: "Importe",
+  movementNumber: "Nº mov",
+} as const
+
+const unicajaImportDefinition: CashflowImportDefinition = {
+  id: "unicaja",
+  label: "Unicaja",
+  fileExtension: ".csv",
+  columns: unicajaColumns,
+  parse(content) {
+    return parseCsvRecords(content).map((row, index) => {
+      const operationDate = row[unicajaColumns.operationDate]?.trim()
+      const valueDate = row[unicajaColumns.valueDate]?.trim()
+      const parsedDate = operationDate
+        ? parseDdMmYyyy(operationDate)
+        : undefined
+      const parsedValueDate = valueDate ? parseDdMmYyyy(valueDate) : undefined
+      const amount = parseAmount(row[unicajaColumns.amount])
+      const externalId =
+        row[unicajaColumns.movementNumber]?.trim() || `row-${index + 2}`
+
+      if (!parsedDate || amount == null) {
+        return {
+          externalId,
+          sourceLine: index + 2,
+          date: parsedDate ?? "",
+          matchDates: compactDates([parsedDate, parsedValueDate]),
+          concept:
+            row[unicajaColumns.concept]?.trim() || "Movimiento importado",
+          amount: amount ?? 0,
+          skipReason: "Fila incompleta",
+        }
+      }
+
+      return {
+        externalId,
+        sourceLine: index + 2,
+        date: parsedDate,
+        matchDates: compactDates([parsedDate, parsedValueDate]),
+        concept: row[unicajaColumns.concept]?.trim() || "Movimiento importado",
+        amount,
+        income: amount > 0 ? amount : undefined,
+        expense: amount < 0 ? Math.abs(amount) : undefined,
+      }
+    })
+  },
+}
+
+export const cashflowImportDefinitions = [
+  revolutImportDefinition,
+  unicajaImportDefinition,
+]
 
 export function getCashflowImportDefinition(
   bank: CashflowImportBank
@@ -131,4 +186,12 @@ function compactDates(dates: Array<string | undefined>): string[] {
   return Array.from(
     new Set(dates.filter((value): value is string => Boolean(value)))
   )
+}
+
+function parseDdMmYyyy(date: string): string | undefined {
+  const parts = date.split("/")
+  if (parts.length !== 3) return undefined
+  const [day, month, year] = parts
+  if (!day || !month || !year || year.length !== 4) return undefined
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`
 }

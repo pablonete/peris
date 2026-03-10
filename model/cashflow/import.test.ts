@@ -33,6 +33,21 @@ const revolutHeader = [
   "Spend program",
 ]
 
+const unicajaHeader = [
+  "Fecha de operación",
+  "Fecha valor",
+  "Concepto",
+  "Importe",
+  "Divisa",
+  "Saldo",
+  "Divisa",
+  "Nº mov",
+  "Oficina ",
+  "Categoría",
+  "Código Devolución",
+  "Concepto Devolución",
+]
+
 describe("importCashflowFile", () => {
   it("matches existing Revolut entries, creates missing ones, and resequences the bank ledger", () => {
     const entries: CashflowEntry[] = [
@@ -167,16 +182,160 @@ describe("importCashflowFile", () => {
     expect(result.logContent).toContain("Otro trimestre")
     expect(result.logContent).toContain("Secuencia corregida: 2")
   })
+  it("matches existing Unicaja entries, creates missing ones, and resequences the bank ledger", () => {
+    const entries: CashflowEntry[] = [
+      {
+        id: "co",
+        date: "2026-01-01",
+        concept: "Carry over",
+        bankName: "Unicaja",
+        balance: 500,
+      },
+      {
+        id: "cf-1",
+        date: "2026-01-30",
+        concept: "AUTONOMOS",
+        bankName: "Unicaja",
+        expense: 422.41,
+        balance: 77.59,
+        bankSequence: 2,
+      },
+      {
+        id: "cf-2",
+        date: "2026-01-30",
+        concept: "Préstamo Admin tgss",
+        bankName: "Unicaja",
+        income: 500,
+        balance: 577.59,
+        bankSequence: 1,
+      },
+    ]
+
+    const csvContent = buildUnicajaCsv([
+      {
+        "Fecha de operación": "27/02/2026",
+        "Fecha valor": "27/02/2026",
+        Concepto: "AUTONOMOS 000384 291043657474",
+        Importe: "-422.41",
+        "Nº mov": "3006",
+      },
+      {
+        "Fecha de operación": "27/02/2026",
+        "Fecha valor": "27/02/2026",
+        Concepto: "Préstamo Admin",
+        Importe: "400.00",
+        "Nº mov": "3005",
+      },
+      {
+        "Fecha de operación": "30/01/2026",
+        "Fecha valor": "30/01/2026",
+        Concepto: "AUTONOMOS 000384 291043657474",
+        Importe: "-422.41",
+        "Nº mov": "3004",
+      },
+      {
+        "Fecha de operación": "30/01/2026",
+        "Fecha valor": "30/01/2026",
+        Concepto: "Préstamo Admin tgss",
+        Importe: "500.00",
+        "Nº mov": "3003",
+      },
+    ])
+
+    const result = importCashflowFile({
+      bank: "unicaja",
+      csvContent,
+      fileName: "unicaja-q1.csv",
+      quarterId: "2026.1Q",
+      entries,
+      now: new Date("2026-03-07T16:10:31.772Z"),
+    })
+
+    expect(result.summary).toEqual({
+      processed: 4,
+      otherQuarter: 0,
+      existing: 2,
+      created: 2,
+      ignored: 0,
+      sequenceFixed: 2,
+    })
+
+    expect(
+      result.entries
+        .filter((entry) => entry.bankName === "Unicaja" || entry.bankName == null)
+        .map(({ date, concept, bankSequence, balance, income, expense }) => ({
+          date,
+          concept,
+          bankSequence,
+          balance,
+          income,
+          expense,
+        }))
+    ).toEqual([
+      {
+        date: "2026-01-01",
+        concept: "Carry over",
+        bankSequence: undefined,
+        balance: 500,
+        income: undefined,
+        expense: undefined,
+      },
+      {
+        date: "2026-01-30",
+        concept: "AUTONOMOS",
+        bankSequence: 1,
+        balance: 77.59,
+        income: undefined,
+        expense: 422.41,
+      },
+      {
+        date: "2026-01-30",
+        concept: "Préstamo Admin tgss",
+        bankSequence: 2,
+        balance: 577.59,
+        income: 500,
+        expense: undefined,
+      },
+      {
+        date: "2026-02-27",
+        concept: "AUTONOMOS 000384 291043657474",
+        bankSequence: 3,
+        balance: 155.18,
+        income: undefined,
+        expense: 422.41,
+      },
+      {
+        date: "2026-02-27",
+        concept: "Préstamo Admin",
+        bankSequence: 4,
+        balance: 555.18,
+        income: 400,
+        expense: undefined,
+      },
+    ])
+
+    expect(result.logPath).toBe(
+      "import/unicaja-q1.peris-2026-03-07T16-10-31.772Z.log.txt"
+    )
+    expect(result.logContent).toContain("Creado")
+    expect(result.logContent).toContain("Secuencia corregida: 2")
+  })
 })
 
 function buildCsv(rows: Array<Record<string, string>>): string {
-  return [revolutHeader.join(","), ...rows.map((row) => buildCsvRow(row))].join(
+  return [revolutHeader.join(","), ...rows.map((row) => buildCsvRow(row, revolutHeader))].join(
     "\n"
   )
 }
 
-function buildCsvRow(row: Record<string, string>): string {
-  return revolutHeader
+function buildUnicajaCsv(rows: Array<Record<string, string>>): string {
+  return [unicajaHeader.join(","), ...rows.map((row) => buildCsvRow(row, unicajaHeader))].join(
+    "\n"
+  )
+}
+
+function buildCsvRow(row: Record<string, string>, header: string[]): string {
+  return header
     .map((column) => escapeCsvValue(row[column] ?? ""))
     .join(",")
 }
