@@ -75,7 +75,7 @@ describe("buildLinkingRows", () => {
     expect(rows).toHaveLength(1)
     expect(rows[0].cashflow).toBe(cashflowWithInvoice)
     expect(rows[0].item).toBe(invoice1)
-    expect(rows[0].itemSide).toBe("invoices")
+    expect(rows[0].itemType).toBe("invoices")
   })
 
   it("pairs a cashflow entry with its linked expense", () => {
@@ -83,7 +83,7 @@ describe("buildLinkingRows", () => {
     expect(rows).toHaveLength(1)
     expect(rows[0].cashflow).toBe(cashflowWithExpense)
     expect(rows[0].item).toBe(expense1)
-    expect(rows[0].itemSide).toBe("expenses")
+    expect(rows[0].itemType).toBe("expenses")
   })
 
   it("sets the date from the cashflow entry", () => {
@@ -158,14 +158,14 @@ describe("buildLinkingRows", () => {
     expect(rows).toHaveLength(2)
     expect(rows[0].cashflow).toBe(cashflowWithExpense)
     expect(rows[0].item).toBe(expense1)
-    expect(rows[0].itemSide).toBe("expenses")
+    expect(rows[0].itemType).toBe("expenses")
     expect(rows[1].cashflow).toBe(cashflowWithInvoice)
     expect(rows[1].item).toBe(invoice1)
-    expect(rows[1].itemSide).toBe("invoices")
+    expect(rows[1].itemType).toBe("invoices")
   })
 
-  it("sets itemSide to undefined for unlinked cashflow-only rows", () => {
+  it("sets itemType to undefined for unlinked cashflow-only rows", () => {
     const rows = buildLinkingRows([cashflowUnlinked], [], [])
-    expect(rows[0].itemSide).toBeUndefined()
+    expect(rows[0].itemType).toBeUndefined()
   })
 })

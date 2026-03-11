@@ -1,150 +1,21 @@
 "use client"
 
-import { FileText, Paperclip, Receipt } from "lucide-react"
-import { formatCurrency, formatDate } from "@/lib/ledger-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useLanguage } from "@/lib/i18n-context"
-import { useData } from "@/lib/use-data"
 import { ErrorBanner } from "@/components/error-banner"
-import { Invoice, Expense, CashflowEntry } from "@/lib/types"
+import { Invoice, Expense } from "@/lib/types"
 import { buildLinkingRows } from "@/lib/linking-utils"
-import { getFileUrl } from "@/lib/storage-types"
 import { cn } from "@/lib/utils"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { InvoiceLinkingCell } from "@/components/invoices/invoice-linking-cell"
+import { ExpenseLinkingCell } from "@/components/expenses/expense-linking-cell"
+import { CashflowLinkingCell } from "@/components/cashflow/cashflow-linking-cell"
 
 interface LinkingViewProps {
   quarterId: string
 }
 
-interface InvoiceCellProps {
-  invoice: Invoice
-  storageUrl: string
-  quarterId: string
-}
-
-function InvoiceCell({ invoice, storageUrl, quarterId }: InvoiceCellProps) {
-  return (
-    <div className="py-2 min-w-0">
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="font-mono text-xs text-muted-foreground shrink-0">
-          {formatDate(invoice.date)}
-        </span>
-        <div className="flex items-center gap-1 shrink-0">
-          {invoice.filename && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <a
-                  href={getFileUrl(
-                    storageUrl,
-                    quarterId,
-                    "invoices",
-                    invoice.filename
-                  )}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <Paperclip className="h-3 w-3" />
-                </a>
-              </TooltipTrigger>
-              <TooltipContent>{invoice.filename}</TooltipContent>
-            </Tooltip>
-          )}
-          <FileText className="h-3 w-3 text-[hsl(var(--ledger-green))] shrink-0" />
-          <span className="font-mono text-xs font-semibold text-[hsl(var(--ledger-green))]">
-            {formatCurrency(invoice.total)}
-          </span>
-        </div>
-      </div>
-      <div className="text-sm truncate text-muted-foreground">
-        {invoice.client} — {invoice.concept}
-      </div>
-    </div>
-  )
-}
-
-interface ExpenseCellProps {
-  expense: Expense
-  storageUrl: string
-  quarterId: string
-}
-
-function ExpenseCell({ expense, storageUrl, quarterId }: ExpenseCellProps) {
-  return (
-    <div className="py-2 min-w-0">
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="font-mono text-xs text-muted-foreground shrink-0">
-          {formatDate(expense.date)}
-        </span>
-        <div className="flex items-center gap-1 shrink-0">
-          {expense.filename && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <a
-                  href={getFileUrl(
-                    storageUrl,
-                    quarterId,
-                    "expenses",
-                    expense.filename
-                  )}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <Paperclip className="h-3 w-3" />
-                </a>
-              </TooltipTrigger>
-              <TooltipContent>{expense.filename}</TooltipContent>
-            </Tooltip>
-          )}
-          <Receipt className="h-3 w-3 text-[hsl(var(--ledger-red))] shrink-0" />
-          <span className="font-mono text-xs font-semibold text-[hsl(var(--ledger-red))]">
-            {formatCurrency(expense.total)}
-          </span>
-        </div>
-      </div>
-      <div className="text-sm truncate text-muted-foreground">
-        {expense.vendor} — {expense.concept}
-      </div>
-    </div>
-  )
-}
-
-function CashflowCell({ entry }: { entry: CashflowEntry }) {
-  const isIncome = entry.income != null
-  return (
-    <div className="py-2 min-w-0">
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="font-mono text-xs text-muted-foreground shrink-0">
-          {formatDate(entry.date)}
-        </span>
-        <span
-          className={cn(
-            "font-mono text-xs font-semibold shrink-0",
-            isIncome
-              ? "text-[hsl(var(--ledger-green))]"
-              : "text-[hsl(var(--ledger-red))]"
-          )}
-        >
-          {isIncome
-            ? formatCurrency(entry.income!)
-            : formatCurrency(entry.expense ?? entry.balance)}
-        </span>
-      </div>
-      <div className="text-sm truncate text-muted-foreground">
-        {entry.concept}
-      </div>
-    </div>
-  )
-}
-
 export function LinkingView({ quarterId }: LinkingViewProps) {
   const { t } = useLanguage()
-  const { activeStorage } = useData()
 
   const {
     content: invoices,
@@ -178,8 +49,6 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
   }
 
   const rows = buildLinkingRows(cashflow ?? [], invoices ?? [], expenses ?? [])
-
-  const storageUrl = activeStorage?.url ?? ""
 
   return (
     <div>
@@ -217,17 +86,15 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                     !row.item && "bg-secondary/10"
                   )}
                 >
-                  {row.item && row.itemSide === "invoices" && (
-                    <InvoiceCell
+                  {row.item && row.itemType === "invoices" && (
+                    <InvoiceLinkingCell
                       invoice={row.item as Invoice}
-                      storageUrl={storageUrl}
                       quarterId={quarterId}
                     />
                   )}
-                  {row.item && row.itemSide === "expenses" && (
-                    <ExpenseCell
+                  {row.item && row.itemType === "expenses" && (
+                    <ExpenseLinkingCell
                       expense={row.item as Expense}
-                      storageUrl={storageUrl}
                       quarterId={quarterId}
                     />
                   )}
@@ -238,7 +105,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                     !row.cashflow && "bg-secondary/10"
                   )}
                 >
-                  {row.cashflow && <CashflowCell entry={row.cashflow} />}
+                  {row.cashflow && <CashflowLinkingCell entry={row.cashflow} />}
                 </div>
               </div>
             ))}

@@ -240,8 +240,6 @@ export const translations = {
     linking: {
       title: "Conciliar",
       emptyState: "No se encontraron datos.",
-      invoices: "Facturas",
-      expenses: "Gastos",
       items: "Facturas / Gastos",
       cashflow: "Flujo de caja",
     },
@@ -484,8 +482,6 @@ export const translations = {
     linking: {
       title: "Linking",
       emptyState: "No data found.",
-      invoices: "Invoices",
-      expenses: "Expenses",
       items: "Invoices / Expenses",
       cashflow: "Cashflow",
     },

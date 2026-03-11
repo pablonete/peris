@@ -1,6 +1,6 @@
 import { Invoice, Expense, CashflowEntry } from "@/lib/types"
 
-export type LinkedSide = "invoices" | "expenses"
+export type LinkedItemType = "invoices" | "expenses"
 
 export type LinkingRow = {
   /** Date used for ordering: cashflow date if present, otherwise the item date. */
@@ -8,7 +8,7 @@ export type LinkingRow = {
   cashflow?: CashflowEntry
   item?: Invoice | Expense
   /** Whether the item is an invoice or expense. */
-  itemSide?: LinkedSide
+  itemType?: LinkedItemType
 }
 
 /**
@@ -35,7 +35,7 @@ export function buildLinkingRows(
         date: entry.date,
         cashflow: entry,
         item,
-        itemSide: "invoices",
+        itemType: "invoices",
       })
     } else if (entry.expenseId) {
       const item = expenses.find((e) => e.id === entry.expenseId)
@@ -44,7 +44,7 @@ export function buildLinkingRows(
         date: entry.date,
         cashflow: entry,
         item,
-        itemSide: "expenses",
+        itemType: "expenses",
       })
     } else {
       rows.push({ date: entry.date, cashflow: entry })
@@ -52,11 +52,11 @@ export function buildLinkingRows(
   }
 
   for (const item of invoices.filter((i) => !usedInvoiceIds.has(i.id))) {
-    rows.push({ date: item.date, item, itemSide: "invoices" })
+    rows.push({ date: item.date, item, itemType: "invoices" })
   }
 
   for (const item of expenses.filter((e) => !usedExpenseIds.has(e.id))) {
-    rows.push({ date: item.date, item, itemSide: "expenses" })
+    rows.push({ date: item.date, item, itemType: "expenses" })
   }
 
   return rows.sort((a, b) => a.date.localeCompare(b.date))
