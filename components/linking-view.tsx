@@ -12,7 +12,7 @@ import { InvoiceLinkingCell } from "@/components/invoices/invoice-linking-cell"
 import { ExpenseLinkingCell } from "@/components/expenses/expense-linking-cell"
 import { CashflowLinkingCell } from "@/components/cashflow/cashflow-linking-cell"
 import { CashflowBankFilter } from "@/components/cashflow-bank-filter"
-import { X } from "lucide-react"
+import { LinkingCircle } from "@/components/linking/linking-circle"
 
 interface LinkingViewProps {
   quarterId: string
@@ -179,7 +179,6 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
           <div className="flex-1 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
             {t("linking.items")}
           </div>
-          <div className="w-12 shrink-0" aria-hidden="true" />
           <div className="flex-1 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground flex items-center justify-between gap-2">
             <span>{t("linking.cashflow")}</span>
             <CashflowBankFilter
@@ -243,131 +242,101 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                   key={row.cashflow?.id ?? row.item?.id ?? idx}
                   className="flex items-stretch"
                 >
-                  {/* Item cell */}
+                  {/* Item cell — content + circle on right edge */}
                   <div
                     className={cn(
-                      "flex-1 px-3 min-h-[3.5rem]",
+                      "flex-1 min-h-[3.5rem] flex items-center",
                       !row.item && "bg-secondary/10"
                     )}
                   >
-                    {row.item && row.itemType === "invoices" && (
-                      <InvoiceLinkingCell
-                        invoice={row.item as Invoice}
-                        quarterId={quarterId}
-                      />
-                    )}
-                    {row.item && row.itemType === "expenses" && (
-                      <ExpenseLinkingCell
-                        expense={row.item as Expense}
-                        quarterId={quarterId}
-                      />
-                    )}
-                  </div>
-
-                  {/* Connector: item circle — line — cashflow circle */}
-                  <div className="w-12 shrink-0 flex items-center">
-                    {/* Item-side circle */}
-                    {row.item ? (
-                      <button
-                        className={cn(
-                          "h-3 w-3 rounded-full border-2 shrink-0 group flex items-center justify-center transition-colors",
-                          isLinked
-                            ? "border-blue-500 cursor-pointer hover:border-destructive"
-                            : isLinkingThisItem
-                              ? "border-blue-400 cursor-pointer"
-                              : isZeroAmountItem
-                                ? "border-foreground/15 opacity-40 cursor-not-allowed"
-                                : isOrphanItem && !linkingItemId
-                                  ? "border-foreground/50 hover:border-foreground cursor-pointer"
-                                  : "border-foreground/20 cursor-default"
-                        )}
-                        onClick={itemCircleAction}
-                        disabled={isZeroAmountItem && !isLinked}
-                        aria-label={
-                          isLinked
-                            ? t("linking.removeLink")
-                            : isLinkingThisItem
-                              ? t("linking.cancelLinking")
-                              : isOrphanItem &&
-                                  !linkingItemId &&
-                                  !isZeroAmountItem
-                                ? t("linking.startLinking")
-                                : undefined
-                        }
-                        title={
-                          isLinked
-                            ? t("linking.removeLink")
-                            : isLinkingThisItem
-                              ? t("linking.cancelLinking")
-                              : isOrphanItem &&
-                                  !linkingItemId &&
-                                  !isZeroAmountItem
-                                ? t("linking.startLinking")
-                                : undefined
-                        }
-                      >
-                        {(isLinked || isLinkingThisItem) && (
-                          <X className="h-2 w-2 text-current opacity-0 group-hover:opacity-100" />
-                        )}
-                      </button>
-                    ) : (
-                      <div className="h-3 w-3 shrink-0" />
-                    )}
-
-                    {/* Connecting line */}
-                    <div
-                      className={cn(
-                        "flex-1 h-[2px]",
-                        isLinked ? "bg-blue-500" : ""
+                    <div className="flex-1 min-w-0 px-3">
+                      {row.item && row.itemType === "invoices" && (
+                        <InvoiceLinkingCell
+                          invoice={row.item as Invoice}
+                          quarterId={quarterId}
+                        />
                       )}
-                    />
-
-                    {/* Cashflow-side circle */}
-                    {row.cashflow ? (
-                      <button
-                        className={cn(
-                          "h-3 w-3 rounded-full border-2 shrink-0 group flex items-center justify-center transition-colors",
-                          isLinked
-                            ? "border-blue-500 cursor-pointer hover:border-destructive"
-                            : linkingItemId && isLinkableEntry
-                              ? "border-blue-400 cursor-pointer hover:border-blue-500"
-                              : "border-foreground/20 cursor-default"
-                        )}
-                        onClick={cashflowCircleAction}
-                        aria-label={
+                      {row.item && row.itemType === "expenses" && (
+                        <ExpenseLinkingCell
+                          expense={row.item as Expense}
+                          quarterId={quarterId}
+                        />
+                      )}
+                    </div>
+                    {row.item ? (
+                      <LinkingCircle
+                        side="item"
+                        isLinked={isLinked}
+                        isLinkingSource={isLinkingThisItem}
+                        isLinkableTarget={false}
+                        isDisabled={isZeroAmountItem && !isLinked}
+                        onClick={itemCircleAction}
+                        ariaLabel={
                           isLinked
                             ? t("linking.removeLink")
-                            : linkingItemId && isLinkableEntry
-                              ? t("linking.linkCashflow")
-                              : undefined
+                            : isLinkingThisItem
+                              ? t("linking.cancelLinking")
+                              : isOrphanItem &&
+                                  !linkingItemId &&
+                                  !isZeroAmountItem
+                                ? t("linking.startLinking")
+                                : undefined
                         }
                         title={
                           isLinked
                             ? t("linking.removeLink")
-                            : linkingItemId && isLinkableEntry
-                              ? t("linking.linkCashflow")
-                              : undefined
+                            : isLinkingThisItem
+                              ? t("linking.cancelLinking")
+                              : isOrphanItem &&
+                                  !linkingItemId &&
+                                  !isZeroAmountItem
+                                ? t("linking.startLinking")
+                                : undefined
                         }
-                      >
-                        {isLinked && (
-                          <X className="h-2 w-2 text-current opacity-0 group-hover:opacity-100" />
-                        )}
-                      </button>
+                      />
                     ) : (
-                      <div className="h-3 w-3 shrink-0" />
+                      <div className="w-7 shrink-0" />
                     )}
                   </div>
 
-                  {/* Cashflow cell */}
+                  {/* Cashflow cell — circle on left edge + content */}
                   <div
                     className={cn(
-                      "flex-1 px-3 min-h-[3.5rem] border-l border-border",
+                      "flex-1 min-h-[3.5rem] flex items-center border-l border-border",
                       !row.cashflow && "bg-secondary/10"
                     )}
                   >
-                    {row.cashflow && (
-                      <CashflowLinkingCell entry={row.cashflow} />
+                    {row.cashflow ? (
+                      <LinkingCircle
+                        side="cashflow"
+                        isLinked={isLinked}
+                        isLinkingSource={false}
+                        isLinkableTarget={!!(linkingItemId && isLinkableEntry)}
+                        isDisabled={false}
+                        onClick={cashflowCircleAction}
+                        ariaLabel={
+                          isLinked
+                            ? t("linking.removeLink")
+                            : linkingItemId && isLinkableEntry
+                              ? t("linking.linkCashflow")
+                              : undefined
+                        }
+                        title={
+                          isLinked
+                            ? t("linking.removeLink")
+                            : linkingItemId && isLinkableEntry
+                              ? t("linking.linkCashflow")
+                              : undefined
+                        }
+                      />
+                    ) : (
+                      <div className="w-7 shrink-0" />
                     )}
+                    <div className="flex-1 min-w-0 px-3">
+                      {row.cashflow && (
+                        <CashflowLinkingCell entry={row.cashflow} />
+                      )}
+                    </div>
                   </div>
                 </div>
               )
