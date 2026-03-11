@@ -174,8 +174,8 @@ finances/
 
 If your data repository contains expense PDFs, **do not store them with Git LFS** (Large File Storage). There are two reasons:
 
-- **Every checkout fetches all LFS objects.** PDFs are rarely changed or deleted, so each clone or checkout must download every PDF ever committed — even in CI or Copilot agent sessions that only need the JSON data files.
-- **GitHub LFS bandwidth budget is limited.** Automated runs (GitHub Actions, Copilot agents) each trigger a full checkout, which rapidly exhausts the monthly LFS bandwidth quota. Once the budget is gone the repository can no longer be cloned until the quota resets or is increased.
+- **Every checkout fetches all LFS objects.** PDFs are rarely changed or deleted, so even when `clone` can be faster ignoring them, the `checkout` must download every PDF in the repo, except those deleted or replaced which typically is a very small percentage — even in CI or Copilot agent sessions that only need the JSON data files.
+- **GitHub LFS bandwidth budget is limited.** Automated runs (GitHub Actions, Copilot agents) each trigger a full checkout, which rapidly exhausts the monthly LFS bandwidth quota. Once the budget is gone the repository can no longer be checked out until the quota resets or is increased.
 
 **Recommendation:** commit PDF files directly to Git (no LFS). PDFs in a personal accounting repo are small in number and rarely re-downloaded by humans, so the standard Git object store is a better fit than LFS for this use case.
 
