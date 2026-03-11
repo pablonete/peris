@@ -171,3 +171,18 @@ function resolveCategoryKey(
   if (!category) return ""
   return mode === "first-level" ? category.split(".")[0] : category
 }
+
+/**
+ * Sorts cashflow entries by bank sequence number, placing carry-over entries
+ * (those without a bankSequence) first.
+ */
+export function sortCashflowBySequence(
+  entries: CashflowEntry[]
+): CashflowEntry[] {
+  return [...entries].sort((a, b) => {
+    if (!a.bankSequence && !b.bankSequence) return 0
+    if (!a.bankSequence) return -1
+    if (!b.bankSequence) return 1
+    return a.bankSequence - b.bankSequence
+  })
+}

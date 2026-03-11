@@ -81,7 +81,7 @@ function CashflowCell({ entry }: { entry: CashflowEntry }) {
 
 export function LinkingView({ quarterId }: LinkingViewProps) {
   const { t } = useLanguage()
-  const [side, setSide] = useState<LinkedSide>("invoices")
+  const [side, setSide] = useState<LinkedSide>("expenses")
 
   const {
     content: invoices,

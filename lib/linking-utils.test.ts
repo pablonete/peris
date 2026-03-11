@@ -84,56 +84,61 @@ describe("buildLinkingRows", () => {
     expect(rows[0].item).toBe(expense1)
   })
 
-  it("creates a cashflow-only row when there is no linked item", () => {
-    const rows = buildLinkingRows([cashflowUnlinked], [invoice1], "invoices")
-    expect(rows).toHaveLength(2)
-    expect(rows[0].cashflow).toBe(cashflowUnlinked)
-    expect(rows[0].item).toBeUndefined()
-    // unlinked invoice appended at the end
-    expect(rows[1].item).toBe(invoice1)
-    expect(rows[1].cashflow).toBeUndefined()
+  it("sets the date from the cashflow entry", () => {
+    const rows = buildLinkingRows([cashflowWithInvoice], [invoice1], "invoices")
+    expect(rows[0].date).toBe("2025-01-12")
   })
 
-  it("creates an item-only row for unlinked items after cashflow rows", () => {
+  it("sets the date from the item when there is no cashflow entry", () => {
+    const rows = buildLinkingRows([], [invoice1], "invoices")
+    expect(rows[0].date).toBe(invoice1.date)
+  })
+
+  it("sorts all rows by date, placing unlinked items at their temporal position", () => {
+    // cashflowUnlinked: 2025-01-15, invoice1 (unlinked): 2025-01-10
+    const rows = buildLinkingRows([cashflowUnlinked], [invoice1], "invoices")
+    expect(rows).toHaveLength(2)
+    // invoice1 (2025-01-10) comes before cashflowUnlinked (2025-01-15)
+    expect(rows[0].item).toBe(invoice1)
+    expect(rows[0].cashflow).toBeUndefined()
+    expect(rows[1].cashflow).toBe(cashflowUnlinked)
+    expect(rows[1].item).toBeUndefined()
+  })
+
+  it("places a paired row before a later unlinked item", () => {
     const rows = buildLinkingRows(
       [cashflowWithInvoice],
       [invoice1, invoice2],
       "invoices"
     )
     expect(rows).toHaveLength(2)
-    // paired row first
+    // paired row (cashflow date 2025-01-12) before unlinked invoice2 (2025-01-20)
     expect(rows[0].cashflow).toBe(cashflowWithInvoice)
     expect(rows[0].item).toBe(invoice1)
-    // unlinked invoice after
+    expect(rows[1].item).toBe(invoice2)
     expect(rows[1].cashflow).toBeUndefined()
-    expect(rows[1].item).toBe(invoice2)
   })
 
-  it("sorts unlinked items by date", () => {
-    const rows = buildLinkingRows([], [invoice2, invoice1], "invoices")
-    expect(rows[0].item).toBe(invoice1) // date 2025-01-10 comes before 2025-01-20
-    expect(rows[1].item).toBe(invoice2)
-  })
-
-  it("places carry-over entries (no bankSequence) first", () => {
+  it("places carry-over entries (earlier date) first", () => {
     const rows = buildLinkingRows(
       [cashflowWithInvoice, cashflowCarryOver],
       [invoice1],
       "invoices"
     )
+    // cashflowCarryOver: 2025-01-01, cashflowWithInvoice: 2025-01-12
     expect(rows[0].cashflow).toBe(cashflowCarryOver)
     expect(rows[1].cashflow).toBe(cashflowWithInvoice)
   })
 
-  it("sorts cashflow entries by bankSequence", () => {
+  it("sorts rows by date regardless of bankSequence", () => {
+    // cashflowWithInvoice: date 2025-01-12, seq 2; cashflowUnlinked: date 2025-01-15, seq 3
     const rows = buildLinkingRows(
       [cashflowUnlinked, cashflowWithInvoice],
       [invoice1],
       "invoices"
     )
-    // cashflowWithInvoice has bankSequence 2, cashflowUnlinked has 3
-    expect(rows[0].cashflow?.id).toBe("cf-1")
-    expect(rows[1].cashflow?.id).toBe("cf-3")
+    expect(rows[0].cashflow?.id).toBe("cf-1") // 2025-01-12
+    expect(rows[1].cashflow?.id).toBe("cf-3") // 2025-01-15
   })
 
   it("returns empty rows for empty inputs", () => {
@@ -142,11 +147,11 @@ describe("buildLinkingRows", () => {
   })
 
   it("does not include invoiceId-linked items when side is expenses", () => {
-    const rows = buildLinkingRows([cashflowWithInvoice], [expense1], "expenses")
     // cashflowWithInvoice has invoiceId not expenseId, so no pairing
-    expect(rows[0].cashflow).toBe(cashflowWithInvoice)
-    expect(rows[0].item).toBeUndefined()
-    // expense1 is unlinked
-    expect(rows[1].item).toBe(expense1)
+    // expense1: 2025-01-05, cashflowWithInvoice: 2025-01-12
+    const rows = buildLinkingRows([cashflowWithInvoice], [expense1], "expenses")
+    expect(rows[0].item).toBe(expense1) // 2025-01-05 comes first
+    expect(rows[1].cashflow).toBe(cashflowWithInvoice)
+    expect(rows[1].item).toBeUndefined()
   })
 })

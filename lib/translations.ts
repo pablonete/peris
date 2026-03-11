@@ -13,7 +13,7 @@ export const translations = {
       commitChanges: "Guardar cambios",
       editingFiles: "archivo editado",
       editingFilesPlural: "archivos editados",
-      linking: "Enlace",
+      linking: "Conciliar",
     },
     quarters: {
       newQuarter: "Nuevo trimestre",
@@ -238,7 +238,7 @@ export const translations = {
       unsavedChanges: "Cambios sin guardar",
     },
     linking: {
-      title: "Enlace",
+      title: "Conciliar",
       emptyState: "No se encontraron datos.",
       invoices: "Facturas",
       expenses: "Gastos",

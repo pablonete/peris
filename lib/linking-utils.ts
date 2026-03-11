@@ -3,51 +3,40 @@ import { Invoice, Expense, CashflowEntry } from "@/lib/types"
 export type LinkedSide = "invoices" | "expenses"
 
 export type LinkingRow = {
+  /** Date used for ordering: cashflow date if present, otherwise the item date. */
+  date: string
   cashflow?: CashflowEntry
   item?: Invoice | Expense
 }
 
-function sortCashflowBySequence(entries: CashflowEntry[]): CashflowEntry[] {
-  return [...entries].sort((a, b) => {
-    if (!a.bankSequence && !b.bankSequence) return 0
-    if (!a.bankSequence) return -1
-    if (!b.bankSequence) return 1
-    return a.bankSequence - b.bankSequence
-  })
-}
-
 /**
  * Builds rows for the linking view by pairing cashflow entries with their
- * linked invoices or expenses. Cashflow is sorted by bank sequence (carry-overs
- * first), and unlinked items are appended sorted by date.
+ * linked invoices or expenses. Each row gets a date (cashflow date if present,
+ * otherwise item date), and all rows are sorted by that date so unlinked items
+ * appear at their temporal position rather than appended at the end.
  */
 export function buildLinkingRows(
   cashflow: CashflowEntry[],
   items: (Invoice | Expense)[],
   side: LinkedSide
 ): LinkingRow[] {
-  const sortedCashflow = sortCashflowBySequence(cashflow)
   const usedItemIds = new Set<string>()
   const rows: LinkingRow[] = []
 
-  for (const entry of sortedCashflow) {
+  for (const entry of cashflow) {
     const linkedId = side === "invoices" ? entry.invoiceId : entry.expenseId
     if (linkedId) {
       const item = items.find((i) => i.id === linkedId)
-      usedItemIds.add(linkedId)
-      rows.push({ cashflow: entry, item })
+      if (item) usedItemIds.add(linkedId)
+      rows.push({ date: entry.date, cashflow: entry, item })
     } else {
-      rows.push({ cashflow: entry })
+      rows.push({ date: entry.date, cashflow: entry })
     }
   }
 
-  const unlinkedItems = items
-    .filter((i) => !usedItemIds.has(i.id))
-    .sort((a, b) => a.date.localeCompare(b.date))
-
-  for (const item of unlinkedItems) {
-    rows.push({ item })
+  for (const item of items.filter((i) => !usedItemIds.has(i.id))) {
+    rows.push({ date: item.date, item })
   }
 
-  return rows
+  return rows.sort((a, b) => a.date.localeCompare(b.date))
 }
