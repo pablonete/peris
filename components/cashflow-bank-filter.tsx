@@ -9,25 +9,31 @@ interface CashflowBankFilterProps {
   banks: string[]
   activeBank: string | null
   onSelect: (bank: string | null) => void
+  className?: string
+  compact?: boolean
 }
 
 export function CashflowBankFilter({
   banks,
   activeBank,
   onSelect,
+  className,
+  compact,
 }: CashflowBankFilterProps) {
   const { t } = useLanguage()
   if (banks.length <= 1) {
     return null
   }
 
+  const buttonClass = cn("font-mono text-xs", compact && "h-5 px-2 py-0")
+
   return (
-    <div className="mb-4 flex flex-wrap gap-2">
+    <div className={className ?? "mb-4 flex flex-wrap gap-2"}>
       <Button
         variant={activeBank === null ? "default" : "outline"}
         size="sm"
         onClick={() => onSelect(null)}
-        className="font-mono text-xs"
+        className={buttonClass}
       >
         {t("cashflow.allBanks")}
       </Button>
@@ -40,7 +46,7 @@ export function CashflowBankFilter({
             variant={activeBank === bank ? "default" : "outline"}
             size="sm"
             onClick={() => onSelect(bank)}
-            className="font-mono text-xs"
+            className={buttonClass}
           >
             <span className={cn("mr-2 inline-block h-2.5 w-2.5", colorClass)} />
             <span>{bank}</span>
