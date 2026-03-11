@@ -2,7 +2,11 @@
 
 import { useRef, useState, useMemo } from "react"
 import { Plus, X, File, AlertCircle } from "lucide-react"
-import { formatCurrency, getQuarterFromDate } from "@/lib/ledger-utils"
+import {
+  formatCurrency,
+  getQuarterFromDate,
+  sortByDate,
+} from "@/lib/ledger-utils"
 import { generateNextId } from "@/lib/id-utils"
 import { readFileAsArrayBuffer } from "@/lib/file-utils"
 import { useData } from "@/lib/use-data"
@@ -234,9 +238,7 @@ function InvoiceFormContent({
       }
     }
 
-    const updated = [...effectiveInvoices, record].sort((a, b) =>
-      a.date.localeCompare(b.date)
-    )
+    const updated = sortByDate([...effectiveInvoices, record])
     setEditingFile(effectiveQuarterId, "invoices", updated, effectiveSha)
 
     onSuccess()

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { formatCurrency, formatDate } from "@/lib/ledger-utils"
+import { formatCurrency, formatDate, sortByDate } from "@/lib/ledger-utils"
 
 describe("ledger-utils", () => {
   describe("formatCurrency", () => {
@@ -37,6 +37,47 @@ describe("ledger-utils", () => {
     it("should format another date correctly", () => {
       const result = formatDate("2023-12-31")
       expect(result).toBe("31 Dec 2023")
+    })
+  })
+
+  describe("sortByDate", () => {
+    it("sorts items ascending by date", () => {
+      const items = [
+        { date: "2025-03-01", id: "c" },
+        { date: "2025-01-15", id: "a" },
+        { date: "2025-02-10", id: "b" },
+      ]
+      const result = sortByDate(items)
+      expect(result.map((i) => i.id)).toEqual(["a", "b", "c"])
+    })
+
+    it("returns a new array and does not mutate the original", () => {
+      const items = [
+        { date: "2025-03-01", id: "c" },
+        { date: "2025-01-15", id: "a" },
+      ]
+      const result = sortByDate(items)
+      expect(result).not.toBe(items)
+      expect(items[0].id).toBe("c")
+    })
+
+    it("handles an empty array", () => {
+      expect(sortByDate([])).toEqual([])
+    })
+
+    it("handles a single item", () => {
+      const items = [{ date: "2025-01-01", id: "x" }]
+      expect(sortByDate(items)).toEqual(items)
+    })
+
+    it("preserves relative order of items with equal dates", () => {
+      const items = [
+        { date: "2025-01-01", id: "first" },
+        { date: "2025-01-01", id: "second" },
+      ]
+      const result = sortByDate(items)
+      expect(result.map((i) => i.id)).toContain("first")
+      expect(result.map((i) => i.id)).toContain("second")
     })
   })
 })

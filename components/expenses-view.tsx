@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { ChevronDown, ChevronUp } from "lucide-react"
-import { formatCurrency, formatDate } from "@/lib/ledger-utils"
+import { formatCurrency, formatDate, sortByDate } from "@/lib/ledger-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useData } from "@/lib/use-data"
 import { Expense } from "@/lib/types"
@@ -65,7 +65,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
     return <ErrorBanner title={t("sidebar.expenses")} message={error.message} />
   }
 
-  const expenses = content || []
+  const expenses = sortByDate(content || [])
   const totalSubtotal = expenses.reduce(
     (s, e) => s + e.vat.reduce((v, item) => v + item.subtotal, 0),
     0
@@ -89,7 +89,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
   const vatSubtotals = getVatSubtotals(expenses)
 
   const handleDeleteExpense = (id: string) => {
-    const nextExpenses = expenses.filter((e) => e.id !== id)
+    const nextExpenses = sortByDate(expenses.filter((e) => e.id !== id))
     const editingFile = getEditingFile(quarterId, "expenses")
     setEditingFile(quarterId, "expenses", nextExpenses, editingFile?.sha)
     setDeleteAlert(null)

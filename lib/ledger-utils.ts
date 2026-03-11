@@ -22,3 +22,7 @@ export function getQuarterFromDate(dateStr: string): string {
   const quarter = Math.ceil(month / 3)
   return `${year}.${quarter}Q`
 }
+
+export function sortByDate<T extends { date: string }>(items: T[]): T[] {
+  return [...items].sort((a, b) => a.date.localeCompare(b.date))
+}

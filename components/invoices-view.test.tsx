@@ -29,6 +29,16 @@ vi.mock("@/lib/use-storage-data", () => ({
   useStorageData: () => ({
     content: [
       {
+        id: "3",
+        date: "2025-03-10",
+        number: "2025-003",
+        client: "Client C",
+        concept: "March services",
+        subtotal: 3000,
+        vat: 630,
+        total: 3630,
+      },
+      {
         id: "1",
         date: "2025-01-15",
         number: "2025-001",
@@ -37,6 +47,16 @@ vi.mock("@/lib/use-storage-data", () => ({
         subtotal: 1000,
         vat: 210,
         total: 1210,
+      },
+      {
+        id: "2",
+        date: "2025-02-20",
+        number: "2025-002",
+        client: "Client B",
+        concept: "Consulting",
+        subtotal: 2000,
+        vat: 420,
+        total: 2420,
       },
     ],
     isPending: false,
@@ -55,5 +75,20 @@ describe("InvoicesView", () => {
 
     expect(screen.getByText("Facturas Enviadas")).toBeInTheDocument()
     expect(screen.getByText("Acme Corp")).toBeInTheDocument()
+  })
+
+  it("renders invoices sorted by date even when content is unsorted", () => {
+    render(
+      <TestProviders>
+        <InvoicesView quarterId="2025.1Q" />
+      </TestProviders>
+    )
+
+    const bodyRows =
+      document.querySelector("tbody")?.querySelectorAll("tr") ?? []
+    const clients = Array.from(bodyRows)
+      .map((row) => row.querySelector("td:nth-child(3)")?.textContent)
+      .filter(Boolean)
+    expect(clients).toEqual(["Acme Corp", "Client B", "Client C"])
   })
 })
