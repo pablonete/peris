@@ -30,12 +30,17 @@ function LayoutContent({
   const segments = pathname.split("/").filter(Boolean)
   const lastSegment = segments[segments.length - 1]
   const selectedView = (
-    ["invoices", "expenses", "cashflow"].includes(lastSegment ?? "")
+    ["invoices", "expenses", "cashflow", "linking"].includes(lastSegment ?? "")
       ? lastSegment
       : "invoices"
   ) as ViewType
 
   const { getEditingFile } = useData()
+
+  function getEditingFileForView(quarterId: string, view: ViewType) {
+    if (view === "linking") return null
+    return getEditingFile(quarterId, view)
+  }
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -88,7 +93,7 @@ function LayoutContent({
           <ViewTabs
             quarterId={selectedQuarter}
             selectedView={selectedView}
-            getEditingFile={getEditingFile}
+            getEditingFile={getEditingFileForView}
             onTabClick={() => setSidebarOpen(false)}
           />
         )}

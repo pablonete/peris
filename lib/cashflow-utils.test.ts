@@ -7,6 +7,7 @@ import {
   getBankColorClass,
   belongsToCashflowBank,
   getCashflowTotalsByCategory,
+  sortCashflowBySequence,
 } from "./cashflow-utils"
 import { CashflowEntry } from "./types"
 
@@ -736,6 +737,42 @@ describe("cashflow-utils", () => {
       expect(result).toHaveLength(1)
       expect(result[0].expensesTotal).toBe(800)
       expect(result[0].invoicesTotal).toBe(0)
+    })
+  })
+
+  describe("sortCashflowBySequence", () => {
+    const makeEntry = (id: string, bankSequence?: number): CashflowEntry => ({
+      id,
+      date: "2025-01-01",
+      concept: "Test",
+      balance: 0,
+      bankSequence,
+    })
+
+    it("places entries without bankSequence first", () => {
+      const entries = [makeEntry("a", 1), makeEntry("b"), makeEntry("c", 2)]
+      const result = sortCashflowBySequence(entries)
+      expect(result[0].id).toBe("b")
+    })
+
+    it("sorts entries with bankSequence numerically", () => {
+      const entries = [makeEntry("a", 3), makeEntry("b", 1), makeEntry("c", 2)]
+      const result = sortCashflowBySequence(entries)
+      expect(result.map((e) => e.id)).toEqual(["b", "c", "a"])
+    })
+
+    it("handles all entries without bankSequence", () => {
+      const entries = [makeEntry("a"), makeEntry("b"), makeEntry("c")]
+      const result = sortCashflowBySequence(entries)
+      expect(result).toHaveLength(3)
+    })
+
+    it("does not mutate the original array", () => {
+      const entries = [makeEntry("a", 2), makeEntry("b", 1)]
+      const original = [...entries]
+      sortCashflowBySequence(entries)
+      expect(entries[0].id).toBe(original[0].id)
+      expect(entries[1].id).toBe(original[1].id)
     })
   })
 })
