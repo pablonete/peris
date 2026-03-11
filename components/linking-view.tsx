@@ -69,15 +69,12 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
       ? selectedBank
       : null
 
-  const filteredCashflow = activeBank
-    ? (cashflow ?? []).filter((e) => e.bankName === activeBank)
-    : (cashflow ?? [])
+  const rows = buildLinkingRows(cashflow ?? [], invoices ?? [], expenses ?? [])
 
-  const rows = buildLinkingRows(
-    filteredCashflow,
-    invoices ?? [],
-    expenses ?? []
-  )
+  // Orphan items (no cashflow yet) are always shown so they can be linked to any bank's entries
+  const filteredRows = activeBank
+    ? rows.filter((row) => !row.cashflow || row.cashflow.bankName === activeBank)
+    : rows
 
   const handleBankSelect = (bank: string | null) => {
     setSelectedBank(bank)
@@ -135,6 +132,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
               activeBank={activeBank}
               onSelect={handleBankSelect}
               className="flex flex-wrap gap-1"
+              compact
             />
           </div>
         </div>
@@ -145,7 +143,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
           </div>
         ) : (
           <div className="divide-y divide-dashed divide-[hsl(var(--ledger-line))]">
-            {rows.map((row, idx) => {
+            {filteredRows.map((row, idx) => {
               const isOrphanItem = !!row.item && !row.cashflow
               const isLinkingThisItem =
                 isOrphanItem && row.item?.id === linkingItemId
@@ -164,7 +162,8 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                   <div
                     className={cn(
                       "flex-1 border-r border-border px-3 min-h-[3.5rem]",
-                      !row.item && "bg-secondary/10"
+                      !row.item && "bg-secondary/10",
+                      isLinkingThisItem && "ring-2 ring-inset ring-blue-500"
                     )}
                   >
                     {row.item && row.itemType === "invoices" && (
