@@ -242,6 +242,10 @@ export const translations = {
       emptyState: "No se encontraron datos.",
       items: "Facturas / Gastos",
       cashflow: "Flujo de caja",
+      startLinking: "Vincular con flujo de caja",
+      cancelLinking: "Cancelar vinculación",
+      linkCashflow: "Vincular con este movimiento",
+      removeLink: "Eliminar vínculo",
     },
   },
   en: {
@@ -484,6 +488,10 @@ export const translations = {
       emptyState: "No data found.",
       items: "Invoices / Expenses",
       cashflow: "Cashflow",
+      startLinking: "Link to cashflow",
+      cancelLinking: "Cancel linking",
+      linkCashflow: "Link to this entry",
+      removeLink: "Remove link",
     },
   },
 }
