@@ -125,11 +125,7 @@ function compareImportedEntries(
 }
 
 function isCarryOverEntry(entry: CashflowEntry): boolean {
-  return (
-    entry.concept === "Carry over" &&
-    entry.income == null &&
-    entry.expense == null
-  )
+  return entry.income == null && entry.expense == null
 }
 
 function getSignedAmount(entry: CashflowEntry): number {
