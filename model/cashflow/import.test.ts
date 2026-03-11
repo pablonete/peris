@@ -167,18 +167,134 @@ describe("importCashflowFile", () => {
     expect(result.logContent).toContain("Otro trimestre")
     expect(result.logContent).toContain("Secuencia corregida: 2")
   })
+  it("matches existing Unicaja entries, creates missing ones, and uses Nº mov as sequence", () => {
+    const entries: CashflowEntry[] = [
+      {
+        id: "co",
+        date: "2026-01-01",
+        concept: "Carry over",
+        bankName: "Unicaja",
+        balance: 500,
+      },
+      {
+        id: "cf-1",
+        date: "2026-01-30",
+        concept: "AUTONOMOS",
+        bankName: "Unicaja",
+        expense: 422.41,
+        balance: 77.59,
+        bankSequence: 2,
+      },
+      {
+        id: "cf-2",
+        date: "2026-01-30",
+        concept: "Préstamo Admin tgss",
+        bankName: "Unicaja",
+        income: 500,
+        balance: 577.59,
+        bankSequence: 1,
+      },
+    ]
+
+    const csvContent = [
+      "Fecha de operación,Fecha valor,Concepto,Importe,Divisa,Saldo,Divisa,Nº mov,Oficina ,Categoría,Código Devolución,Concepto Devolución",
+      "27/02/2026,27/02/2026,AUTONOMOS 000654 290102030405,-422.41,EUR,74.25,EUR,3006,8076,,,",
+      "27/02/2026,27/02/2026,Ingreso,400.00,EUR,496.66,EUR,3005,8076,,,",
+      "30/01/2026,30/01/2026,AUTONOMOS 000654 290102030405,-422.41,EUR,96.66,EUR,3004,3001,,,",
+      "30/01/2026,30/01/2026,Ingreso TGSS,500.00,EUR,519.07,EUR,3003,8076,,,",
+    ].join("\n")
+
+    const result = importCashflowFile({
+      bank: "unicaja",
+      csvContent,
+      fileName: "unicaja-q1.csv",
+      quarterId: "2026.1Q",
+      entries,
+      now: new Date("2026-03-07T16:10:31.772Z"),
+    })
+
+    expect(result.summary).toEqual({
+      processed: 4,
+      otherQuarter: 0,
+      existing: 2,
+      created: 2,
+      ignored: 0,
+      sequenceFixed: 2,
+    })
+
+    expect(
+      result.entries
+        .filter(
+          (entry) => entry.bankName === "Unicaja" || entry.bankName == null
+        )
+        .map(({ date, concept, bankSequence, balance, income, expense }) => ({
+          date,
+          concept,
+          bankSequence,
+          balance,
+          income,
+          expense,
+        }))
+    ).toEqual([
+      {
+        date: "2026-01-01",
+        concept: "Carry over",
+        bankSequence: undefined,
+        balance: 500,
+        income: undefined,
+        expense: undefined,
+      },
+      {
+        date: "2026-01-30",
+        concept: "Préstamo Admin tgss",
+        bankSequence: 3003,
+        balance: 1000,
+        income: 500,
+        expense: undefined,
+      },
+      {
+        date: "2026-01-30",
+        concept: "AUTONOMOS",
+        bankSequence: 3004,
+        balance: 577.59,
+        income: undefined,
+        expense: 422.41,
+      },
+      {
+        date: "2026-02-27",
+        concept: "Ingreso",
+        bankSequence: 3005,
+        balance: 977.59,
+        income: 400,
+        expense: undefined,
+      },
+      {
+        date: "2026-02-27",
+        concept: "AUTONOMOS 000654 290102030405",
+        bankSequence: 3006,
+        balance: 555.18,
+        income: undefined,
+        expense: 422.41,
+      },
+    ])
+
+    expect(result.logPath).toBe(
+      "import/unicaja-q1.peris-2026-03-07T16-10-31.772Z.log.txt"
+    )
+    expect(result.logContent).toContain("Creado")
+    expect(result.logContent).toContain("Secuencia corregida: 2")
+  })
 })
 
 function buildCsv(rows: Array<Record<string, string>>): string {
-  return [revolutHeader.join(","), ...rows.map((row) => buildCsvRow(row))].join(
-    "\n"
-  )
+  return [
+    revolutHeader.join(","),
+    ...rows.map((row) => buildCsvRow(row, revolutHeader)),
+  ].join("\n")
 }
 
-function buildCsvRow(row: Record<string, string>): string {
-  return revolutHeader
-    .map((column) => escapeCsvValue(row[column] ?? ""))
-    .join(",")
+function buildCsvRow(row: Record<string, string>, header: string[]): string {
+  return header.map((column) => escapeCsvValue(row[column] ?? "")).join(",")
 }
 
 function escapeCsvValue(value: string): string {

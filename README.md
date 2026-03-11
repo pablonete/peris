@@ -167,7 +167,7 @@ finances/
 **import/** - Optional bank import workspace at the root of the data path:
 
 - Place bank exports here before importing them from the Cashflow view
-- Peris currently supports Revolut CSV files
+- Peris currently supports Revolut and Unicaja CSV files
 - Each import writes a sibling `.log.txt` file describing per-row actions and the final summary
 
 ### Security Considerations
