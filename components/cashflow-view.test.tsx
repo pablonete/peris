@@ -110,6 +110,27 @@ describe("CashflowView", () => {
     ).toBeInTheDocument()
   })
 
+  it("changes periodicity when an option is selected from the dropdown", async () => {
+    const user = userEvent.setup()
+    getEditingFileMock.mockReturnValue(null)
+
+    renderCashflowView()
+
+    // The "Client payment" entry has no periodicity → shows the + button
+    await user.click(screen.getByLabelText("Establecer periodicidad"))
+
+    await user.click(await screen.findByRole("menuitem", { name: "Mensual" }))
+
+    expect(setEditingFileMock).toHaveBeenCalledWith(
+      "2025.1Q",
+      "cashflow",
+      expect.arrayContaining([
+        expect.objectContaining({ id: "2", periodicity: "1mo" }),
+      ]),
+      undefined
+    )
+  })
+
   it("shows Close instead of Import after a successful import", async () => {
     const user = userEvent.setup()
     readTextFileMock.mockResolvedValue({

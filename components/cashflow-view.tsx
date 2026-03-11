@@ -36,6 +36,7 @@ import { ImportCashflowDialog } from "@/components/cashflow/import-cashflow-dial
 import { SummaryCard } from "@/components/summary-card"
 import { EditingIndicator } from "@/components/editing-indicator"
 import { PeriodicityBadge } from "@/components/periodicity-badge"
+import { PeriodicityButton } from "@/components/periodicity-button"
 import {
   GhostEntrySourceCell,
   RegularEntrySourceCell,
@@ -158,6 +159,17 @@ export function CashflowView({
     setAssignCategoryEntry(null)
   }
 
+  const handleChangePeriodicity = (
+    entry: CashflowEntry,
+    periodicity: CashflowEntry["periodicity"]
+  ) => {
+    const nextEntries = entries.map((e) =>
+      e.id === entry.id ? { ...e, periodicity } : e
+    )
+    const editingFile = getEditingFile(quarterId, "cashflow")
+    setEditingFile(quarterId, "cashflow", nextEntries, editingFile?.sha)
+  }
+
   return (
     <div>
       <div className="mb-6 border-b-2 border-foreground/20 pb-4">
@@ -272,7 +284,16 @@ export function CashflowView({
                   <TableCell className="font-mono text-xs">
                     <span className="flex items-center gap-2">
                       <span>{formatDate(entry.date)}</span>
-                      <PeriodicityBadge periodicity={entry.periodicity} />
+                      {ghost ? (
+                        <PeriodicityBadge periodicity={entry.periodicity} />
+                      ) : !isCarryOver ? (
+                        <PeriodicityButton
+                          periodicity={entry.periodicity}
+                          onChangePeriodicity={(p) =>
+                            handleChangePeriodicity(entry as CashflowEntry, p)
+                          }
+                        />
+                      ) : null}
                     </span>
                   </TableCell>
                   <TableCell className={cn("text-sm", isCarryOver && "italic")}>
