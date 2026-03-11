@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { formatCurrency, formatDate } from "@/lib/ledger-utils"
+import { formatCurrency, formatDate, sortByDate } from "@/lib/ledger-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useData } from "@/lib/use-data"
 import { Invoice } from "@/lib/types"
@@ -67,13 +67,15 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
     return null
   }
 
-  const totalSubtotal = content.reduce((s, i) => s + i.subtotal, 0)
-  const totalVat = content.reduce((s, i) => s + i.vat, 0)
-  const totalAmount = content.reduce((s, i) => s + i.total, 0)
-  const hasCurrency = content.some((i) => i.currency)
+  const invoices = sortByDate(content)
+
+  const totalSubtotal = invoices.reduce((s, i) => s + i.subtotal, 0)
+  const totalVat = invoices.reduce((s, i) => s + i.vat, 0)
+  const totalAmount = invoices.reduce((s, i) => s + i.total, 0)
+  const hasCurrency = invoices.some((i) => i.currency)
 
   const handleDeleteInvoice = (id: string) => {
-    const nextInvoices = content.filter((i) => i.id !== id)
+    const nextInvoices = sortByDate(invoices.filter((i) => i.id !== id))
     const editingFile = getEditingFile(quarterId, "invoices")
     setEditingFile(quarterId, "invoices", nextInvoices, editingFile?.sha)
     setDeleteAlert(null)
@@ -82,7 +84,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
   const handleLinkOrphan = (filename: string) => {
     if (!linkOrphanInvoice) return
 
-    const nextInvoices = content.map((i) =>
+    const nextInvoices = invoices.map((i) =>
       i.id === linkOrphanInvoice.id ? { ...i, filename } : i
     )
     const editingFile = getEditingFile(quarterId, "invoices")
@@ -100,11 +102,11 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
               <EditingIndicator isEditing={isEditing} />
             </h2>
             <p className="font-mono text-xs text-muted-foreground">
-              {quarterId} &middot; {companyName} &middot; {content.length}{" "}
+              {quarterId} &middot; {companyName} &middot; {invoices.length}{" "}
               {t("invoices.sentInvoices").toLowerCase()}
             </p>
           </div>
-          <NewInvoiceDialog quarterId={quarterId} invoices={content} />
+          <NewInvoiceDialog quarterId={quarterId} invoices={invoices} />
         </div>
       </div>
 
@@ -112,13 +114,13 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
         <SummaryCard label={t("invoices.totalInvoiced")} value={totalAmount} />
         <SummaryCard
           label={t("invoices.collected")}
-          value={content
+          value={invoices
             .filter((i) => i.paymentDate != null)
             .reduce((s, i) => s + i.total, 0)}
         />
         <SummaryCard
           label={t("invoices.outstanding")}
-          value={content
+          value={invoices
             .filter((i) => i.paymentDate == null)
             .reduce((s, i) => s + i.total, 0)}
         />
@@ -162,14 +164,14 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {content.length === 0 ? (
+            {invoices.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={10} className="py-6 text-center">
                   {t("invoices.emptyState")}
                 </TableCell>
               </TableRow>
             ) : (
-              content.map((inv) => (
+              invoices.map((inv) => (
                 <TableRow
                   key={inv.id}
                   className="border-b border-dashed border-[hsl(var(--ledger-line))] hover:bg-secondary/50"
@@ -264,7 +266,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
 
       <DuplicateInvoiceDialog
         quarterId={quarterId}
-        invoices={content}
+        invoices={invoices}
         invoice={duplicateInvoice}
         onClose={() => setDuplicateInvoice(null)}
       />
@@ -275,7 +277,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
         onLink={handleLinkOrphan}
         quarterId={quarterId}
         type="invoices"
-        linkedItems={content}
+        linkedItems={invoices}
       />
     </div>
   )

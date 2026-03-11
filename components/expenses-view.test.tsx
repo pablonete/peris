@@ -28,12 +28,28 @@ vi.mock("@/lib/use-storage-data", () => ({
   useStorageData: () => ({
     content: [
       {
+        id: "3",
+        date: "2025-03-01",
+        vendor: "Vendor C",
+        concept: "March item",
+        vat: [],
+        total: 300,
+      },
+      {
         id: "1",
         date: "2025-01-10",
         vendor: "Office Supplies Ltd",
         concept: "Stationery",
         vat: [{ rate: 21, subtotal: 100, amount: 21 }],
         total: 121,
+      },
+      {
+        id: "2",
+        date: "2025-02-01",
+        vendor: "Vendor B",
+        concept: "February item",
+        vat: [],
+        total: 200,
       },
     ],
     isPending: false,
@@ -52,5 +68,20 @@ describe("ExpensesView", () => {
 
     expect(screen.getByText("Gastos")).toBeInTheDocument()
     expect(screen.getByText("Office Supplies Ltd")).toBeInTheDocument()
+  })
+
+  it("renders expenses sorted by date even when content is unsorted", () => {
+    render(
+      <TestProviders>
+        <ExpensesView quarterId="2025.1Q" />
+      </TestProviders>
+    )
+
+    const bodyRows =
+      document.querySelector("tbody")?.querySelectorAll("tr") ?? []
+    const vendors = Array.from(bodyRows)
+      .map((row) => row.querySelector("td:nth-child(3)")?.textContent)
+      .filter(Boolean)
+    expect(vendors).toEqual(["Office Supplies Ltd", "Vendor B", "Vendor C"])
   })
 })
