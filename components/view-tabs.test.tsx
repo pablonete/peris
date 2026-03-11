@@ -81,9 +81,7 @@ describe("ViewTabs", () => {
       </TestProviders>
     )
 
-    expect(
-      screen.getByLabelText("Cambios sin guardar")
-    ).toBeInTheDocument()
+    expect(screen.getByLabelText("Cambios sin guardar")).toBeInTheDocument()
   })
 
   it("does not show edit indicator when no views have unsaved changes", () => {

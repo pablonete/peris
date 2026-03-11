@@ -71,32 +71,34 @@ const cashflowUnlinked: CashflowEntry = {
 
 describe("buildLinkingRows", () => {
   it("pairs a cashflow entry with its linked invoice", () => {
-    const rows = buildLinkingRows([cashflowWithInvoice], [invoice1], "invoices")
+    const rows = buildLinkingRows([cashflowWithInvoice], [invoice1], [])
     expect(rows).toHaveLength(1)
     expect(rows[0].cashflow).toBe(cashflowWithInvoice)
     expect(rows[0].item).toBe(invoice1)
+    expect(rows[0].itemType).toBe("invoices")
   })
 
   it("pairs a cashflow entry with its linked expense", () => {
-    const rows = buildLinkingRows([cashflowWithExpense], [expense1], "expenses")
+    const rows = buildLinkingRows([cashflowWithExpense], [], [expense1])
     expect(rows).toHaveLength(1)
     expect(rows[0].cashflow).toBe(cashflowWithExpense)
     expect(rows[0].item).toBe(expense1)
+    expect(rows[0].itemType).toBe("expenses")
   })
 
   it("sets the date from the cashflow entry", () => {
-    const rows = buildLinkingRows([cashflowWithInvoice], [invoice1], "invoices")
+    const rows = buildLinkingRows([cashflowWithInvoice], [invoice1], [])
     expect(rows[0].date).toBe("2025-01-12")
   })
 
   it("sets the date from the item when there is no cashflow entry", () => {
-    const rows = buildLinkingRows([], [invoice1], "invoices")
+    const rows = buildLinkingRows([], [invoice1], [])
     expect(rows[0].date).toBe(invoice1.date)
   })
 
   it("sorts all rows by date, placing unlinked items at their temporal position", () => {
     // cashflowUnlinked: 2025-01-15, invoice1 (unlinked): 2025-01-10
-    const rows = buildLinkingRows([cashflowUnlinked], [invoice1], "invoices")
+    const rows = buildLinkingRows([cashflowUnlinked], [invoice1], [])
     expect(rows).toHaveLength(2)
     // invoice1 (2025-01-10) comes before cashflowUnlinked (2025-01-15)
     expect(rows[0].item).toBe(invoice1)
@@ -109,7 +111,7 @@ describe("buildLinkingRows", () => {
     const rows = buildLinkingRows(
       [cashflowWithInvoice],
       [invoice1, invoice2],
-      "invoices"
+      []
     )
     expect(rows).toHaveLength(2)
     // paired row (cashflow date 2025-01-12) before unlinked invoice2 (2025-01-20)
@@ -123,7 +125,7 @@ describe("buildLinkingRows", () => {
     const rows = buildLinkingRows(
       [cashflowWithInvoice, cashflowCarryOver],
       [invoice1],
-      "invoices"
+      []
     )
     // cashflowCarryOver: 2025-01-01, cashflowWithInvoice: 2025-01-12
     expect(rows[0].cashflow).toBe(cashflowCarryOver)
@@ -135,23 +137,35 @@ describe("buildLinkingRows", () => {
     const rows = buildLinkingRows(
       [cashflowUnlinked, cashflowWithInvoice],
       [invoice1],
-      "invoices"
+      []
     )
     expect(rows[0].cashflow?.id).toBe("cf-1") // 2025-01-12
     expect(rows[1].cashflow?.id).toBe("cf-3") // 2025-01-15
   })
 
   it("returns empty rows for empty inputs", () => {
-    expect(buildLinkingRows([], [], "invoices")).toEqual([])
-    expect(buildLinkingRows([], [], "expenses")).toEqual([])
+    expect(buildLinkingRows([], [], [])).toEqual([])
   })
 
-  it("does not include invoiceId-linked items when side is expenses", () => {
-    // cashflowWithInvoice has invoiceId not expenseId, so no pairing
-    // expense1: 2025-01-05, cashflowWithInvoice: 2025-01-12
-    const rows = buildLinkingRows([cashflowWithInvoice], [expense1], "expenses")
-    expect(rows[0].item).toBe(expense1) // 2025-01-05 comes first
+  it("shows invoices and expenses together in a combined list", () => {
+    // cashflowWithExpense (2025-01-06) linked to expense1 (2025-01-05)
+    // cashflowWithInvoice (2025-01-12) linked to invoice1 (2025-01-10)
+    const rows = buildLinkingRows(
+      [cashflowWithInvoice, cashflowWithExpense],
+      [invoice1],
+      [expense1]
+    )
+    expect(rows).toHaveLength(2)
+    expect(rows[0].cashflow).toBe(cashflowWithExpense)
+    expect(rows[0].item).toBe(expense1)
+    expect(rows[0].itemType).toBe("expenses")
     expect(rows[1].cashflow).toBe(cashflowWithInvoice)
-    expect(rows[1].item).toBeUndefined()
+    expect(rows[1].item).toBe(invoice1)
+    expect(rows[1].itemType).toBe("invoices")
+  })
+
+  it("sets itemType to undefined for unlinked cashflow-only rows", () => {
+    const rows = buildLinkingRows([cashflowUnlinked], [], [])
+    expect(rows[0].itemType).toBeUndefined()
   })
 })

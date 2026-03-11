@@ -1,87 +1,21 @@
 "use client"
 
-import { useState } from "react"
-import { FileText, Receipt } from "lucide-react"
-import { formatCurrency, formatDate } from "@/lib/ledger-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useLanguage } from "@/lib/i18n-context"
 import { ErrorBanner } from "@/components/error-banner"
-import { Button } from "@/components/ui/button"
-import { Invoice, Expense, CashflowEntry } from "@/lib/types"
-import { buildLinkingRows, LinkedSide } from "@/lib/linking-utils"
+import { Invoice, Expense } from "@/lib/types"
+import { buildLinkingRows } from "@/lib/linking-utils"
 import { cn } from "@/lib/utils"
+import { InvoiceLinkingCell } from "@/components/invoices/invoice-linking-cell"
+import { ExpenseLinkingCell } from "@/components/expenses/expense-linking-cell"
+import { CashflowLinkingCell } from "@/components/cashflow/cashflow-linking-cell"
 
 interface LinkingViewProps {
   quarterId: string
 }
 
-function InvoiceCell({ invoice }: { invoice: Invoice }) {
-  return (
-    <div className="py-2 min-w-0">
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="font-mono text-xs text-muted-foreground shrink-0">
-          {formatDate(invoice.date)}
-        </span>
-        <span className="font-mono text-xs font-semibold text-[hsl(var(--ledger-green))] shrink-0">
-          {formatCurrency(invoice.total)}
-        </span>
-      </div>
-      <div className="text-sm truncate text-muted-foreground">
-        {invoice.client} — {invoice.concept}
-      </div>
-    </div>
-  )
-}
-
-function ExpenseCell({ expense }: { expense: Expense }) {
-  return (
-    <div className="py-2 min-w-0">
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="font-mono text-xs text-muted-foreground shrink-0">
-          {formatDate(expense.date)}
-        </span>
-        <span className="font-mono text-xs font-semibold text-[hsl(var(--ledger-red))] shrink-0">
-          {formatCurrency(expense.total)}
-        </span>
-      </div>
-      <div className="text-sm truncate text-muted-foreground">
-        {expense.vendor} — {expense.concept}
-      </div>
-    </div>
-  )
-}
-
-function CashflowCell({ entry }: { entry: CashflowEntry }) {
-  const isIncome = entry.income != null
-  return (
-    <div className="py-2 min-w-0">
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="font-mono text-xs text-muted-foreground shrink-0">
-          {formatDate(entry.date)}
-        </span>
-        <span
-          className={cn(
-            "font-mono text-xs font-semibold shrink-0",
-            isIncome
-              ? "text-[hsl(var(--ledger-green))]"
-              : "text-[hsl(var(--ledger-red))]"
-          )}
-        >
-          {isIncome
-            ? formatCurrency(entry.income!)
-            : formatCurrency(entry.expense ?? entry.balance)}
-        </span>
-      </div>
-      <div className="text-sm truncate text-muted-foreground">
-        {entry.concept}
-      </div>
-    </div>
-  )
-}
-
 export function LinkingView({ quarterId }: LinkingViewProps) {
   const { t } = useLanguage()
-  const [side, setSide] = useState<LinkedSide>("expenses")
 
   const {
     content: invoices,
@@ -114,10 +48,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
     return <ErrorBanner title={t("linking.title")} message={error.message} />
   }
 
-  const items = side === "invoices" ? (invoices ?? []) : (expenses ?? [])
-  const cashflowEntries = cashflow ?? []
-
-  const rows = buildLinkingRows(cashflowEntries, items, side)
+  const rows = buildLinkingRows(cashflow ?? [], invoices ?? [], expenses ?? [])
 
   return (
     <div>
@@ -128,31 +59,10 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
         <p className="font-mono text-xs text-muted-foreground">{quarterId}</p>
       </div>
 
-      <div className="mb-4 flex gap-2">
-        <Button
-          variant={side === "invoices" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSide("invoices")}
-        >
-          <FileText className="mr-2 h-4 w-4" />
-          {t("linking.invoices")}
-        </Button>
-        <Button
-          variant={side === "expenses" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSide("expenses")}
-        >
-          <Receipt className="mr-2 h-4 w-4" />
-          {t("linking.expenses")}
-        </Button>
-      </div>
-
       <div className="rounded-sm border border-border bg-card overflow-hidden">
         <div className="flex border-b-2 border-foreground/15">
           <div className="flex-1 border-r border-border px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-            {side === "invoices"
-              ? t("linking.invoices")
-              : t("linking.expenses")}
+            {t("linking.items")}
           </div>
           <div className="flex-1 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
             {t("linking.cashflow")}
@@ -176,12 +86,18 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                     !row.item && "bg-secondary/10"
                   )}
                 >
-                  {row.item &&
-                    (side === "invoices" ? (
-                      <InvoiceCell invoice={row.item as Invoice} />
-                    ) : (
-                      <ExpenseCell expense={row.item as Expense} />
-                    ))}
+                  {row.item && row.itemType === "invoices" && (
+                    <InvoiceLinkingCell
+                      invoice={row.item as Invoice}
+                      quarterId={quarterId}
+                    />
+                  )}
+                  {row.item && row.itemType === "expenses" && (
+                    <ExpenseLinkingCell
+                      expense={row.item as Expense}
+                      quarterId={quarterId}
+                    />
+                  )}
                 </div>
                 <div
                   className={cn(
@@ -189,7 +105,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                     !row.cashflow && "bg-secondary/10"
                   )}
                 >
-                  {row.cashflow && <CashflowCell entry={row.cashflow} />}
+                  {row.cashflow && <CashflowLinkingCell entry={row.cashflow} />}
                 </div>
               </div>
             ))}
