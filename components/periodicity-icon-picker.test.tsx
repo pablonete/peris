@@ -1,14 +1,17 @@
 import { describe, it, expect, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { PeriodicityButton } from "@/components/periodicity-button"
+import { PeriodicityIconPicker } from "@/components/periodicity-icon-picker"
 import { TestProviders } from "@/test/test-utils"
 
-describe("PeriodicityButton", () => {
+describe("PeriodicityIconPicker", () => {
   it("renders the periodicity button when periodicity is set", () => {
     render(
       <TestProviders>
-        <PeriodicityButton periodicity="1mo" onChangePeriodicity={vi.fn()} />
+        <PeriodicityIconPicker
+          periodicity="1mo"
+          onChangePeriodicity={vi.fn()}
+        />
       </TestProviders>
     )
 
@@ -19,7 +22,7 @@ describe("PeriodicityButton", () => {
   it("renders a + button when no periodicity is set", () => {
     render(
       <TestProviders>
-        <PeriodicityButton
+        <PeriodicityIconPicker
           periodicity={undefined}
           onChangePeriodicity={vi.fn()}
         />
@@ -34,7 +37,10 @@ describe("PeriodicityButton", () => {
 
     render(
       <TestProviders>
-        <PeriodicityButton periodicity="1mo" onChangePeriodicity={vi.fn()} />
+        <PeriodicityIconPicker
+          periodicity="1mo"
+          onChangePeriodicity={vi.fn()}
+        />
       </TestProviders>
     )
 
@@ -58,7 +64,7 @@ describe("PeriodicityButton", () => {
 
     render(
       <TestProviders>
-        <PeriodicityButton
+        <PeriodicityIconPicker
           periodicity="1mo"
           onChangePeriodicity={onChangePeriodicity}
         />
@@ -77,7 +83,7 @@ describe("PeriodicityButton", () => {
 
     render(
       <TestProviders>
-        <PeriodicityButton
+        <PeriodicityIconPicker
           periodicity="1mo"
           onChangePeriodicity={onChangePeriodicity}
         />

@@ -1,7 +1,6 @@
 "use client"
 
 import { Plus } from "lucide-react"
-import { CashflowEntry } from "@/lib/types"
 import { useLanguage } from "@/lib/i18n-context"
 import {
   DropdownMenu,
@@ -10,20 +9,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Periodicity, PERIODICITY_OPTIONS } from "@/model/cashflow/periodicity"
 
-type Periodicity = CashflowEntry["periodicity"]
-
-const PERIODICITY_OPTIONS: Periodicity[] = ["1mo", "3mo", "1y"]
-
-interface PeriodicityButtonProps {
+interface PeriodicityIconPickerProps {
   periodicity?: Periodicity
   onChangePeriodicity: (periodicity: Periodicity) => void
 }
 
-export function PeriodicityButton({
+export function PeriodicityIconPicker({
   periodicity,
   onChangePeriodicity,
-}: PeriodicityButtonProps) {
+}: PeriodicityIconPickerProps) {
   const { t } = useLanguage()
 
   return (

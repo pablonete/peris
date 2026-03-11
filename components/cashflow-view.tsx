@@ -36,7 +36,7 @@ import { ImportCashflowDialog } from "@/components/cashflow/import-cashflow-dial
 import { SummaryCard } from "@/components/summary-card"
 import { EditingIndicator } from "@/components/editing-indicator"
 import { PeriodicityBadge } from "@/components/periodicity-badge"
-import { PeriodicityButton } from "@/components/periodicity-button"
+import { PeriodicityIconPicker } from "@/components/periodicity-icon-picker"
 import {
   GhostEntrySourceCell,
   RegularEntrySourceCell,
@@ -287,7 +287,7 @@ export function CashflowView({
                       {ghost ? (
                         <PeriodicityBadge periodicity={entry.periodicity} />
                       ) : !isCarryOver ? (
-                        <PeriodicityButton
+                        <PeriodicityIconPicker
                           periodicity={entry.periodicity}
                           onChangePeriodicity={(p) =>
                             handleChangePeriodicity(entry as CashflowEntry, p)
