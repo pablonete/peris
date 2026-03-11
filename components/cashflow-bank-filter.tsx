@@ -9,12 +9,14 @@ interface CashflowBankFilterProps {
   banks: string[]
   activeBank: string | null
   onSelect: (bank: string | null) => void
+  className?: string
 }
 
 export function CashflowBankFilter({
   banks,
   activeBank,
   onSelect,
+  className,
 }: CashflowBankFilterProps) {
   const { t } = useLanguage()
   if (banks.length <= 1) {
@@ -22,7 +24,7 @@ export function CashflowBankFilter({
   }
 
   return (
-    <div className="mb-4 flex flex-wrap gap-2">
+    <div className={className ?? "mb-4 flex flex-wrap gap-2"}>
       <Button
         variant={activeBank === null ? "default" : "outline"}
         size="sm"

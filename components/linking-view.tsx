@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 import { InvoiceLinkingCell } from "@/components/invoices/invoice-linking-cell"
 import { ExpenseLinkingCell } from "@/components/expenses/expense-linking-cell"
 import { CashflowLinkingCell } from "@/components/cashflow/cashflow-linking-cell"
+import { CashflowBankFilter } from "@/components/cashflow-bank-filter"
 
 interface LinkingViewProps {
   quarterId: string
@@ -22,6 +23,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
   const cashflowSha = useFileSha(quarterId, "cashflow")
 
   const [linkingItemId, setLinkingItemId] = useState<string | null>(null)
+  const [selectedBank, setSelectedBank] = useState<string | null>(null)
 
   const {
     content: invoices,
@@ -54,7 +56,33 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
     return <ErrorBanner title={t("linking.title")} message={error.message} />
   }
 
-  const rows = buildLinkingRows(cashflow ?? [], invoices ?? [], expenses ?? [])
+  const uniqueBanks = Array.from(
+    new Set(
+      (cashflow ?? [])
+        .map((entry) => entry.bankName)
+        .filter((name): name is string => Boolean(name))
+    )
+  ).sort()
+  const hasMultipleBanks = uniqueBanks.length > 1
+  const activeBank =
+    hasMultipleBanks && selectedBank && uniqueBanks.includes(selectedBank)
+      ? selectedBank
+      : null
+
+  const filteredCashflow = activeBank
+    ? (cashflow ?? []).filter((e) => e.bankName === activeBank)
+    : (cashflow ?? [])
+
+  const rows = buildLinkingRows(
+    filteredCashflow,
+    invoices ?? [],
+    expenses ?? []
+  )
+
+  const handleBankSelect = (bank: string | null) => {
+    setSelectedBank(bank)
+    setLinkingItemId(null)
+  }
 
   const updateCashflow = (updatedEntries: CashflowEntry[]) => {
     const sha = getEditingFile(quarterId, "cashflow")?.sha ?? cashflowSha
@@ -100,8 +128,14 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
           <div className="flex-1 border-r border-border px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
             {t("linking.items")}
           </div>
-          <div className="flex-1 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-            {t("linking.cashflow")}
+          <div className="flex-1 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground flex items-center justify-between gap-2">
+            <span>{t("linking.cashflow")}</span>
+            <CashflowBankFilter
+              banks={uniqueBanks}
+              activeBank={activeBank}
+              onSelect={handleBankSelect}
+              className="flex flex-wrap gap-1"
+            />
           </div>
         </div>
 
@@ -118,7 +152,9 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
               const isLinked =
                 !!row.cashflow?.invoiceId || !!row.cashflow?.expenseId
               const isLinkableEntry =
-                !!row.cashflow && !row.cashflow.invoiceId && !row.cashflow.expenseId
+                !!row.cashflow &&
+                !row.cashflow.invoiceId &&
+                !row.cashflow.expenseId
 
               return (
                 <div
@@ -174,7 +210,9 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                       <CashflowLinkingCell
                         entry={row.cashflow}
                         onRemoveLink={
-                          isLinked ? () => handleRemoveLink(row.cashflow!) : undefined
+                          isLinked
+                            ? () => handleRemoveLink(row.cashflow!)
+                            : undefined
                         }
                         onLink={
                           linkingItemId && isLinkableEntry
