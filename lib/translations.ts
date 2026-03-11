@@ -13,6 +13,7 @@ export const translations = {
       commitChanges: "Guardar cambios",
       editingFiles: "archivo editado",
       editingFilesPlural: "archivos editados",
+      linking: "Enlace",
     },
     quarters: {
       newQuarter: "Nuevo trimestre",
@@ -236,6 +237,13 @@ export const translations = {
         "Selecciona un trimestre en la barra lateral para ver los datos.",
       unsavedChanges: "Cambios sin guardar",
     },
+    linking: {
+      title: "Enlace",
+      emptyState: "No se encontraron datos.",
+      invoices: "Facturas",
+      expenses: "Gastos",
+      cashflow: "Flujo de caja",
+    },
   },
   en: {
     sidebar: {
@@ -251,6 +259,7 @@ export const translations = {
       commitChanges: "Commit changes",
       editingFiles: "edited file",
       editingFilesPlural: "edited files",
+      linking: "Linking",
     },
     quarters: {
       newQuarter: "New Quarter",
@@ -470,6 +479,13 @@ export const translations = {
     views: {
       selectQuarter: "Select a quarter from the sidebar to view data.",
       unsavedChanges: "Has unsaved changes",
+    },
+    linking: {
+      title: "Linking",
+      emptyState: "No data found.",
+      invoices: "Invoices",
+      expenses: "Expenses",
+      cashflow: "Cashflow",
     },
   },
 }
