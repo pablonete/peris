@@ -1,10 +1,12 @@
 "use client"
 
-import { useStorageData } from "@/lib/use-storage-data"
+import { useState } from "react"
+import { useStorageData, useFileSha } from "@/lib/use-storage-data"
 import { useLanguage } from "@/lib/i18n-context"
+import { useData } from "@/lib/use-data"
 import { ErrorBanner } from "@/components/error-banner"
-import { Invoice, Expense } from "@/lib/types"
-import { buildLinkingRows } from "@/lib/linking-utils"
+import { Invoice, Expense, CashflowEntry } from "@/lib/types"
+import { buildLinkingRows, LinkedItemType } from "@/lib/linking-utils"
 import { cn } from "@/lib/utils"
 import { InvoiceLinkingCell } from "@/components/invoices/invoice-linking-cell"
 import { ExpenseLinkingCell } from "@/components/expenses/expense-linking-cell"
@@ -16,6 +18,10 @@ interface LinkingViewProps {
 
 export function LinkingView({ quarterId }: LinkingViewProps) {
   const { t } = useLanguage()
+  const { getEditingFile, setEditingFile } = useData()
+  const cashflowSha = useFileSha(quarterId, "cashflow")
+
+  const [linkingItemId, setLinkingItemId] = useState<string | null>(null)
 
   const {
     content: invoices,
@@ -50,6 +56,36 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
 
   const rows = buildLinkingRows(cashflow ?? [], invoices ?? [], expenses ?? [])
 
+  const updateCashflow = (updatedEntries: CashflowEntry[]) => {
+    const sha = getEditingFile(quarterId, "cashflow")?.sha ?? cashflowSha
+    setEditingFile(quarterId, "cashflow", updatedEntries, sha)
+  }
+
+  const patchCashflowEntry = (
+    entry: CashflowEntry,
+    patch: Partial<CashflowEntry>
+  ) => {
+    updateCashflow(
+      (cashflow ?? []).map((e) => (e.id === entry.id ? { ...e, ...patch } : e))
+    )
+  }
+
+  const handleRemoveLink = (entry: CashflowEntry) => {
+    patchCashflowEntry(entry, { invoiceId: undefined, expenseId: undefined })
+  }
+
+  const handleLinkCashflow = (
+    entry: CashflowEntry,
+    itemId: string,
+    itemType: LinkedItemType
+  ) => {
+    patchCashflowEntry(entry, {
+      invoiceId: itemType === "invoices" ? itemId : undefined,
+      expenseId: itemType === "expenses" ? itemId : undefined,
+    })
+    setLinkingItemId(null)
+  }
+
   return (
     <div>
       <div className="mb-6 border-b-2 border-foreground/20 pb-4">
@@ -75,40 +111,93 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
           </div>
         ) : (
           <div className="divide-y divide-dashed divide-[hsl(var(--ledger-line))]">
-            {rows.map((row, idx) => (
-              <div
-                key={row.cashflow?.id ?? row.item?.id ?? idx}
-                className="flex"
-              >
+            {rows.map((row, idx) => {
+              const isOrphanItem = !!row.item && !row.cashflow
+              const isLinkingThisItem =
+                isOrphanItem && row.item?.id === linkingItemId
+              const isLinked =
+                !!row.cashflow?.invoiceId || !!row.cashflow?.expenseId
+              const isLinkableEntry =
+                !!row.cashflow && !row.cashflow.invoiceId && !row.cashflow.expenseId
+
+              return (
                 <div
-                  className={cn(
-                    "flex-1 border-r border-border px-3 min-h-[3.5rem]",
-                    !row.item && "bg-secondary/10"
-                  )}
+                  key={row.cashflow?.id ?? row.item?.id ?? idx}
+                  className="flex"
                 >
-                  {row.item && row.itemType === "invoices" && (
-                    <InvoiceLinkingCell
-                      invoice={row.item as Invoice}
-                      quarterId={quarterId}
-                    />
-                  )}
-                  {row.item && row.itemType === "expenses" && (
-                    <ExpenseLinkingCell
-                      expense={row.item as Expense}
-                      quarterId={quarterId}
-                    />
-                  )}
+                  <div
+                    className={cn(
+                      "flex-1 border-r border-border px-3 min-h-[3.5rem]",
+                      !row.item && "bg-secondary/10"
+                    )}
+                  >
+                    {row.item && row.itemType === "invoices" && (
+                      <InvoiceLinkingCell
+                        invoice={row.item as Invoice}
+                        quarterId={quarterId}
+                        onStartLinking={
+                          isOrphanItem && !linkingItemId
+                            ? () => setLinkingItemId(row.item!.id)
+                            : undefined
+                        }
+                        onCancelLinking={
+                          isLinkingThisItem
+                            ? () => setLinkingItemId(null)
+                            : undefined
+                        }
+                      />
+                    )}
+                    {row.item && row.itemType === "expenses" && (
+                      <ExpenseLinkingCell
+                        expense={row.item as Expense}
+                        quarterId={quarterId}
+                        onStartLinking={
+                          isOrphanItem && !linkingItemId
+                            ? () => setLinkingItemId(row.item!.id)
+                            : undefined
+                        }
+                        onCancelLinking={
+                          isLinkingThisItem
+                            ? () => setLinkingItemId(null)
+                            : undefined
+                        }
+                      />
+                    )}
+                  </div>
+                  <div
+                    className={cn(
+                      "flex-1 px-3 min-h-[3.5rem]",
+                      !row.cashflow && "bg-secondary/10"
+                    )}
+                  >
+                    {row.cashflow && (
+                      <CashflowLinkingCell
+                        entry={row.cashflow}
+                        onRemoveLink={
+                          isLinked ? () => handleRemoveLink(row.cashflow!) : undefined
+                        }
+                        onLink={
+                          linkingItemId && isLinkableEntry
+                            ? () => {
+                                const linkingRow = rows.find(
+                                  (r) => r.item?.id === linkingItemId
+                                )
+                                if (linkingRow?.itemType) {
+                                  handleLinkCashflow(
+                                    row.cashflow!,
+                                    linkingItemId,
+                                    linkingRow.itemType
+                                  )
+                                }
+                              }
+                            : undefined
+                        }
+                      />
+                    )}
+                  </div>
                 </div>
-                <div
-                  className={cn(
-                    "flex-1 px-3 min-h-[3.5rem]",
-                    !row.cashflow && "bg-secondary/10"
-                  )}
-                >
-                  {row.cashflow && <CashflowLinkingCell entry={row.cashflow} />}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
