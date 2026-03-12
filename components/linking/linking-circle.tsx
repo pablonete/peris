@@ -34,7 +34,12 @@ export function LinkingCircle({
         "h-7 w-7 flex items-center justify-center group transition-colors shrink-0",
         isInteractive ? "cursor-pointer" : "cursor-default"
       )}
-      onClick={onClick}
+      onClick={(e) => {
+        if (onClick) {
+          e.stopPropagation()
+          onClick(e)
+        }
+      }}
       disabled={isDisabled}
       aria-label={ariaLabel}
       title={ariaLabel}

@@ -249,6 +249,10 @@ export const translations = {
       linkCashflow: "Vincular con este movimiento",
       removeLink: "Eliminar vínculo",
       orphansOnly: "Solo huérfanos",
+      mismatchTitle: "Importes diferentes",
+      mismatchDesc: "Hay una diferencia de",
+      mismatchConfirm: "Vincular de todas formas",
+      cancel: "Cancelar",
     },
   },
   en: {
@@ -498,6 +502,10 @@ export const translations = {
       linkCashflow: "Link to this entry",
       removeLink: "Remove link",
       orphansOnly: "Orphans",
+      mismatchTitle: "Amount mismatch",
+      mismatchDesc: "There is a mismatch of",
+      mismatchConfirm: "Link anyway",
+      cancel: "Cancel",
     },
   },
 }

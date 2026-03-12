@@ -8,12 +8,22 @@ import { ErrorBanner } from "@/components/error-banner"
 import { Invoice, Expense, CashflowEntry } from "@/lib/types"
 import { buildLinkingRows, LinkedItemType } from "@/lib/linking-utils"
 import { cn } from "@/lib/utils"
+import { formatCurrency } from "@/lib/ledger-utils"
 import { InvoiceLinkingCell } from "@/components/invoices/invoice-linking-cell"
 import { ExpenseLinkingCell } from "@/components/expenses/expense-linking-cell"
 import { CashflowLinkingCell } from "@/components/cashflow/cashflow-linking-cell"
 import { CashflowBankFilter } from "@/components/cashflow-bank-filter"
 import { LinkingCircle } from "@/components/linking/linking-circle"
 import { Toggle } from "@/components/ui/toggle"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface LinkingViewProps {
   quarterId: string
@@ -33,6 +43,12 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
   const [linkingSourcePos, setLinkingSourcePos] = useState<{
     x: number
     y: number
+  } | null>(null)
+  const [pendingLink, setPendingLink] = useState<{
+    entry: CashflowEntry
+    itemId: string
+    itemType: LinkedItemType
+    mismatch: number
   } | null>(null)
 
   const tableRef = useRef<HTMLDivElement>(null)
@@ -142,6 +158,27 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
     setMousePos(null)
   }
 
+  const handleTryLinkCashflow = (
+    entry: CashflowEntry,
+    itemId: string,
+    itemType: LinkedItemType
+  ) => {
+    const allItems = [...(invoices ?? []), ...(expenses ?? [])]
+    const item = allItems.find((i) => i.id === itemId)
+    const itemAmount = item ? (item as Invoice | Expense).total : 0
+    const cashflowAmount =
+      itemType === "invoices" ? (entry.income ?? 0) : (entry.expense ?? 0)
+    const mismatch = Math.abs(itemAmount - cashflowAmount)
+    // Tolerance to avoid false positives from floating-point rounding
+    const tolerance = 0.001
+
+    if (mismatch > tolerance) {
+      setPendingLink({ entry, itemId, itemType, mismatch })
+    } else {
+      handleLinkCashflow(entry, itemId, itemType)
+    }
+  }
+
   const handleStartLinking = (
     e: React.MouseEvent<HTMLButtonElement>,
     itemId: string
@@ -175,6 +212,12 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
     setMousePos(null)
   }
 
+  const handleTableClick = () => {
+    if (linkingItemId) {
+      handleCancelLinking()
+    }
+  }
+
   return (
     <div>
       <div className="mb-6 border-b-2 border-foreground/20 pb-4">
@@ -189,6 +232,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
         className="rounded-sm border border-border bg-card overflow-hidden relative"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        onClick={handleTableClick}
       >
         <div className="flex border-b-2 border-foreground/15">
           <div className="flex-1 border-r border-border px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground flex items-center justify-between gap-2">
@@ -236,7 +280,9 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                 (row.item as Expense | undefined)?.total === 0
 
               const itemCircleAction = isLinked
-                ? () => handleRemoveLink(row.cashflow!)
+                ? linkingItemId
+                  ? undefined
+                  : () => handleRemoveLink(row.cashflow!)
                 : isLinkingThisItem
                   ? handleCancelLinking
                   : isOrphanItem && !linkingItemId && !isZeroAmountItem
@@ -245,14 +291,16 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                     : undefined
 
               const cashflowCircleAction = isLinked
-                ? () => handleRemoveLink(row.cashflow!)
+                ? linkingItemId
+                  ? undefined
+                  : () => handleRemoveLink(row.cashflow!)
                 : linkingItemId && isLinkableEntry
                   ? () => {
                       const linkingRow = rows.find(
                         (r) => r.item?.id === linkingItemId
                       )
                       if (linkingRow?.itemType) {
-                        handleLinkCashflow(
+                        handleTryLinkCashflow(
                           row.cashflow!,
                           linkingItemId,
                           linkingRow.itemType
@@ -293,7 +341,10 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                         isLinked={isLinked}
                         isLinkingSource={isLinkingThisItem}
                         isLinkableTarget={false}
-                        isDisabled={isZeroAmountItem && !isLinked}
+                        isDisabled={
+                          (isZeroAmountItem && !isLinked) ||
+                          (!!linkingItemId && isLinked)
+                        }
                         onClick={itemCircleAction}
                         ariaLabel={
                           isLinked
@@ -323,7 +374,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                         isLinked={isLinked}
                         isLinkingSource={false}
                         isLinkableTarget={!!(linkingItemId && isLinkableEntry)}
-                        isDisabled={false}
+                        isDisabled={!!linkingItemId && isLinked}
                         onClick={cashflowCircleAction}
                         ariaLabel={
                           isLinked
@@ -365,6 +416,42 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
           </svg>
         )}
       </div>
+
+      <AlertDialog
+        open={!!pendingLink}
+        onOpenChange={(open) => !open && setPendingLink(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("linking.mismatchTitle")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingLink &&
+                `${t("linking.mismatchDesc")} ${formatCurrency(pendingLink.mismatch)}.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex justify-end gap-2">
+            <AlertDialogCancel onClick={() => setPendingLink(null)}>
+              {t("linking.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingLink) {
+                  handleLinkCashflow(
+                    pendingLink.entry,
+                    pendingLink.itemId,
+                    pendingLink.itemType
+                  )
+                  setPendingLink(null)
+                }
+              }}
+            >
+              {t("linking.mismatchConfirm")}
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
