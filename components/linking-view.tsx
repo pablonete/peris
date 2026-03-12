@@ -12,6 +12,7 @@ import { InvoiceLinkingCell } from "@/components/invoices/invoice-linking-cell"
 import { ExpenseLinkingCell } from "@/components/expenses/expense-linking-cell"
 import { CashflowLinkingCell } from "@/components/cashflow/cashflow-linking-cell"
 import { CashflowBankFilter } from "@/components/cashflow-bank-filter"
+import { Toggle } from "@/components/ui/toggle"
 
 interface LinkingViewProps {
   quarterId: string
@@ -24,6 +25,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
 
   const [linkingItemId, setLinkingItemId] = useState<string | null>(null)
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
+  const [showOrphansOnly, setShowOrphansOnly] = useState(false)
 
   const {
     content: invoices,
@@ -72,9 +74,18 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
   const rows = buildLinkingRows(cashflow ?? [], invoices ?? [], expenses ?? [])
 
   // Orphan items (no cashflow yet) are always shown so they can be linked to any bank's entries
-  const filteredRows = activeBank
-    ? rows.filter((row) => !row.cashflow || row.cashflow.bankName === activeBank)
-    : rows
+  const filteredRows = (
+    activeBank
+      ? rows.filter((row) => !row.cashflow || row.cashflow.bankName === activeBank)
+      : rows
+  ).filter((row) =>
+    showOrphansOnly ? !(row.cashflow?.invoiceId || row.cashflow?.expenseId) : true
+  )
+
+  const handleOrphansToggle = (pressed: boolean) => {
+    setShowOrphansOnly(pressed)
+    setLinkingItemId(null)
+  }
 
   const handleBankSelect = (bank: string | null) => {
     setSelectedBank(bank)
@@ -122,8 +133,17 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
 
       <div className="rounded-sm border border-border bg-card overflow-hidden">
         <div className="flex border-b-2 border-foreground/15">
-          <div className="flex-1 border-r border-border px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-            {t("linking.items")}
+          <div className="flex-1 border-r border-border px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground flex items-center justify-between gap-2">
+            <span>{t("linking.items")}</span>
+            <Toggle
+              pressed={showOrphansOnly}
+              onPressedChange={handleOrphansToggle}
+              size="sm"
+              variant="outline"
+              className="h-5 px-2 py-0 font-mono text-[10px] uppercase tracking-[0.15em]"
+            >
+              {t("linking.orphansOnly")}
+            </Toggle>
           </div>
           <div className="flex-1 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground flex items-center justify-between gap-2">
             <span>{t("linking.cashflow")}</span>
