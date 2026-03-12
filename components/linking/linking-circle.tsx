@@ -4,15 +4,15 @@ import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export interface LinkingCircleProps {
-  /** Side controls whether the half-line is drawn after (item) or before (cashflow) the circle */
-  side: "item" | "cashflow"
+  /** "left" renders [circle][half-line →]; "right" renders [← half-line][circle] */
+  side: "left" | "right"
   isLinked: boolean
   /** This circle is the active source of an in-progress link */
   isLinkingSource: boolean
   /** This circle can be clicked to complete an in-progress link */
   isLinkableTarget: boolean
   isDisabled: boolean
-  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
+  onClick?: () => void
   ariaLabel?: string
   title?: string
 }
@@ -68,7 +68,7 @@ export function LinkingCircle({
     <div className={cn("flex-1 h-[2px]", isLinked ? "bg-blue-500" : "")} />
   )
 
-  if (side === "item") {
+  if (side === "left") {
     return (
       <>
         {circle}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState } from "react"
 import { useStorageData, useFileSha } from "@/lib/use-storage-data"
 import { useLanguage } from "@/lib/i18n-context"
 import { useData } from "@/lib/use-data"
@@ -25,15 +25,6 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
 
   const [linkingItemId, setLinkingItemId] = useState<string | null>(null)
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
-  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(
-    null
-  )
-  const [linkingSourcePos, setLinkingSourcePos] = useState<{
-    x: number
-    y: number
-  } | null>(null)
-
-  const tableRef = useRef<HTMLDivElement>(null)
 
   const {
     content: invoices,
@@ -91,8 +82,6 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
   const handleBankSelect = (bank: string | null) => {
     setSelectedBank(bank)
     setLinkingItemId(null)
-    setLinkingSourcePos(null)
-    setMousePos(null)
   }
 
   const updateCashflow = (updatedEntries: CashflowEntry[]) => {
@@ -123,41 +112,14 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
       expenseId: itemType === "expenses" ? itemId : undefined,
     })
     setLinkingItemId(null)
-    setLinkingSourcePos(null)
-    setMousePos(null)
   }
 
-  const handleStartLinking = (
-    e: React.MouseEvent<HTMLButtonElement>,
-    itemId: string
-  ) => {
-    if (!tableRef.current) return
-    const tableRect = tableRef.current.getBoundingClientRect()
-    const circleRect = e.currentTarget.getBoundingClientRect()
-    setLinkingSourcePos({
-      x: circleRect.left + circleRect.width / 2 - tableRect.left,
-      y: circleRect.top + circleRect.height / 2 - tableRect.top,
-    })
+  const handleStartLinking = (itemId: string) => {
     setLinkingItemId(itemId)
   }
 
   const handleCancelLinking = () => {
     setLinkingItemId(null)
-    setLinkingSourcePos(null)
-    setMousePos(null)
-  }
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!linkingItemId || !tableRef.current) return
-    const tableRect = tableRef.current.getBoundingClientRect()
-    setMousePos({
-      x: e.clientX - tableRect.left,
-      y: e.clientY - tableRect.top,
-    })
-  }
-
-  const handleMouseLeave = () => {
-    setMousePos(null)
   }
 
   return (
@@ -169,12 +131,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
         <p className="font-mono text-xs text-muted-foreground">{quarterId}</p>
       </div>
 
-      <div
-        ref={tableRef}
-        className="rounded-sm border border-border bg-card overflow-hidden relative"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-      >
+      <div className="rounded-sm border border-border bg-card overflow-hidden relative">
         <div className="flex border-b-2 border-foreground/15">
           <div className="flex-1 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
             {t("linking.items")}
@@ -216,8 +173,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                 : isLinkingThisItem
                   ? handleCancelLinking
                   : isOrphanItem && !linkingItemId && !isZeroAmountItem
-                    ? (e: React.MouseEvent<HTMLButtonElement>) =>
-                        handleStartLinking(e, row.item!.id)
+                    ? () => handleStartLinking(row.item!.id)
                     : undefined
 
               const cashflowCircleAction = isLinked
@@ -265,7 +221,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                     </div>
                     {row.item ? (
                       <LinkingCircle
-                        side="item"
+                        side="left"
                         isLinked={isLinked}
                         isLinkingSource={isLinkingThisItem}
                         isLinkableTarget={false}
@@ -308,7 +264,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                   >
                     {row.cashflow ? (
                       <LinkingCircle
-                        side="cashflow"
+                        side="right"
                         isLinked={isLinked}
                         isLinkingSource={false}
                         isLinkableTarget={!!(linkingItemId && isLinkableEntry)}
@@ -342,26 +298,6 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
               )
             })}
           </div>
-        )}
-
-        {/* SVG overlay: dashed line following mouse during linking */}
-        {linkingItemId && linkingSourcePos && mousePos && (
-          <svg
-            className="absolute inset-0 pointer-events-none"
-            style={{ width: "100%", height: "100%" }}
-            role="presentation"
-            aria-hidden="true"
-          >
-            <line
-              x1={linkingSourcePos.x}
-              y1={linkingSourcePos.y}
-              x2={mousePos.x}
-              y2={mousePos.y}
-              stroke="#3b82f6"
-              strokeWidth="2"
-              strokeDasharray="6 4"
-            />
-          </svg>
         )}
       </div>
     </div>
