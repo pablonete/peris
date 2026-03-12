@@ -12,9 +12,8 @@ export interface LinkingCircleProps {
   /** This circle can be clicked to complete an in-progress link */
   isLinkableTarget: boolean
   isDisabled: boolean
-  onClick?: () => void
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
   ariaLabel?: string
-  title?: string
 }
 
 export function LinkingCircle({
@@ -25,7 +24,6 @@ export function LinkingCircle({
   isDisabled,
   onClick,
   ariaLabel,
-  title,
 }: LinkingCircleProps) {
   const isInteractive = !!onClick && !isDisabled
   const showX = isLinked || isLinkingSource
@@ -39,7 +37,7 @@ export function LinkingCircle({
       onClick={onClick}
       disabled={isDisabled}
       aria-label={ariaLabel}
-      title={title}
+      title={ariaLabel}
     >
       <div
         className={cn(
@@ -68,19 +66,19 @@ export function LinkingCircle({
     <div className={cn("flex-1 h-[2px]", isLinked ? "bg-blue-500" : "")} />
   )
 
-  if (side === "left") {
-    return (
-      <>
-        {circle}
-        {halfLine}
-      </>
-    )
-  }
-
   return (
-    <>
-      {halfLine}
-      {circle}
-    </>
+    <div className="flex w-12 items-center">
+      {side === "left" ? (
+        <>
+          {circle}
+          {halfLine}
+        </>
+      ) : (
+        <>
+          {halfLine}
+          {circle}
+        </>
+      )}
+    </div>
   )
 }

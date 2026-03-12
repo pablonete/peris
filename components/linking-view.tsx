@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useStorageData, useFileSha } from "@/lib/use-storage-data"
 import { useLanguage } from "@/lib/i18n-context"
 import { useData } from "@/lib/use-data"
@@ -27,6 +27,15 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
   const [linkingItemId, setLinkingItemId] = useState<string | null>(null)
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
   const [showOrphansOnly, setShowOrphansOnly] = useState(false)
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(
+    null
+  )
+  const [linkingSourcePos, setLinkingSourcePos] = useState<{
+    x: number
+    y: number
+  } | null>(null)
+
+  const tableRef = useRef<HTMLDivElement>(null)
 
   const {
     content: invoices,
@@ -77,20 +86,28 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
   // Orphan items (no cashflow yet) are always shown so they can be linked to any bank's entries
   const filteredRows = (
     activeBank
-      ? rows.filter((row) => !row.cashflow || row.cashflow.bankName === activeBank)
+      ? rows.filter(
+          (row) => !row.cashflow || row.cashflow.bankName === activeBank
+        )
       : rows
   ).filter((row) =>
-    showOrphansOnly ? !(row.cashflow?.invoiceId || row.cashflow?.expenseId) : true
+    showOrphansOnly
+      ? !(row.cashflow?.invoiceId || row.cashflow?.expenseId)
+      : true
   )
 
   const handleOrphansToggle = (pressed: boolean) => {
     setShowOrphansOnly(pressed)
     setLinkingItemId(null)
+    setLinkingSourcePos(null)
+    setMousePos(null)
   }
 
   const handleBankSelect = (bank: string | null) => {
     setSelectedBank(bank)
     setLinkingItemId(null)
+    setLinkingSourcePos(null)
+    setMousePos(null)
   }
 
   const updateCashflow = (updatedEntries: CashflowEntry[]) => {
@@ -121,14 +138,41 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
       expenseId: itemType === "expenses" ? itemId : undefined,
     })
     setLinkingItemId(null)
+    setLinkingSourcePos(null)
+    setMousePos(null)
   }
 
-  const handleStartLinking = (itemId: string) => {
+  const handleStartLinking = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    itemId: string
+  ) => {
+    if (!tableRef.current) return
+    const tableRect = tableRef.current.getBoundingClientRect()
+    const circleRect = e.currentTarget.getBoundingClientRect()
+    setLinkingSourcePos({
+      x: circleRect.left + circleRect.width / 2 - tableRect.left,
+      y: circleRect.top + circleRect.height / 2 - tableRect.top,
+    })
     setLinkingItemId(itemId)
   }
 
   const handleCancelLinking = () => {
     setLinkingItemId(null)
+    setLinkingSourcePos(null)
+    setMousePos(null)
+  }
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!linkingItemId || !tableRef.current) return
+    const tableRect = tableRef.current.getBoundingClientRect()
+    setMousePos({
+      x: e.clientX - tableRect.left,
+      y: e.clientY - tableRect.top,
+    })
+  }
+
+  const handleMouseLeave = () => {
+    setMousePos(null)
   }
 
   return (
@@ -140,7 +184,12 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
         <p className="font-mono text-xs text-muted-foreground">{quarterId}</p>
       </div>
 
-      <div className="rounded-sm border border-border bg-card overflow-hidden relative">
+      <div
+        ref={tableRef}
+        className="rounded-sm border border-border bg-card overflow-hidden relative"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
         <div className="flex border-b-2 border-foreground/15">
           <div className="flex-1 border-r border-border px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground flex items-center justify-between gap-2">
             <span>{t("linking.items")}</span>
@@ -191,7 +240,8 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                 : isLinkingThisItem
                   ? handleCancelLinking
                   : isOrphanItem && !linkingItemId && !isZeroAmountItem
-                    ? () => handleStartLinking(row.item!.id)
+                    ? (e: React.MouseEvent<HTMLButtonElement>) =>
+                        handleStartLinking(e, row.item!.id)
                     : undefined
 
               const cashflowCircleAction = isLinked
@@ -237,7 +287,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                         />
                       )}
                     </div>
-                    {row.item ? (
+                    {row.item && (
                       <LinkingCircle
                         side="left"
                         isLinked={isLinked}
@@ -256,20 +306,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                                 ? t("linking.startLinking")
                                 : undefined
                         }
-                        title={
-                          isLinked
-                            ? t("linking.removeLink")
-                            : isLinkingThisItem
-                              ? t("linking.cancelLinking")
-                              : isOrphanItem &&
-                                  !linkingItemId &&
-                                  !isZeroAmountItem
-                                ? t("linking.startLinking")
-                                : undefined
-                        }
                       />
-                    ) : (
-                      <div className="w-7 shrink-0" />
                     )}
                   </div>
 
@@ -280,7 +317,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                       !row.cashflow && "bg-secondary/10"
                     )}
                   >
-                    {row.cashflow ? (
+                    {row.cashflow && (
                       <LinkingCircle
                         side="right"
                         isLinked={isLinked}
@@ -295,16 +332,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
                               ? t("linking.linkCashflow")
                               : undefined
                         }
-                        title={
-                          isLinked
-                            ? t("linking.removeLink")
-                            : linkingItemId && isLinkableEntry
-                              ? t("linking.linkCashflow")
-                              : undefined
-                        }
                       />
-                    ) : (
-                      <div className="w-7 shrink-0" />
                     )}
                     <div className="flex-1 min-w-0 px-3">
                       {row.cashflow && (
@@ -316,6 +344,25 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
               )
             })}
           </div>
+        )}
+
+        {linkingItemId && linkingSourcePos && mousePos && (
+          <svg
+            className="absolute inset-0 pointer-events-none"
+            style={{ width: "100%", height: "100%" }}
+            role="presentation"
+            aria-hidden="true"
+          >
+            <line
+              x1={linkingSourcePos.x}
+              y1={linkingSourcePos.y}
+              x2={mousePos.x}
+              y2={mousePos.y}
+              stroke="#3b82f6"
+              strokeWidth="2"
+              strokeDasharray="6 4"
+            />
+          </svg>
         )}
       </div>
     </div>
