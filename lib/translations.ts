@@ -248,6 +248,7 @@ export const translations = {
       cancelLinking: "Cancelar vinculación",
       linkCashflow: "Vincular con este movimiento",
       removeLink: "Eliminar vínculo",
+      orphansOnly: "Solo huérfanos",
     },
   },
   en: {
@@ -496,6 +497,7 @@ export const translations = {
       cancelLinking: "Cancel linking",
       linkCashflow: "Link to this entry",
       removeLink: "Remove link",
+      orphansOnly: "Orphans",
     },
   },
 }
