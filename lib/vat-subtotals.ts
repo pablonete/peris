@@ -20,7 +20,7 @@ export function getVatSubtotals(expenses: Expense[]): VatSubtotal[] {
   >()
 
   expenses.forEach((expense) => {
-    expense.vat.forEach((vatItem) => {
+    (expense.vat ?? []).forEach((vatItem) => {
       const existing = subtotalsMap.get(vatItem.rate) || {
         expenseIds: new Set<string>(),
         subtotal: 0,

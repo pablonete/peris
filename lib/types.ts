@@ -65,7 +65,7 @@ export interface Expense {
   /** Description of the expense */
   concept: string
   /** VAT breakdown details */
-  vat: VatItem[]
+  vat?: VatItem[]
   /** Tax retention withheld by the company (IRPF, typically 15%) */
   taxRetention?: number
   /** Total amount including VAT and after tax retention */

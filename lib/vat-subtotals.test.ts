@@ -14,17 +14,17 @@ describe("vat-subtotals", () => {
         {
           id: "EXP-1",
           date: "2024-01-01",
+          vendor: "",
           concept: "Test",
           vat: [{ rate: 21, subtotal: 100, amount: 21 }],
-          irpf: 0,
           total: 121,
         },
         {
           id: "EXP-2",
           date: "2024-01-02",
+          vendor: "",
           concept: "Test 2",
           vat: [{ rate: 21, subtotal: 200, amount: 42 }],
-          irpf: 0,
           total: 242,
         },
       ]
@@ -46,17 +46,17 @@ describe("vat-subtotals", () => {
         {
           id: "EXP-1",
           date: "2024-01-01",
+          vendor: "",
           concept: "Test",
           vat: [{ rate: 21, subtotal: 100, amount: 21 }],
-          irpf: 0,
           total: 121,
         },
         {
           id: "EXP-2",
           date: "2024-01-02",
+          vendor: "",
           concept: "Test 2",
           vat: [{ rate: 10, subtotal: 200, amount: 20 }],
-          irpf: 0,
           total: 220,
         },
       ]
@@ -73,13 +73,13 @@ describe("vat-subtotals", () => {
         {
           id: "EXP-1",
           date: "2024-01-01",
+          vendor: "",
           concept: "Test",
           vat: [
             { rate: 4, subtotal: 50, amount: 2 },
             { rate: 21, subtotal: 100, amount: 21 },
             { rate: 10, subtotal: 200, amount: 20 },
           ],
-          irpf: 0,
           total: 393,
         },
       ]
@@ -94,12 +94,12 @@ describe("vat-subtotals", () => {
         {
           id: "EXP-1",
           date: "2024-01-01",
+          vendor: "",
           concept: "Test",
           vat: [
             { rate: 21, subtotal: 100, amount: 21 },
             { rate: 21, subtotal: 50, amount: 10.5 },
           ],
-          irpf: 0,
           total: 181.5,
         },
       ]
