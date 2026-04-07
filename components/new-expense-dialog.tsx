@@ -126,13 +126,11 @@ function ExpenseDialogContent({
   const [number, setNumber] = useState(initialExpense?.number || "")
   const [concept, setConcept] = useState(initialExpense?.concept || "")
   const [vatLines, setVatLines] = useState<VatLineItem[]>(
-    initialExpense
-      ? initialExpense.vat.map((item, idx) => ({
-          id: idx === 0 ? "initial" : `vat-${idx}`,
-          rate: String(item.rate),
-          subtotal: String(item.subtotal),
-        }))
-      : [{ id: "initial", rate: "", subtotal: "" }]
+    initialExpense?.vat?.map((item, idx) => ({
+      id: idx === 0 ? "initial" : `vat-${idx}`,
+      rate: String(item.rate),
+      subtotal: String(item.subtotal),
+    })) ?? [{ id: "initial", rate: "", subtotal: "" }]
   )
   const [applyIrpf, setApplyIrpf] = useState(!!initialExpense?.taxRetention)
   const [isPaid, setIsPaid] = useState(!!initialExpense?.paymentDate)

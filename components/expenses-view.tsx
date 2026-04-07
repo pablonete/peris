@@ -67,11 +67,11 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
 
   const expenses = sortByDate(content || [])
   const totalSubtotal = expenses.reduce(
-    (s, e) => s + e.vat.reduce((v, item) => v + item.subtotal, 0),
+    (s, e) => s + (e.vat?.reduce((v, item) => v + item.subtotal, 0) ?? 0),
     0
   )
   const totalVat = expenses.reduce(
-    (s, e) => s + e.vat.reduce((v, item) => v + item.amount, 0),
+    (s, e) => s + (e.vat?.reduce((v, item) => v + item.amount, 0) ?? 0),
     0
   )
   const totalTaxRetention = expenses.reduce(
@@ -202,9 +202,9 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                     />
                   </TableCell>
                   <TableCell className="font-mono text-xs text-right">
-                    {exp.vat.length > 0 ? (
+                    {(exp.vat?.length ?? 0) > 0 ? (
                       <div className="flex flex-col gap-1">
-                        {exp.vat.map((vat, idx) => (
+                        {exp.vat?.map((vat, idx) => (
                           <div key={`${vat.rate}-${vat.subtotal}`}>
                             {formatCurrency(vat.subtotal)}
                           </div>
@@ -215,9 +215,9 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
                     )}
                   </TableCell>
                   <TableCell className="font-mono text-xs text-right">
-                    {exp.vat.length > 0 ? (
+                    {(exp.vat?.length ?? 0) > 0 ? (
                       <div className="flex flex-col gap-1">
-                        {exp.vat.map((vat, idx) => (
+                        {exp.vat?.map((vat, idx) => (
                           <div
                             key={`${vat.rate}-${vat.subtotal}`}
                             className="flex items-baseline justify-end gap-1"
