@@ -81,7 +81,7 @@ vi.mock("@/lib/use-storage-data", () => ({
 
     return { content: null, isPending: false, error: null }
   },
-  useFileSha: (quarterId: string) =>
+  useFileSha: (quarterId: string, _type: string) =>
     quarterId === "2026.2Q" ? "sha-next" : "sha-current",
 }))
 
