@@ -7,6 +7,15 @@ export function getPreviousQuarterId(quarterId: string): string {
   return `${year}.${quarter - 1}Q`
 }
 
+export function getNextQuarterId(quarterId: string): string {
+  const match = quarterId.match(/^(\d{4})\.(\d)Q$/)
+  if (!match) return quarterId
+  const year = parseInt(match[1], 10)
+  const quarter = parseInt(match[2], 10)
+  if (quarter === 4) return `${year + 1}.1Q`
+  return `${year}.${quarter + 1}Q`
+}
+
 export function getYearAgoQuarterId(quarterId: string): string {
   const match = quarterId.match(/^(\d{4})\.(\d)Q$/)
   if (!match) return quarterId

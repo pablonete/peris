@@ -90,11 +90,11 @@ export interface CashflowEntry {
   bankSequence?: number
   /** Income amount if this is an income transaction */
   income?: number
-  /** Optional link to an invoice from the same quarter */
+  /** Optional link to an invoice, optionally prefixed with a quarter when cross-quarter */
   invoiceId?: string
   /** Expense amount if this is an expense transaction */
   expense?: number
-  /** Optional link to an expense from the same quarter */
+  /** Optional link to an expense, optionally prefixed with a quarter when cross-quarter */
   expenseId?: string
   /** Running account balance after this transaction */
   balance: number

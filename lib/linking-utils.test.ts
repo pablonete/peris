@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { buildLinkingRows } from "@/lib/linking-utils"
+import { buildLinkingRows, makeQuarterScopedLinkId } from "@/lib/linking-utils"
 import { Invoice, Expense, CashflowEntry } from "@/lib/types"
 
 const invoice1: Invoice = {
@@ -82,6 +82,24 @@ describe("buildLinkingRows", () => {
     const rows = buildLinkingRows([cashflowWithExpense], [], [expense1])
     expect(rows).toHaveLength(1)
     expect(rows[0].cashflow).toBe(cashflowWithExpense)
+    expect(rows[0].item).toBe(expense1)
+    expect(rows[0].itemType).toBe("expenses")
+  })
+
+  it("pairs a cashflow entry with a prefixed linked expense", () => {
+    const rows = buildLinkingRows(
+      [
+        {
+          ...cashflowWithExpense,
+          expenseId: makeQuarterScopedLinkId("2025.2Q", expense1.id),
+        },
+      ],
+      [],
+      [expense1]
+    )
+
+    expect(rows).toHaveLength(1)
+    expect(rows[0].cashflow?.expenseId).toBe("[2025.2Q]exp-1")
     expect(rows[0].item).toBe(expense1)
     expect(rows[0].itemType).toBe("expenses")
   })
