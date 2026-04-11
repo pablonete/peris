@@ -6,7 +6,10 @@ import { formatCurrency, formatDate, sortByDate } from "@/lib/ledger-utils"
 import { useStorageData } from "@/lib/use-storage-data"
 import { useData } from "@/lib/use-data"
 import { Expense } from "@/lib/types"
-import { getVatSubtotals } from "@/lib/vat-subtotals"
+import {
+  getExpenseVatQuarterSummary,
+  getVatSubtotals,
+} from "@/lib/vat-subtotals"
 import {
   Table,
   TableBody,
@@ -30,6 +33,7 @@ import { DeleteExpenseAlert } from "@/components/delete-expense-alert"
 import { LinkOrphanFileDialog } from "@/components/link-orphan-file-dialog"
 import { useLanguage } from "@/lib/i18n-context"
 import { Button } from "@/components/ui/button"
+import { VatSummarySection } from "@/components/vat-summary-section"
 
 interface ExpensesViewProps {
   quarterId: string
@@ -87,6 +91,7 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
     .reduce((s, e) => s + e.total, 0)
 
   const vatSubtotals = getVatSubtotals(expenses)
+  const vatQuarterSummary = getExpenseVatQuarterSummary(expenses)
 
   const handleDeleteExpense = (id: string) => {
     const nextExpenses = sortByDate(expenses.filter((e) => e.id !== id))
@@ -323,6 +328,14 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
           </TableFooter>
         </Table>
       </div>
+
+      <VatSummarySection
+        title={t("expenses.vatSummary")}
+        typeLabel={t("expenses.vatType")}
+        baseLabel={t("expenses.vatBase")}
+        quotaLabel={t("expenses.vatQuota")}
+        summaries={vatQuarterSummary}
+      />
 
       <DeleteExpenseAlert
         expenseId={deleteAlert}

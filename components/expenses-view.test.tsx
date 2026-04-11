@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import { ExpensesView } from "@/components/expenses-view"
 import { TestProviders } from "@/test/test-utils"
 
@@ -48,8 +48,8 @@ vi.mock("@/lib/use-storage-data", () => ({
         date: "2025-02-01",
         vendor: "Vendor B",
         concept: "February item",
-        vat: [],
-        total: 200,
+        vat: [{ rate: 10, subtotal: 200, amount: 20 }],
+        total: 220,
       },
     ],
     isPending: false,
@@ -83,5 +83,27 @@ describe("ExpensesView", () => {
       .map((row) => row.querySelector("td:nth-child(3)")?.textContent)
       .filter(Boolean)
     expect(vendors).toEqual(["Office Supplies Ltd", "Vendor B", "Vendor C"])
+  })
+
+  it("renders the VAT summary grouped by VAT type", () => {
+    render(
+      <TestProviders>
+        <ExpensesView quarterId="2025.1Q" />
+      </TestProviders>
+    )
+
+    const summarySection = screen
+      .getByRole("heading", { name: "IVA Soportado" })
+      .closest("section")
+
+    expect(summarySection).not.toBeNull()
+
+    const summary = within(summarySection!)
+    expect(summary.getByText("Tipo")).toBeInTheDocument()
+    expect(summary.getByText("Cuota")).toBeInTheDocument()
+    expect(summary.getByText("21%")).toBeInTheDocument()
+    expect(summary.getByText("10%")).toBeInTheDocument()
+    expect(summary.getByText("0%")).toBeInTheDocument()
+    expect(summary.getByText(/300,00/)).toBeInTheDocument()
   })
 })

@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest"
-import { getVatSubtotals } from "@/lib/vat-subtotals"
-import type { Expense } from "@/lib/types"
+import {
+  getExpenseVatQuarterSummary,
+  getInvoiceVatQuarterSummary,
+  getVatSubtotals,
+} from "@/lib/vat-subtotals"
+import type { Expense, Invoice } from "@/lib/types"
 
 describe("vat-subtotals", () => {
   describe("getVatSubtotals", () => {
@@ -107,6 +111,87 @@ describe("vat-subtotals", () => {
       const result = getVatSubtotals(expenses)
 
       expect(result[0].count).toBe(1)
+    })
+  })
+
+  describe("getExpenseVatQuarterSummary", () => {
+    it("groups expense VAT by rate, including expenses without VAT", () => {
+      const expenses: Expense[] = [
+        {
+          id: "EXP-1",
+          date: "2024-01-01",
+          vendor: "",
+          concept: "Standard VAT",
+          vat: [{ rate: 21, subtotal: 100, amount: 21 }],
+          total: 121,
+        },
+        {
+          id: "EXP-2",
+          date: "2024-01-02",
+          vendor: "",
+          concept: "Reduced VAT",
+          vat: [{ rate: 10, subtotal: 200, amount: 20 }],
+          total: 220,
+        },
+        {
+          id: "EXP-3",
+          date: "2024-01-03",
+          vendor: "",
+          concept: "No VAT",
+          total: 50,
+          taxRetention: 10,
+        },
+      ]
+
+      expect(getExpenseVatQuarterSummary(expenses)).toEqual([
+        { rate: 21, base: 100, quota: 21 },
+        { rate: 10, base: 200, quota: 20 },
+        { rate: 0, base: 60, quota: 0 },
+      ])
+    })
+  })
+
+  describe("getInvoiceVatQuarterSummary", () => {
+    it("groups invoice VAT by rate and derives the rate when it is missing", () => {
+      const invoices: Invoice[] = [
+        {
+          id: "INV-1",
+          date: "2024-01-01",
+          number: "1",
+          client: "",
+          concept: "Standard VAT",
+          subtotal: 100,
+          vatRate: 21,
+          vat: 21,
+          total: 121,
+        },
+        {
+          id: "INV-2",
+          date: "2024-01-02",
+          number: "2",
+          client: "",
+          concept: "Reduced VAT",
+          subtotal: 50,
+          vat: 5,
+          total: 55,
+        },
+        {
+          id: "INV-3",
+          date: "2024-01-03",
+          number: "3",
+          client: "",
+          concept: "No VAT",
+          subtotal: 25,
+          vat: 0,
+          total: 25,
+        },
+      ]
+
+      expect(getInvoiceVatQuarterSummary(invoices)).toEqual([
+        { rate: 21, base: 100, quota: 21 },
+        { rate: 10, base: 50, quota: 5 },
+        { rate: 0, base: 25, quota: 0 },
+      ])
     })
   })
 })
