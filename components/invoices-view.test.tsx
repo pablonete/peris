@@ -103,7 +103,7 @@ describe("InvoicesView", () => {
     )
 
     const summarySection = screen
-      .getByRole("heading", { name: "Resumen de IVA" })
+      .getByRole("heading", { name: "IVA Repercutido" })
       .closest("section")
 
     expect(summarySection).not.toBeNull()
