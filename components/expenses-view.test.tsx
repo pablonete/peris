@@ -110,9 +110,10 @@ describe("ExpensesView", () => {
 
     expect(createObjectURL).toHaveBeenCalledTimes(1)
     const blob = createObjectURL.mock.calls[0][0] as Blob
-    await expect(blob.text()).resolves.toContain("600.0")
-    await expect(blob.text()).resolves.toContain("472.0")
-    await expect(blob.text()).resolves.toContain("410.0")
+    const content = await blob.text()
+    expect(content).toContain("600.0")
+    expect(content).toContain("472.0")
+    expect(content).toContain("410.0")
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:expense-export")
 
     clickSpy.mockRestore()

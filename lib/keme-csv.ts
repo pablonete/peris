@@ -35,6 +35,9 @@ const stringifyRows = (rows: KemeCsvRow[]) =>
 const getInvoiceDescription = (invoice: Invoice) =>
   [invoice.client, invoice.concept].filter(Boolean).join(" · ")
 
+const getExpenseDescription = (expense: Expense) =>
+  [expense.vendor, expense.concept].filter(Boolean).join(" · ")
+
 const getExpenseBaseAmount = (expense: Expense) => {
   const baseAmount =
     expense.vat?.reduce((sum, vatItem) => sum + vatItem.subtotal, 0) ?? 0
@@ -94,7 +97,7 @@ export const buildKemeExpenseCsv = (expenses: Expense[]) => {
   const rows = expenses.flatMap<KemeCsvRow>((expense, index) => {
     const asiento = String(index + 1)
     const date = formatDate(expense.date)
-    const description = [expense.vendor, expense.concept].join(" · ")
+    const description = getExpenseDescription(expense)
     const reference = expense.number ?? ""
     const baseAmount = getExpenseBaseAmount(expense)
     const vatAmount = getExpenseVatAmount(expense)
