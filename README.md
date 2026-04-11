@@ -5,8 +5,8 @@ A minimalist ledger book application for financial tracking based on GitHub repo
 ## Features
 
 - 📊 **Quarterly Organization** - Track finances by quarters (Q1-Q4)
-- 💰 **Invoice Management** - Record and monitor sent invoices with payment dates
-- 🧾 **Expense Tracking** - Log business expenses with VAT (multiple), IRPF (15%), payment dates, and the attached document
+- 💰 **Invoice Management** - Record and monitor sent invoices with payment dates and quarterly VAT summaries by rate
+- 🧾 **Expense Tracking** - Log business expenses with VAT (multiple), IRPF (15%), payment dates, attached documents, and quarterly VAT summaries by rate
 - 💵 **Cashflow View** - Monitor bank balance and transaction flow over time with multi-bank support and category tagging
 - 🔀 **Linking View** - Reconcile invoices or expenses with their cashflow entries side-by-side, with date-ordered rows
 - 📥 **Bank Imports** - Import Revolut CSV files from the repository `import/` folder into cashflow
@@ -256,8 +256,8 @@ Switch between Spanish and English using the **ES | EN** toggle at the bottom of
 ### Views
 
 - **Welcome** - Overview of all quarters with key financial metrics
-- **Invoices** - Detailed list of sent invoices with totals and payment dates
-- **Expenses** - Business expenses with VAT rates (multiple), IRPF tax withholding, payment dates, PDFs, and paid/pending status summary
+- **Invoices** - Detailed list of sent invoices with totals, payment dates, and a VAT summary by rate
+- **Expenses** - Business expenses with VAT rates (multiple), IRPF tax withholding, payment dates, PDFs, paid/pending status, and a VAT summary by rate
 - **Cashflow** - Month-by-month bank balance and transactions
 - **Linking** - Side-by-side reconciliation of invoices or expenses with cashflow entries; rows sorted by date so unlinked items appear at their temporal position
 

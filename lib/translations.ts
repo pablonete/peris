@@ -86,6 +86,10 @@ export const translations = {
         "Selecciona un archivo PDF existente en la carpeta de facturas que no está enlazado a ninguna factura.",
       noOrphanFiles: "No hay archivos huérfanos disponibles.",
       linkFile: "Enlazar archivo",
+      vatSummary: "Resumen de IVA",
+      vatType: "Tipo",
+      vatBase: "Base",
+      vatQuota: "Cuota",
     },
     expenses: {
       expenses: "Gastos",
@@ -136,6 +140,10 @@ export const translations = {
       noOrphanFiles: "No hay archivos huérfanos disponibles.",
       linkFile: "Enlazar archivo",
       loading: "Cargando...",
+      vatSummary: "Resumen de IVA",
+      vatType: "Tipo",
+      vatBase: "Base",
+      vatQuota: "Cuota",
     },
     cashflow: {
       cashflow: "Flujo de caja",
@@ -336,6 +344,10 @@ export const translations = {
         "Select an existing PDF file in the invoices folder that is not linked to any invoice.",
       noOrphanFiles: "No orphan files available.",
       linkFile: "Link file",
+      vatSummary: "VAT summary",
+      vatType: "Type",
+      vatBase: "Base",
+      vatQuota: "VAT",
     },
     expenses: {
       expenses: "Expenses",
@@ -385,6 +397,10 @@ export const translations = {
       noOrphanFiles: "No orphan files available.",
       linkFile: "Link file",
       loading: "Loading...",
+      vatSummary: "VAT summary",
+      vatType: "Type",
+      vatBase: "Base",
+      vatQuota: "VAT",
     },
     cashflow: {
       cashflow: "Cashflow",

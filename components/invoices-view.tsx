@@ -28,6 +28,8 @@ import { InvoiceRowActions } from "@/components/invoice-row-actions"
 import { DeleteInvoiceAlert } from "@/components/delete-invoice-alert"
 import { LinkOrphanFileDialog } from "@/components/link-orphan-file-dialog"
 import { useLanguage } from "@/lib/i18n-context"
+import { getInvoiceVatQuarterSummary } from "@/lib/vat-subtotals"
+import { VatSummarySection } from "@/components/vat-summary-section"
 
 interface InvoicesViewProps {
   quarterId: string
@@ -73,6 +75,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
   const totalVat = invoices.reduce((s, i) => s + i.vat, 0)
   const totalAmount = invoices.reduce((s, i) => s + i.total, 0)
   const hasCurrency = invoices.some((i) => i.currency)
+  const vatQuarterSummary = getInvoiceVatQuarterSummary(invoices)
 
   const handleDeleteInvoice = (id: string) => {
     const nextInvoices = sortByDate(invoices.filter((i) => i.id !== id))
@@ -257,6 +260,14 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
           </TableFooter>
         </Table>
       </div>
+
+      <VatSummarySection
+        title={t("invoices.vatSummary")}
+        typeLabel={t("invoices.vatType")}
+        baseLabel={t("invoices.vatBase")}
+        quotaLabel={t("invoices.vatQuota")}
+        summaries={vatQuarterSummary}
+      />
 
       <DeleteInvoiceAlert
         invoiceId={deleteAlert}
