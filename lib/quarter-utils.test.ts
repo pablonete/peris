@@ -25,6 +25,7 @@ describe("quarter-utils", () => {
     it("returns the next quarter within the same year", () => {
       expect(getNextQuarterId("2025.1Q")).toBe("2025.2Q")
       expect(getNextQuarterId("2025.2Q")).toBe("2025.3Q")
+      expect(getNextQuarterId("2025.3Q")).toBe("2025.4Q")
     })
 
     it("wraps to the first quarter of the next year", () => {

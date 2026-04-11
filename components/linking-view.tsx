@@ -24,6 +24,16 @@ interface LinkingViewProps {
   quarterId: string
 }
 
+function buildLinkedItemId(
+  activeCashflowQuarterId: string,
+  currentQuarterId: string,
+  itemId: string
+) {
+  return activeCashflowQuarterId === currentQuarterId
+    ? itemId
+    : makeQuarterScopedLinkId(activeCashflowQuarterId, itemId)
+}
+
 export function LinkingView({ quarterId }: LinkingViewProps) {
   const { t } = useLanguage()
   const { getEditingFile, setEditingFile } = useData()
@@ -178,10 +188,11 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
     itemId: string,
     itemType: LinkedItemType
   ) => {
-    const linkedItemId =
-      activeCashflowQuarterId === quarterId
-        ? itemId
-        : makeQuarterScopedLinkId(activeCashflowQuarterId, itemId)
+    const linkedItemId = buildLinkedItemId(
+      activeCashflowQuarterId,
+      quarterId,
+      itemId
+    )
 
     patchCashflowEntry(entry, {
       invoiceId: itemType === "invoices" ? linkedItemId : undefined,

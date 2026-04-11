@@ -18,6 +18,10 @@ function getRawLinkedItemId(itemId: string): string {
   return match?.[2] ?? itemId
 }
 
+/**
+ * Builds the stored link identifier for a cross-quarter cashflow link by
+ * prefixing the original item ID with the cashflow quarter.
+ */
 export function makeQuarterScopedLinkId(
   quarterId: string,
   itemId: string
