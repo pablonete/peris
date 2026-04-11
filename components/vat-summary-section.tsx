@@ -31,7 +31,7 @@ export function VatSummarySection({
   }
 
   return (
-    <section className="mt-6 rounded-sm border border-border bg-card">
+    <section className="mt-6 rounded-sm border border-border bg-card w-fit">
       <div className="border-b border-border px-4 py-3">
         <h3 className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
           {title}
