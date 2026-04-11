@@ -86,6 +86,7 @@ export const translations = {
         "Selecciona un archivo PDF existente en la carpeta de facturas que no está enlazado a ninguna factura.",
       noOrphanFiles: "No hay archivos huérfanos disponibles.",
       linkFile: "Enlazar archivo",
+      exportEntries: "Exportar asientos",
     },
     expenses: {
       expenses: "Gastos",
@@ -136,6 +137,7 @@ export const translations = {
       noOrphanFiles: "No hay archivos huérfanos disponibles.",
       linkFile: "Enlazar archivo",
       loading: "Cargando...",
+      exportEntries: "Exportar asientos",
     },
     cashflow: {
       cashflow: "Flujo de caja",
@@ -336,6 +338,7 @@ export const translations = {
         "Select an existing PDF file in the invoices folder that is not linked to any invoice.",
       noOrphanFiles: "No orphan files available.",
       linkFile: "Link file",
+      exportEntries: "Export entries",
     },
     expenses: {
       expenses: "Expenses",
@@ -385,6 +388,7 @@ export const translations = {
       noOrphanFiles: "No orphan files available.",
       linkFile: "Link file",
       loading: "Loading...",
+      exportEntries: "Export entries",
     },
     cashflow: {
       cashflow: "Cashflow",

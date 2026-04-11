@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { InvoicesView } from "@/components/invoices-view"
 import { TestProviders } from "@/test/test-utils"
 
@@ -90,5 +90,38 @@ describe("InvoicesView", () => {
       .map((row) => row.querySelector("td:nth-child(3)")?.textContent)
       .filter(Boolean)
     expect(clients).toEqual(["Acme Corp", "Client B", "Client C"])
+  })
+
+  it("exports the current quarter invoices as a Keme CSV file", async () => {
+    const createObjectURL = vi.fn(() => "blob:invoice-export")
+    const revokeObjectURL = vi.fn()
+    Object.defineProperty(URL, "createObjectURL", {
+      writable: true,
+      value: createObjectURL,
+    })
+    Object.defineProperty(URL, "revokeObjectURL", {
+      writable: true,
+      value: revokeObjectURL,
+    })
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => {})
+
+    render(
+      <TestProviders>
+        <InvoicesView quarterId="2025.1Q" />
+      </TestProviders>
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Exportar asientos" }))
+
+    expect(createObjectURL).toHaveBeenCalledTimes(1)
+    const blob = createObjectURL.mock.calls[0][0] as Blob
+    await expect(blob.text()).resolves.toContain("440.0")
+    await expect(blob.text()).resolves.toContain("700.0")
+    await expect(blob.text()).resolves.toContain("477.0")
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:invoice-export")
+
+    clickSpy.mockRestore()
   })
 })
