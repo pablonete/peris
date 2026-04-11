@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { InvoicesView } from "@/components/invoices-view"
-import { TestProviders } from "@/test/test-utils"
+import { TestProviders, mockDownloadUrl } from "@/test/test-utils"
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
@@ -90,5 +90,29 @@ describe("InvoicesView", () => {
       .map((row) => row.querySelector("td:nth-child(3)")?.textContent)
       .filter(Boolean)
     expect(clients).toEqual(["Acme Corp", "Client B", "Client C"])
+  })
+
+  it("exports the current quarter invoices as a Keme CSV file", async () => {
+    const { createObjectURL, revokeObjectURL, restore } = mockDownloadUrl(
+      "blob:invoice-export"
+    )
+
+    render(
+      <TestProviders>
+        <InvoicesView quarterId="2025.1Q" />
+      </TestProviders>
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Exportar asientos" }))
+
+    expect(createObjectURL).toHaveBeenCalledTimes(1)
+    const blob = createObjectURL.mock.calls[0][0] as Blob
+    const content = await blob.text()
+    expect(content).toContain("440.0")
+    expect(content).toContain("700.0")
+    expect(content).toContain("477.0")
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:invoice-export")
+
+    restore()
   })
 })

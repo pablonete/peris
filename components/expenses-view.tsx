@@ -30,6 +30,8 @@ import { DeleteExpenseAlert } from "@/components/delete-expense-alert"
 import { LinkOrphanFileDialog } from "@/components/link-orphan-file-dialog"
 import { useLanguage } from "@/lib/i18n-context"
 import { Button } from "@/components/ui/button"
+import { downloadTextFile } from "@/lib/file-utils"
+import { buildKemeExpenseCsv } from "@/lib/keme-csv"
 
 interface ExpensesViewProps {
   quarterId: string
@@ -106,6 +108,13 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
     setLinkOrphanExpense(null)
   }
 
+  const handleExportEntries = () => {
+    downloadTextFile(
+      `keme-expenses-${quarterId}.csv`,
+      buildKemeExpenseCsv(expenses)
+    )
+  }
+
   return (
     <div>
       <div className="mb-6 border-b-2 border-foreground/20 pb-4">
@@ -114,7 +123,17 @@ export function ExpensesView({ quarterId }: ExpensesViewProps) {
             {t("expenses.expenses")}
             <EditingIndicator isEditing={isEditing} />
           </h2>
-          <NewExpenseDialog quarterId={quarterId} expenses={expenses} />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportEntries}
+              className="font-mono"
+            >
+              {t("expenses.exportEntries")}
+            </Button>
+            <NewExpenseDialog quarterId={quarterId} expenses={expenses} />
+          </div>
         </div>
         <p className="font-mono text-xs text-muted-foreground">
           {quarterId} &middot; {companyName} &middot; {expenses.length}{" "}

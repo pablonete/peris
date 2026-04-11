@@ -28,6 +28,9 @@ import { InvoiceRowActions } from "@/components/invoice-row-actions"
 import { DeleteInvoiceAlert } from "@/components/delete-invoice-alert"
 import { LinkOrphanFileDialog } from "@/components/link-orphan-file-dialog"
 import { useLanguage } from "@/lib/i18n-context"
+import { Button } from "@/components/ui/button"
+import { downloadTextFile } from "@/lib/file-utils"
+import { buildKemeInvoiceCsv } from "@/lib/keme-csv"
 
 interface InvoicesViewProps {
   quarterId: string
@@ -92,10 +95,17 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
     setLinkOrphanInvoice(null)
   }
 
+  const handleExportEntries = () => {
+    downloadTextFile(
+      `keme-invoices-${quarterId}.csv`,
+      buildKemeInvoiceCsv(invoices)
+    )
+  }
+
   return (
     <div>
       <div className="mb-6 border-b-2 border-foreground/20 pb-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="flex items-center gap-2 text-2xl font-bold tracking-wide text-foreground">
               {t("invoices.sentInvoices")}
@@ -106,7 +116,17 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
               {t("invoices.sentInvoices").toLowerCase()}
             </p>
           </div>
-          <NewInvoiceDialog quarterId={quarterId} invoices={invoices} />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportEntries}
+              className="font-mono"
+            >
+              {t("invoices.exportEntries")}
+            </Button>
+            <NewInvoiceDialog quarterId={quarterId} invoices={invoices} />
+          </div>
         </div>
       </div>
 

@@ -7,6 +7,7 @@ A minimalist ledger book application for financial tracking based on GitHub repo
 - 📊 **Quarterly Organization** - Track finances by quarters (Q1-Q4)
 - 💰 **Invoice Management** - Record and monitor sent invoices with payment dates
 - 🧾 **Expense Tracking** - Log business expenses with VAT (multiple), IRPF (15%), payment dates, and the attached document
+- 📤 **Keme CSV Export** - Export current-quarter invoice or expense journal entries to Keme Contabilidad CSV
 - 💵 **Cashflow View** - Monitor bank balance and transaction flow over time with multi-bank support and category tagging
 - 🔀 **Linking View** - Reconcile invoices or expenses with their cashflow entries side-by-side, with date-ordered rows
 - 📥 **Bank Imports** - Import Revolut CSV files from the repository `import/` folder into cashflow
@@ -247,6 +248,7 @@ pnpm dev
 - Use the **sidebar** to switch between quarters
 - Once a quarter is selected, use the **tabs at the top** (Invoices, Expenses, Cashflow, Linking) to switch views
 - In **Cashflow**, use **Import** to pick a bank export from the repository `import/` folder and stage the resulting cashflow updates plus the generated log file
+- In **Invoices** and **Expenses**, use **Exportar asientos** to download the current quarter in Keme Contabilidad CSV format
 - The active view is preserved when switching quarters
 
 ### Language Toggle
@@ -256,8 +258,8 @@ Switch between Spanish and English using the **ES | EN** toggle at the bottom of
 ### Views
 
 - **Welcome** - Overview of all quarters with key financial metrics
-- **Invoices** - Detailed list of sent invoices with totals and payment dates
-- **Expenses** - Business expenses with VAT rates (multiple), IRPF tax withholding, payment dates, PDFs, and paid/pending status summary
+- **Invoices** - Detailed list of sent invoices with totals, payment dates, and Keme Contabilidad CSV export
+- **Expenses** - Business expenses with VAT rates (multiple), IRPF tax withholding, payment dates, PDFs, paid/pending status summary, and Keme Contabilidad CSV export
 - **Cashflow** - Month-by-month bank balance and transactions
 - **Linking** - Side-by-side reconciliation of invoices or expenses with cashflow entries; rows sorted by date so unlinked items appear at their temporal position
 
