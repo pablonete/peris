@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest"
 import { fireEvent, render, screen } from "@testing-library/react"
 import { ExpensesView } from "@/components/expenses-view"
-import { TestProviders } from "@/test/test-utils"
+import { TestProviders, mockDownloadUrl } from "@/test/test-utils"
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
@@ -86,19 +86,9 @@ describe("ExpensesView", () => {
   })
 
   it("exports the current quarter expenses as a Keme CSV file", async () => {
-    const createObjectURL = vi.fn(() => "blob:expense-export")
-    const revokeObjectURL = vi.fn()
-    Object.defineProperty(URL, "createObjectURL", {
-      writable: true,
-      value: createObjectURL,
-    })
-    Object.defineProperty(URL, "revokeObjectURL", {
-      writable: true,
-      value: revokeObjectURL,
-    })
-    const clickSpy = vi
-      .spyOn(HTMLAnchorElement.prototype, "click")
-      .mockImplementation(() => {})
+    const { createObjectURL, revokeObjectURL, restore } = mockDownloadUrl(
+      "blob:expense-export"
+    )
 
     render(
       <TestProviders>
@@ -116,6 +106,6 @@ describe("ExpensesView", () => {
     expect(content).toContain("410.0")
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:expense-export")
 
-    clickSpy.mockRestore()
+    restore()
   })
 })

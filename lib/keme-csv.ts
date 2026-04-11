@@ -38,6 +38,9 @@ const getInvoiceDescription = (invoice: Invoice) =>
 const getExpenseDescription = (expense: Expense) =>
   [expense.vendor, expense.concept].filter(Boolean).join(" · ")
 
+const getExpenseGrossAmount = (expense: Expense) =>
+  expense.total + (expense.taxRetention ?? 0)
+
 const getExpenseBaseAmount = (expense: Expense) => {
   const baseAmount =
     expense.vat?.reduce((sum, vatItem) => sum + vatItem.subtotal, 0) ?? 0
@@ -46,7 +49,7 @@ const getExpenseBaseAmount = (expense: Expense) => {
     return baseAmount
   }
 
-  return expense.total + (expense.taxRetention ?? 0)
+  return getExpenseGrossAmount(expense)
 }
 
 const getExpenseVatAmount = (expense: Expense) =>
