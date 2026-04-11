@@ -105,7 +105,7 @@ export function InvoicesView({ quarterId }: InvoicesViewProps) {
   return (
     <div>
       <div className="mb-6 border-b-2 border-foreground/20 pb-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="flex items-center gap-2 text-2xl font-bold tracking-wide text-foreground">
               {t("invoices.sentInvoices")}

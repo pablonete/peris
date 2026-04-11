@@ -12,7 +12,7 @@ const KEME_HEADERS = [
 
 type KemeCsvRow = [string, string, string, string, string, string, string]
 
-const formatAmount = (value: number) => value.toFixed(2)
+const formatAmountTwoDecimals = (value: number) => value.toFixed(2)
 
 const formatDate = (isoDate: string) => {
   const [year, month, day] = isoDate.split("-")
@@ -68,8 +68,8 @@ export const buildKemeInvoiceCsv = (invoices: Invoice[]) => {
         date,
         "440.0",
         description,
-        formatAmount(invoice.total),
-        formatAmount(0),
+        formatAmountTwoDecimals(invoice.total),
+        formatAmountTwoDecimals(0),
         reference,
       ],
       [
@@ -77,8 +77,8 @@ export const buildKemeInvoiceCsv = (invoices: Invoice[]) => {
         date,
         "700.0",
         description,
-        formatAmount(0),
-        formatAmount(invoice.subtotal),
+        formatAmountTwoDecimals(0),
+        formatAmountTwoDecimals(invoice.subtotal),
         reference,
       ],
       [
@@ -86,8 +86,8 @@ export const buildKemeInvoiceCsv = (invoices: Invoice[]) => {
         date,
         "477.0",
         description,
-        formatAmount(0),
-        formatAmount(invoice.vat),
+        formatAmountTwoDecimals(0),
+        formatAmountTwoDecimals(invoice.vat),
         reference,
       ],
     ]
@@ -112,8 +112,8 @@ export const buildKemeExpenseCsv = (expenses: Expense[]) => {
         date,
         "600.0",
         description,
-        formatAmount(baseAmount),
-        formatAmount(0),
+        formatAmountTwoDecimals(baseAmount),
+        formatAmountTwoDecimals(0),
         reference,
       ],
       [
@@ -121,8 +121,8 @@ export const buildKemeExpenseCsv = (expenses: Expense[]) => {
         date,
         "472.0",
         description,
-        formatAmount(vatAmount),
-        formatAmount(0),
+        formatAmountTwoDecimals(vatAmount),
+        formatAmountTwoDecimals(0),
         reference,
       ],
       [
@@ -130,8 +130,8 @@ export const buildKemeExpenseCsv = (expenses: Expense[]) => {
         date,
         "410.0",
         description,
-        formatAmount(0),
-        formatAmount(payableAmount),
+        formatAmountTwoDecimals(0),
+        formatAmountTwoDecimals(payableAmount),
         reference,
       ],
     ]
