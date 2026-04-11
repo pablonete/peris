@@ -13,7 +13,7 @@ export type LinkingRow = {
   itemType?: LinkedItemType
 }
 
-function getRawLinkedItemId(itemId: string): string {
+export function getRawLinkedItemId(itemId: string): string {
   const match = itemId.match(QUARTER_SCOPED_LINK_ID_PATTERN)
   return match?.[2] ?? itemId
 }

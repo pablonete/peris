@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest"
-import { buildLinkingRows, makeQuarterScopedLinkId } from "@/lib/linking-utils"
+import {
+  buildLinkingRows,
+  getRawLinkedItemId,
+  makeQuarterScopedLinkId,
+} from "@/lib/linking-utils"
 import { Invoice, Expense, CashflowEntry } from "@/lib/types"
 
 const invoice1: Invoice = {
@@ -185,5 +189,23 @@ describe("buildLinkingRows", () => {
   it("sets itemType to undefined for unlinked cashflow-only rows", () => {
     const rows = buildLinkingRows([cashflowUnlinked], [], [])
     expect(rows[0].itemType).toBeUndefined()
+  })
+})
+
+describe("makeQuarterScopedLinkId", () => {
+  it("prefixes the item id with the linked quarter", () => {
+    expect(makeQuarterScopedLinkId("2026.2Q", "exp-61")).toBe(
+      "[2026.2Q]exp-61"
+    )
+  })
+})
+
+describe("getRawLinkedItemId", () => {
+  it("extracts the raw id from a prefixed link id", () => {
+    expect(getRawLinkedItemId("[2026.2Q]exp-61")).toBe("exp-61")
+  })
+
+  it("returns the original id when there is no quarter prefix", () => {
+    expect(getRawLinkedItemId("exp-61")).toBe("exp-61")
   })
 })
