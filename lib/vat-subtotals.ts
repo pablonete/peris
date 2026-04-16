@@ -51,13 +51,7 @@ function getExpenseVatSummaryEntries(expenses: Expense[]) {
       }))
     }
 
-    return [
-      {
-        rate: 0,
-        base: expense.total + (expense.taxRetention ?? 0),
-        quota: 0,
-      },
-    ]
+    return []
   })
 }
 

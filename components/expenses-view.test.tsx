@@ -31,9 +31,17 @@ vi.mock("@/lib/use-storage-data", () => ({
         id: "3",
         date: "2025-03-01",
         vendor: "Vendor C",
-        concept: "March item",
+        concept: "March item without VAT",
         vat: [],
         total: 300,
+      },
+      {
+        id: "4",
+        date: "2025-03-15",
+        vendor: "Vendor D",
+        concept: "March item with explicit 0% VAT",
+        vat: [{ rate: 0, subtotal: 150, amount: 0 }],
+        total: 150,
       },
       {
         id: "1",
@@ -82,10 +90,15 @@ describe("ExpensesView", () => {
     const vendors = Array.from(bodyRows)
       .map((row) => row.querySelector("td:nth-child(3)")?.textContent)
       .filter(Boolean)
-    expect(vendors).toEqual(["Office Supplies Ltd", "Vendor B", "Vendor C"])
+    expect(vendors).toEqual([
+      "Office Supplies Ltd",
+      "Vendor B",
+      "Vendor C",
+      "Vendor D",
+    ])
   })
 
-  it("renders the VAT summary grouped by VAT type", () => {
+  it("renders the VAT summary grouped by VAT type using only explicit VAT entries", () => {
     render(
       <TestProviders>
         <ExpensesView quarterId="2025.1Q" />
@@ -104,6 +117,7 @@ describe("ExpensesView", () => {
     expect(summary.getByText("21%")).toBeInTheDocument()
     expect(summary.getByText("10%")).toBeInTheDocument()
     expect(summary.getByText("0%")).toBeInTheDocument()
-    expect(summary.getByText(/300,00/)).toBeInTheDocument()
+    expect(summary.getByText(/150,00/)).toBeInTheDocument()
+    expect(summary.queryByText(/300,00/)).not.toBeInTheDocument()
   })
 })

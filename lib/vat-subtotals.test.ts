@@ -115,7 +115,7 @@ describe("vat-subtotals", () => {
   })
 
   describe("getExpenseVatQuarterSummary", () => {
-    it("groups expense VAT by rate, including expenses without VAT", () => {
+    it("groups expense VAT by rate and skips expenses without VAT", () => {
       const expenses: Expense[] = [
         {
           id: "EXP-1",
@@ -137,16 +137,24 @@ describe("vat-subtotals", () => {
           id: "EXP-3",
           date: "2024-01-03",
           vendor: "",
-          concept: "No VAT",
+          concept: "No VAT breakdown",
           total: 50,
           taxRetention: 10,
+        },
+        {
+          id: "EXP-4",
+          date: "2024-01-04",
+          vendor: "",
+          concept: "Explicit 0% VAT",
+          vat: [{ rate: 0, subtotal: 80, amount: 0 }],
+          total: 80,
         },
       ]
 
       expect(getExpenseVatQuarterSummary(expenses)).toEqual([
         { rate: 21, base: 100, quota: 21 },
         { rate: 10, base: 200, quota: 20 },
-        { rate: 0, base: 60, quota: 0 },
+        { rate: 0, base: 80, quota: 0 },
       ])
     })
   })
