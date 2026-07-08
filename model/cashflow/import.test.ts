@@ -34,6 +34,58 @@ const revolutHeader = [
 ]
 
 describe("importCashflowFile", () => {
+  it("assigns UUID-based IDs to newly created Revolut entries", () => {
+    const entries: CashflowEntry[] = [
+      {
+        id: "co",
+        date: "2026-01-01",
+        concept: "Carry over",
+        bankName: "Revolut",
+        balance: 500,
+      },
+    ]
+
+    const csvContent = buildCsv([
+      {
+        "Date started (UTC)": "2026-02-10",
+        "Date completed (UTC)": "2026-02-10",
+        ID: "6a2e7f47-31f8-ae0e-9947-20985d024b28",
+        State: "COMPLETED",
+        Description: "Cafetería Sol",
+        Amount: "-5.00",
+      },
+      {
+        "Date started (UTC)": "2026-02-11",
+        "Date completed (UTC)": "2026-02-11",
+        ID: "6a2e7f47-9999-aaaa-bbbb-cccccccccccc",
+        State: "COMPLETED",
+        Description: "Mercadona",
+        Amount: "-30.00",
+      },
+    ])
+
+    const result = importCashflowFile({
+      bank: "revolut",
+      csvContent,
+      fileName: "revolut-feb.csv",
+      quarterId: "2026.1Q",
+      entries,
+      now: new Date("2026-03-07T16:10:31.772Z"),
+    })
+
+    expect(result.summary.created).toBe(2)
+
+    const revolutEntries = result.entries.filter(
+      (e) => e.bankName === "Revolut" && e.id !== "co"
+    )
+
+    // First entry: UUID prefix is "6a2e7f47"
+    expect(revolutEntries[0].id).toBe("6a2e7f47")
+
+    // Second entry: same 8-char prefix — collision resolved with suffix "a"
+    expect(revolutEntries[1].id).toBe("6a2e7f47a")
+  })
+
   it("matches existing Revolut entries, creates missing ones, and resequences the bank ledger", () => {
     const entries: CashflowEntry[] = [
       {
