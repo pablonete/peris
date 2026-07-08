@@ -21,6 +21,38 @@ import {
 import { CashflowEntry } from "@/lib/types"
 import { CashflowImportLogRecord } from "./import-log"
 
+function isUUID(id: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    id
+  )
+}
+
+function resolveNewEntryId(
+  externalId: string,
+  existingEntries: CashflowEntry[]
+): string {
+  if (!isUUID(externalId)) {
+    return generateNextId(existingEntries, "cf")
+  }
+
+  const base = externalId.slice(0, 8)
+  const existingIds = new Set(existingEntries.map((e) => e.id))
+
+  if (!existingIds.has(base)) {
+    return base
+  }
+
+  // Collision: try base + 'a', 'b', ...
+  for (const suffix of "abcdefghijklmnopqrstuvwxyz") {
+    const candidate = base + suffix
+    if (!existingIds.has(candidate)) {
+      return candidate
+    }
+  }
+
+  return generateNextId(existingEntries, "cf")
+}
+
 export interface CashflowImportSummary {
   processed: number
   otherQuarter: number
@@ -110,7 +142,7 @@ export function importCashflowFile({
     }
 
     const newEntry: CashflowEntry = {
-      id: generateNextId(nextEntries, "cf"),
+      id: resolveNewEntryId(movement.externalId, nextEntries),
       date: movement.date,
       concept: movement.concept,
       bankName,
