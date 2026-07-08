@@ -21,6 +21,11 @@ import {
 import { CashflowEntry } from "@/lib/types"
 import { CashflowImportLogRecord } from "./import-log"
 
+function getShortExternalId(externalId: string | undefined): string | undefined {
+  if (!externalId || externalId.length < 8) return undefined
+  return externalId.slice(0, 8)
+}
+
 export interface CashflowImportSummary {
   processed: number
   otherQuarter: number
@@ -110,7 +115,7 @@ export function importCashflowFile({
     }
 
     const newEntry: CashflowEntry = {
-      id: generateNextId(nextEntries, "cf"),
+      id: getShortExternalId(movement.externalId) ?? generateNextId(nextEntries, "cf"),
       date: movement.date,
       concept: movement.concept,
       bankName,
