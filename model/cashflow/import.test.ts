@@ -34,7 +34,7 @@ const revolutHeader = [
 ]
 
 describe("importCashflowFile", () => {
-  it("assigns UUID-based IDs to newly created Revolut entries", () => {
+  it("assigns short external IDs to newly created Revolut entries", () => {
     const entries: CashflowEntry[] = [
       {
         id: "co",
@@ -57,7 +57,7 @@ describe("importCashflowFile", () => {
       {
         "Date started (UTC)": "2026-02-11",
         "Date completed (UTC)": "2026-02-11",
-        ID: "6a2e7f47-9999-aaaa-bbbb-cccccccccccc",
+        ID: "b3c1d2e4-9999-aaaa-bbbb-cccccccccccc",
         State: "COMPLETED",
         Description: "Mercadona",
         Amount: "-30.00",
@@ -79,11 +79,9 @@ describe("importCashflowFile", () => {
       (e) => e.bankName === "Revolut" && e.id !== "co"
     )
 
-    // First entry: UUID prefix is "6a2e7f47"
+    // First 8 chars of the UUID are used as the ID
     expect(revolutEntries[0].id).toBe("6a2e7f47")
-
-    // Second entry: same 8-char prefix — collision resolved with suffix "a"
-    expect(revolutEntries[1].id).toBe("6a2e7f47a")
+    expect(revolutEntries[1].id).toBe("b3c1d2e4")
   })
 
   it("matches existing Revolut entries, creates missing ones, and resequences the bank ledger", () => {
