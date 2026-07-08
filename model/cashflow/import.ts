@@ -21,36 +21,9 @@ import {
 import { CashflowEntry } from "@/lib/types"
 import { CashflowImportLogRecord } from "./import-log"
 
-function isUUID(id: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-    id
-  )
-}
-
-function resolveNewEntryId(
-  externalId: string,
-  existingEntries: CashflowEntry[]
-): string {
-  if (!isUUID(externalId)) {
-    return generateNextId(existingEntries, "cf")
-  }
-
-  const base = externalId.slice(0, 8)
-  const existingIds = new Set(existingEntries.map((e) => e.id))
-
-  if (!existingIds.has(base)) {
-    return base
-  }
-
-  // Collision: try base + 'a', 'b', ...
-  for (const suffix of "abcdefghijklmnopqrstuvwxyz") {
-    const candidate = base + suffix
-    if (!existingIds.has(candidate)) {
-      return candidate
-    }
-  }
-
-  return generateNextId(existingEntries, "cf")
+function getShortExternalId(externalId: string | undefined): string | undefined {
+  if (!externalId || externalId.length < 8) return undefined
+  return externalId.slice(0, 8)
 }
 
 export interface CashflowImportSummary {
@@ -142,7 +115,7 @@ export function importCashflowFile({
     }
 
     const newEntry: CashflowEntry = {
-      id: resolveNewEntryId(movement.externalId, nextEntries),
+      id: getShortExternalId(movement.externalId) ?? generateNextId(nextEntries, "cf"),
       date: movement.date,
       concept: movement.concept,
       bankName,
