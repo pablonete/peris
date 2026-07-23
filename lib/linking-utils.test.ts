@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest"
-import { buildLinkingRows } from "@/lib/linking-utils"
+import {
+  buildLinkingRows,
+  getRawLinkedItemId,
+  makeQuarterScopedLinkId,
+} from "@/lib/linking-utils"
 import { Invoice, Expense, CashflowEntry } from "@/lib/types"
 
 const invoice1: Invoice = {
@@ -86,6 +90,24 @@ describe("buildLinkingRows", () => {
     expect(rows[0].itemType).toBe("expenses")
   })
 
+  it("pairs a cashflow entry with a prefixed linked expense", () => {
+    const rows = buildLinkingRows(
+      [
+        {
+          ...cashflowWithExpense,
+          expenseId: makeQuarterScopedLinkId("2025.2Q", expense1.id),
+        },
+      ],
+      [],
+      [expense1]
+    )
+
+    expect(rows).toHaveLength(1)
+    expect(rows[0].cashflow?.expenseId).toBe("[2025.2Q]exp-1")
+    expect(rows[0].item).toBe(expense1)
+    expect(rows[0].itemType).toBe("expenses")
+  })
+
   it("sets the date from the cashflow entry", () => {
     const rows = buildLinkingRows([cashflowWithInvoice], [invoice1], [])
     expect(rows[0].date).toBe("2025-01-12")
@@ -167,5 +189,23 @@ describe("buildLinkingRows", () => {
   it("sets itemType to undefined for unlinked cashflow-only rows", () => {
     const rows = buildLinkingRows([cashflowUnlinked], [], [])
     expect(rows[0].itemType).toBeUndefined()
+  })
+})
+
+describe("makeQuarterScopedLinkId", () => {
+  it("prefixes the item id with the linked quarter", () => {
+    expect(makeQuarterScopedLinkId("2026.2Q", "exp-61")).toBe(
+      "[2026.2Q]exp-61"
+    )
+  })
+})
+
+describe("getRawLinkedItemId", () => {
+  it("extracts the raw id from a prefixed link id", () => {
+    expect(getRawLinkedItemId("[2026.2Q]exp-61")).toBe("exp-61")
+  })
+
+  it("returns the original id when there is no quarter prefix", () => {
+    expect(getRawLinkedItemId("exp-61")).toBe("exp-61")
   })
 })

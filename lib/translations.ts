@@ -257,6 +257,7 @@ export const translations = {
       linkCashflow: "Vincular con este movimiento",
       removeLink: "Eliminar vínculo",
       orphansOnly: "Solo huérfanos",
+      nextQuarter: "Siguiente trimestre",
     },
   },
   en: {
@@ -514,6 +515,7 @@ export const translations = {
       linkCashflow: "Link to this entry",
       removeLink: "Remove link",
       orphansOnly: "Orphans",
+      nextQuarter: "Next quarter",
     },
   },
 }

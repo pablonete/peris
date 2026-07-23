@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest"
-import { getPreviousQuarterId, getYearAgoQuarterId } from "./quarter-utils"
+import {
+  getNextQuarterId,
+  getPreviousQuarterId,
+  getYearAgoQuarterId,
+} from "./quarter-utils"
 
 describe("quarter-utils", () => {
   describe("getPreviousQuarterId", () => {
@@ -14,6 +18,22 @@ describe("quarter-utils", () => {
 
     it("returns input unchanged when format is invalid", () => {
       expect(getPreviousQuarterId("invalid")).toBe("invalid")
+    })
+  })
+
+  describe("getNextQuarterId", () => {
+    it("returns the next quarter within the same year", () => {
+      expect(getNextQuarterId("2025.1Q")).toBe("2025.2Q")
+      expect(getNextQuarterId("2025.2Q")).toBe("2025.3Q")
+      expect(getNextQuarterId("2025.3Q")).toBe("2025.4Q")
+    })
+
+    it("wraps to the first quarter of the next year", () => {
+      expect(getNextQuarterId("2025.4Q")).toBe("2026.1Q")
+    })
+
+    it("returns the original input for invalid quarter strings", () => {
+      expect(getNextQuarterId("invalid")).toBe("invalid")
     })
   })
 

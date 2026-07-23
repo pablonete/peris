@@ -6,7 +6,11 @@ import { useLanguage } from "@/lib/i18n-context"
 import { useData } from "@/lib/use-data"
 import { ErrorBanner } from "@/components/error-banner"
 import { Invoice, Expense, CashflowEntry } from "@/lib/types"
-import { buildLinkingRows, LinkedItemType } from "@/lib/linking-utils"
+import {
+  buildLinkingRows,
+  LinkedItemType,
+  makeQuarterScopedLinkId,
+} from "@/lib/linking-utils"
 import { cn } from "@/lib/utils"
 import { InvoiceLinkingCell } from "@/components/invoices/invoice-linking-cell"
 import { ExpenseLinkingCell } from "@/components/expenses/expense-linking-cell"
@@ -14,19 +18,33 @@ import { CashflowLinkingCell } from "@/components/cashflow/cashflow-linking-cell
 import { CashflowBankFilter } from "@/components/cashflow-bank-filter"
 import { LinkingCircle } from "@/components/linking/linking-circle"
 import { Toggle } from "@/components/ui/toggle"
+import { getNextQuarterId } from "@/lib/quarter-utils"
 
 interface LinkingViewProps {
   quarterId: string
 }
 
+function buildLinkedItemId(
+  activeCashflowQuarterId: string,
+  currentQuarterId: string,
+  itemId: string
+) {
+  return activeCashflowQuarterId === currentQuarterId
+    ? itemId
+    : makeQuarterScopedLinkId(activeCashflowQuarterId, itemId)
+}
+
 export function LinkingView({ quarterId }: LinkingViewProps) {
   const { t } = useLanguage()
   const { getEditingFile, setEditingFile } = useData()
+  const nextQuarterId = getNextQuarterId(quarterId)
   const cashflowSha = useFileSha(quarterId, "cashflow")
+  const nextQuarterCashflowSha = useFileSha(nextQuarterId, "cashflow")
 
   const [linkingItemId, setLinkingItemId] = useState<string | null>(null)
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
   const [showOrphansOnly, setShowOrphansOnly] = useState(false)
+  const [showNextQuarterCashflow, setShowNextQuarterCashflow] = useState(false)
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(
     null
   )
@@ -52,9 +70,30 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
     isPending: cashflowPending,
     error: cashflowError,
   } = useStorageData(quarterId, "cashflow")
+  const {
+    content: nextQuarterCashflow,
+    isPending: nextQuarterCashflowPending,
+    error: nextQuarterCashflowError,
+  } = useStorageData(nextQuarterId, "cashflow")
 
-  const isPending = invoicesPending || expensesPending || cashflowPending
-  const error = invoicesError || expensesError || cashflowError
+  const activeCashflowQuarterId = showNextQuarterCashflow
+    ? nextQuarterId
+    : quarterId
+  const activeCashflow = showNextQuarterCashflow
+    ? nextQuarterCashflow
+    : cashflow
+  const activeCashflowSha = showNextQuarterCashflow
+    ? nextQuarterCashflowSha
+    : cashflowSha
+
+  const isPending =
+    invoicesPending ||
+    expensesPending ||
+    (showNextQuarterCashflow ? nextQuarterCashflowPending : cashflowPending)
+  const error =
+    invoicesError ||
+    expensesError ||
+    (showNextQuarterCashflow ? nextQuarterCashflowError : cashflowError)
 
   if (isPending) {
     return (
@@ -70,7 +109,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
 
   const uniqueBanks = Array.from(
     new Set(
-      (cashflow ?? [])
+      (activeCashflow ?? [])
         .map((entry) => entry.bankName)
         .filter((name): name is string => Boolean(name))
     )
@@ -81,7 +120,17 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
       ? selectedBank
       : null
 
-  const rows = buildLinkingRows(cashflow ?? [], invoices ?? [], expenses ?? [])
+  const rows = buildLinkingRows(
+    activeCashflow ?? [],
+    invoices ?? [],
+    expenses ?? []
+  )
+
+  const resetLinkingState = () => {
+    setLinkingItemId(null)
+    setLinkingSourcePos(null)
+    setMousePos(null)
+  }
 
   // Orphan items (no cashflow yet) are always shown so they can be linked to any bank's entries
   const filteredRows = (
@@ -98,21 +147,25 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
 
   const handleOrphansToggle = (pressed: boolean) => {
     setShowOrphansOnly(pressed)
-    setLinkingItemId(null)
-    setLinkingSourcePos(null)
-    setMousePos(null)
+    resetLinkingState()
+  }
+
+  const handleNextQuarterToggle = (pressed: boolean) => {
+    setShowNextQuarterCashflow(pressed)
+    setSelectedBank(null)
+    resetLinkingState()
   }
 
   const handleBankSelect = (bank: string | null) => {
     setSelectedBank(bank)
-    setLinkingItemId(null)
-    setLinkingSourcePos(null)
-    setMousePos(null)
+    resetLinkingState()
   }
 
   const updateCashflow = (updatedEntries: CashflowEntry[]) => {
-    const sha = getEditingFile(quarterId, "cashflow")?.sha ?? cashflowSha
-    setEditingFile(quarterId, "cashflow", updatedEntries, sha)
+    const sha =
+      getEditingFile(activeCashflowQuarterId, "cashflow")?.sha ??
+      activeCashflowSha
+    setEditingFile(activeCashflowQuarterId, "cashflow", updatedEntries, sha)
   }
 
   const patchCashflowEntry = (
@@ -120,7 +173,9 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
     patch: Partial<CashflowEntry>
   ) => {
     updateCashflow(
-      (cashflow ?? []).map((e) => (e.id === entry.id ? { ...e, ...patch } : e))
+      (activeCashflow ?? []).map((e) =>
+        e.id === entry.id ? { ...e, ...patch } : e
+      )
     )
   }
 
@@ -133,13 +188,17 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
     itemId: string,
     itemType: LinkedItemType
   ) => {
+    const linkedItemId = buildLinkedItemId(
+      activeCashflowQuarterId,
+      quarterId,
+      itemId
+    )
+
     patchCashflowEntry(entry, {
-      invoiceId: itemType === "invoices" ? itemId : undefined,
-      expenseId: itemType === "expenses" ? itemId : undefined,
+      invoiceId: itemType === "invoices" ? linkedItemId : undefined,
+      expenseId: itemType === "expenses" ? linkedItemId : undefined,
     })
-    setLinkingItemId(null)
-    setLinkingSourcePos(null)
-    setMousePos(null)
+    resetLinkingState()
   }
 
   const handleStartLinking = (
@@ -157,9 +216,7 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
   }
 
   const handleCancelLinking = () => {
-    setLinkingItemId(null)
-    setLinkingSourcePos(null)
-    setMousePos(null)
+    resetLinkingState()
   }
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -205,13 +262,24 @@ export function LinkingView({ quarterId }: LinkingViewProps) {
           </div>
           <div className="flex-1 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground flex items-center justify-between gap-2">
             <span>{t("linking.cashflow")}</span>
-            <CashflowBankFilter
-              banks={uniqueBanks}
-              activeBank={activeBank}
-              onSelect={handleBankSelect}
-              className="flex flex-wrap gap-1"
-              compact
-            />
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <Toggle
+                pressed={showNextQuarterCashflow}
+                onPressedChange={handleNextQuarterToggle}
+                size="sm"
+                variant="outline"
+                className="h-5 px-2 py-0 font-mono text-[10px] uppercase tracking-[0.15em]"
+              >
+                {t("linking.nextQuarter")}
+              </Toggle>
+              <CashflowBankFilter
+                banks={uniqueBanks}
+                activeBank={activeBank}
+                onSelect={handleBankSelect}
+                className="flex flex-wrap gap-1"
+                compact
+              />
+            </div>
           </div>
         </div>
 
