@@ -29,8 +29,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { ErrorBanner } from "@/components/error-banner"
 import { CashflowBankFilter } from "@/components/cashflow-bank-filter"
-import { CashflowRowActions } from "@/components/cashflow-row-actions"
-import { AssignCategoryDialog } from "@/components/assign-category-dialog"
+import { CategoryMenu } from "@/components/cashflow/category-menu"
 import { CashflowCategoryChart } from "@/components/cashflow-category-chart"
 import { ImportCashflowDialog } from "@/components/cashflow/import-cashflow-dialog"
 import { SummaryCard } from "@/components/summary-card"
@@ -69,8 +68,6 @@ export function CashflowView({
   const isEditing = isDirtyFile(quarterId, "cashflow")
 
   const [selectedBank, setSelectedBank] = useState<string | null>(null)
-  const [assignCategoryEntry, setAssignCategoryEntry] =
-    useState<CashflowEntry | null>(null)
   const [showGhosts, setShowGhosts] = useState(false)
 
   const previousQuarterId = getPreviousQuarterId(quarterId)
@@ -99,7 +96,6 @@ export function CashflowView({
       ? selectedBank
       : null
   const showBankColumn = hasMultipleBanks && activeBank === null
-  const showEllipsis = categories.length > 0
 
   if (isPending) {
     return (
@@ -149,14 +145,15 @@ export function CashflowView({
 
   const displayEntries: DisplayEntry[] = [...filteredEntries, ...ghostEntries]
 
-  const handleAssignCategory = (category: string | undefined) => {
-    if (!assignCategoryEntry) return
+  const handleAssignCategory = (
+    entry: CashflowEntry,
+    category: string | undefined
+  ) => {
     const nextEntries = entries.map((e) =>
-      e.id === assignCategoryEntry.id ? { ...e, category } : e
+      e.id === entry.id ? { ...e, category } : e
     )
     const editingFile = getEditingFile(quarterId, "cashflow")
     setEditingFile(quarterId, "cashflow", nextEntries, editingFile?.sha)
-    setAssignCategoryEntry(null)
   }
 
   const handleChangePeriodicity = (
@@ -250,7 +247,6 @@ export function CashflowView({
               <TableHead className="font-mono text-[10px] uppercase tracking-[0.15em] text-right">
                 Balance
               </TableHead>
-              {showEllipsis && <TableHead className="w-[40px]" />}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -318,7 +314,16 @@ export function CashflowView({
                     ) : (
                       <div>
                         <span>{entry.concept}</span>
-                        {entry.category && (
+                        {categories.length > 0 && !ghost && (
+                          <CategoryMenu
+                            category={entry.category}
+                            categories={categories}
+                            onAssign={(cat) =>
+                              handleAssignCategory(entry as CashflowEntry, cat)
+                            }
+                          />
+                        )}
+                        {ghost && entry.category && (
                           <span className="font-mono text-[10px] text-muted-foreground/70 mt-0.5 block">
                             {entry.category}
                           </span>
@@ -361,27 +366,13 @@ export function CashflowView({
                   <TableCell className="font-mono text-sm font-semibold text-right">
                     {formatCurrency(entry.balance)}
                   </TableCell>
-                  {showEllipsis && (
-                    <TableCell className="text-center">
-                      {!ghost && (
-                        <CashflowRowActions
-                          onAssignCategory={() =>
-                            setAssignCategoryEntry(entry as CashflowEntry)
-                          }
-                        />
-                      )}
-                    </TableCell>
-                  )}
                 </TableRow>
               )
             })}
           </TableBody>
           <TableFooter>
             <TableRow className="border-t-2 border-foreground/20 bg-secondary/30 hover:bg-secondary/30">
-              <TableCell
-                colSpan={showEllipsis ? 5 : 4}
-                className="font-semibold text-sm"
-              >
+              <TableCell colSpan={4} className="font-semibold text-sm">
                 <div className="flex items-center justify-between">
                   <span>Period totals</span>
                   <Button
@@ -417,16 +408,6 @@ export function CashflowView({
       </div>
 
       <CashflowCategoryChart entries={filteredEntries} />
-
-      {assignCategoryEntry && (
-        <AssignCategoryDialog
-          open={assignCategoryEntry !== null}
-          onClose={() => setAssignCategoryEntry(null)}
-          onAssign={handleAssignCategory}
-          categories={categories}
-          currentCategory={assignCategoryEntry.category}
-        />
-      )}
     </div>
   )
 }
