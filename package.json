@@ -13,6 +13,7 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "cashflow:generate": "tsx scripts/generate-cashflow.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build -o out/storybook"
   },
@@ -87,6 +88,7 @@
     "postcss": "^8.5",
     "prettier": "^3.8.1",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.23.15",
     "typescript": "5.7.3",
     "vitest": "^4.0.18",
     "storybook": "^10.2.10",

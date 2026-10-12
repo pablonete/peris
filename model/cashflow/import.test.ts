@@ -448,3 +448,350 @@ function escapeCsvValue(value: string): string {
 
   return `"${value.replaceAll('"', '""')}"`
 }
+  it("extends short Revolut IDs when their prefixes collide", () => {
+    const entries: CashflowEntry[] = [
+      {
+        id: "co",
+        date: "2031-03-31",
+        concept: "Carry over",
+        bankName: "Revolut",
+        balance: 100,
+      },
+    ]
+    const csvContent = buildCsv([
+      {
+        "Date started (UTC)": "2031-04-01",
+        "Date completed (UTC)": "2031-04-01",
+        ID: "sharedidA-0000000001",
+        State: "COMPLETED",
+        Description: "Movement one",
+        Amount: "-10.00",
+      },
+      {
+        "Date started (UTC)": "2031-04-02",
+        "Date completed (UTC)": "2031-04-02",
+        ID: "sharedidB-0000000002",
+        State: "COMPLETED",
+        Description: "Movement two",
+        Amount: "-20.00",
+      },
+    ])
+
+    const firstImport = importCashflowFile({
+      bank: "revolut",
+      csvContent,
+      fileName: "revolut-q2.csv",
+      quarterId: "2031.2Q",
+      entries,
+    })
+    const importedIds = firstImport.entries
+      .filter((entry) => entry.bankName === "Revolut" && entry.id !== "co")
+      .map((entry) => entry.id)
+
+    expect(importedIds).toEqual(["sharedid", "sharedidB"])
+
+    const secondImport = importCashflowFile({
+      bank: "revolut",
+      csvContent,
+      fileName: "revolut-q2.csv",
+      quarterId: "2031.2Q",
+      entries: firstImport.entries,
+    })
+    expect(secondImport.summary.created).toBe(0)
+    expect(secondImport.summary.existing).toBe(2)
+  })
+
+  it("orders same-day Revolut movements from balance chains, not CSV row order", () => {
+    const entries: CashflowEntry[] = [
+      {
+        id: "co",
+        date: "2031-03-31",
+        concept: "Carry over",
+        bankName: "Revolut",
+        balance: 240.79,
+      },
+    ]
+    const csvContent = buildCsv([
+      {
+        "Date started (UTC)": "2031-04-01",
+        "Date completed (UTC)": "2031-04-01",
+        ID: "aaaaaaaa-0000-0000-0000-000000000001",
+        State: "COMPLETED",
+        Description: "Movement 1",
+        Amount: "-80.00",
+        Balance: "168.30",
+      },
+      {
+        "Date started (UTC)": "2031-04-01",
+        "Date completed (UTC)": "2031-04-01",
+        ID: "bbbbbbbb-0000-0000-0000-000000000002",
+        State: "COMPLETED",
+        Description: "Movement 2",
+        Amount: "-9.00",
+        Balance: "248.30",
+      },
+      {
+        "Date started (UTC)": "2031-04-01",
+        "Date completed (UTC)": "2031-04-01",
+        ID: "cccccccc-0000-0000-0000-000000000003",
+        State: "COMPLETED",
+        Description: "Movement 3",
+        Amount: "-20.66",
+        Balance: "257.30",
+      },
+      {
+        "Date started (UTC)": "2031-04-01",
+        "Date completed (UTC)": "2031-04-01",
+        ID: "dddddddd-0000-0000-0000-000000000004",
+        State: "COMPLETED",
+        Description: "Movement 4",
+        Amount: "-47.83",
+        Balance: "277.96",
+      },
+      {
+        "Date started (UTC)": "2031-04-01",
+        "Date completed (UTC)": "2031-04-01",
+        ID: "eeeeeeee-0000-0000-0000-000000000005",
+        State: "COMPLETED",
+        Description: "Movement 5",
+        Amount: "85.00",
+        Balance: "325.79",
+      },
+    ])
+
+    const result = importCashflowFile({
+      bank: "revolut",
+      csvContent,
+      fileName: "revolut-q2.csv",
+      quarterId: "2031.2Q",
+      entries,
+      now: new Date("2031-07-12T10:00:00.000Z"),
+    })
+
+    expect(result.summary.created).toBe(5)
+    expect(
+      result.entries
+        .filter((entry) => entry.bankName === "Revolut" && entry.id !== "co")
+        .map(({ id, income, expense, balance, bankSequence }) => ({
+          id,
+          income,
+          expense,
+          balance,
+          bankSequence,
+        }))
+    ).toEqual([
+      {
+        id: "eeeeeeee",
+        income: 85,
+        expense: undefined,
+        balance: 325.79,
+        bankSequence: 1,
+      },
+      {
+        id: "dddddddd",
+        income: undefined,
+        expense: 47.83,
+        balance: 277.96,
+        bankSequence: 2,
+      },
+      {
+        id: "cccccccc",
+        income: undefined,
+        expense: 20.66,
+        balance: 257.3,
+        bankSequence: 3,
+      },
+      {
+        id: "bbbbbbbb",
+        income: undefined,
+        expense: 9,
+        balance: 248.3,
+        bankSequence: 4,
+      },
+      {
+        id: "aaaaaaaa",
+        income: undefined,
+        expense: 80,
+        balance: 168.3,
+        bankSequence: 5,
+      },
+    ])
+  })
+
+  it("requires balance data to order same-day Revolut movements", () => {
+    const csvContent = buildCsv([
+      {
+        "Date started (UTC)": "2031-04-01",
+        "Date completed (UTC)": "2031-04-01",
+        ID: "aaaaaaaa-0000-0000-0000-000000000001",
+        State: "COMPLETED",
+        Description: "Movement 1",
+        Amount: "-10.00",
+      },
+      {
+        "Date started (UTC)": "2031-04-01",
+        "Date completed (UTC)": "2031-04-01",
+        ID: "bbbbbbbb-0000-0000-0000-000000000002",
+        State: "COMPLETED",
+        Description: "Movement 2",
+        Amount: "-20.00",
+      },
+    ])
+
+    expect(() =>
+      importCashflowFile({
+        bank: "revolut",
+        csvContent,
+        fileName: "revolut-q2.csv",
+        quarterId: "2031.2Q",
+        entries: [
+          {
+            id: "co",
+            date: "2031-03-31",
+            concept: "Carry over",
+            bankName: "Revolut",
+            balance: 100,
+          },
+        ],
+      })
+    ).toThrow(/missing or invalid Balance values/)
+  })
+
+  it("uses the explicit opening balance even if the carry-over row is not first", () => {
+    const entries: CashflowEntry[] = [
+      {
+        id: "existing",
+        date: "2031-04-01",
+        concept: "Existing movement",
+        bankName: "Revolut",
+        expense: 10,
+        balance: 50,
+        bankSequence: 1,
+      },
+      {
+        id: "co",
+        date: "2031-03-31",
+        concept: "Carry over",
+        bankName: "Revolut",
+        balance: 100,
+      },
+    ]
+    const csvContent = buildCsv([
+      {
+        "Date started (UTC)": "2031-04-01",
+        "Date completed (UTC)": "2031-04-01",
+        ID: "existing-row",
+        State: "COMPLETED",
+        Description: "Existing movement",
+        Amount: "-10.00",
+      },
+      {
+        "Date started (UTC)": "2031-04-02",
+        "Date completed (UTC)": "2031-04-02",
+        ID: "new-row-0001",
+        State: "COMPLETED",
+        Description: "New movement",
+        Amount: "-5.00",
+      },
+    ])
+
+    const result = importCashflowFile({
+      bank: "revolut",
+      csvContent,
+      fileName: "revolut-q2.csv",
+      quarterId: "2031.2Q",
+      entries,
+      now: new Date("2031-07-12T10:00:00.000Z"),
+    })
+
+    expect(
+      result.entries
+        .filter((entry) => entry.bankName === "Revolut")
+        .map(({ id, balance }) => ({ id, balance }))
+    ).toEqual([
+      { id: "co", balance: 100 },
+      { id: "existing", balance: 90 },
+      { id: "new-row-", balance: 85 },
+    ])
+  })
+
+  it("does not mistake a new similar movement for an existing one in the same CSV", () => {
+    const entries: CashflowEntry[] = [
+      {
+        id: "co",
+        date: "2031-04-01",
+        concept: "Carry over",
+        bankName: "Revolut",
+        balance: 1000,
+      },
+    ]
+    const csvContent = buildCsv([
+      {
+        "Date started (UTC)": "2031-04-10",
+        "Date completed (UTC)": "2031-04-10",
+        ID: "aaaaaaaa-0000-0000-0000-000000000001",
+        State: "COMPLETED",
+        Description: "Movement one",
+        Amount: "-12.34",
+      },
+      {
+        "Date started (UTC)": "2031-04-12",
+        "Date completed (UTC)": "2031-04-12",
+        ID: "bbbbbbbb-0000-0000-0000-000000000002",
+        State: "COMPLETED",
+        Description: "Movement two",
+        Amount: "-12.34",
+      },
+    ])
+
+    const firstImport = importCashflowFile({
+      bank: "revolut",
+      csvContent,
+      fileName: "revolut-q2.csv",
+      quarterId: "2031.2Q",
+      entries,
+      now: new Date("2031-07-12T10:00:00.000Z"),
+    })
+
+    expect(firstImport.summary.created).toBe(2)
+    expect(firstImport.summary.existing).toBe(0)
+    expect(
+      firstImport.entries
+        .filter((entry) => entry.bankName === "Revolut" && entry.id !== "co")
+        .map(({ id, date, expense, balance, bankSequence }) => ({
+          id,
+          date,
+          expense,
+          balance,
+          bankSequence,
+        }))
+    ).toEqual([
+      {
+        id: "aaaaaaaa",
+        date: "2031-04-10",
+        expense: 12.34,
+        balance: 987.66,
+        bankSequence: 1,
+      },
+      {
+        id: "bbbbbbbb",
+        date: "2031-04-12",
+        expense: 12.34,
+        balance: 975.32,
+        bankSequence: 2,
+      },
+    ])
+
+    const secondImport = importCashflowFile({
+      bank: "revolut",
+      csvContent,
+      fileName: "revolut-q2.csv",
+      quarterId: "2031.2Q",
+      entries: firstImport.entries,
+      now: new Date("2031-07-12T10:01:00.000Z"),
+    })
+
+    expect(secondImport.summary.created).toBe(0)
+    expect(secondImport.summary.existing).toBe(2)
+    expect(secondImport.entries).toEqual(firstImport.entries)
+  })
