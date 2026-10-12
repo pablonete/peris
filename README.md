@@ -9,7 +9,8 @@ A minimalist ledger book application for financial tracking based on GitHub repo
 - 🧾 **Expense Tracking** - Log business expenses with VAT (multiple), IRPF (15%), payment dates, attached documents, and quarterly VAT summaries by rate
 - 💵 **Cashflow View** - Monitor bank balance and transaction flow over time with multi-bank support and category tagging
 - 🔀 **Linking View** - Reconcile invoices or expenses with their cashflow entries side-by-side, with date-ordered rows
-- 📥 **Bank Imports** - Import Revolut CSV files from the repository `import/` folder into cashflow
+- 📥 **Bank Imports** - Import Unicaja and Revolut CSV files from the repository `import/` folder into cashflow
+- 🧮 **Headless Cashflow Generation** - Generate one quarter's cashflow from supported bank CSVs using the same TypeScript import logic
 - 🌍 **Bilingual Support** - Switch between Spanish (ES) and English (EN)
 - 🔗 **GitHub Data Storage** - Store and sync your financial data from GitHub repositories
 
@@ -253,6 +254,16 @@ pnpm dev
 
 Switch between Spanish and English using the **ES | EN** toggle at the bottom of the sidebar.
 
+### Headless Cashflow Generation
+
+The `generate-cashflow` skill takes a quarter (for example, `2031.2Q`) and a target data-repository slug, selects one supported Unicaja or Revolut statement whose filename range covers that full quarter, reuses the TypeScript cashflow importer, and opens a review PR in that target repository. It stops rather than combine partial statements—even if they collectively span the quarter—or use overlapping files. It reconstructs same-day Revolut order from the CSV balance chain and aborts if that order is ambiguous. It does not use the UI or modify/delete source CSVs. Like the UI importer, the CLI writes one timestamped row-level import log per selected source into the target repository's `import/` directory. Those logs contain transaction details: keep them only in the intended private data repository and never commit them to the public Peris code repository. The CLI can also be run directly against a local data-repository checkout:
+
+```bash
+PERIS_DATA_REPO_PATH=/path/to/data-repository pnpm --silent run cashflow:generate -- 2031.2Q
+```
+
+The command updates that quarter's existing `cashflow.json` and writes the import logs; it refuses to calculate a bank balance without a baseline. PR creation is handled by the skill, and PRs are never merged automatically.
+
 ### Views
 
 - **Welcome** - Overview of all quarters with key financial metrics
@@ -275,6 +286,7 @@ pnpm test           # Run tests in watch mode
 pnpm test:run       # Run tests once
 pnpm test:ui        # Run tests with UI
 pnpm test:coverage  # Run tests with coverage report
+pnpm --silent run cashflow:generate -- 2031.2Q # Generate cashflow for one quarter from repository CSVs
 pnpm storybook      # Start Storybook development server
 pnpm build-storybook # Build Storybook to out/storybook
 ```
@@ -286,7 +298,10 @@ peris/
 ├── app/                 # Next.js app directory with routes
 ├── components/          # React components
 │   └── ui/              # Radix UI component library
-├── lib/                 # Utilities, helpers, and business logic
+├── lib/                 # Utilities and shared business logic
+├── model/cashflow/      # Cashflow import and generation logic
+├── scripts/             # Headless data-generation commands
+├── .agents/skills/      # Repository-specific agent workflows
 ├── public/              # Static assets
 └── styles/              # Global styles
 ```

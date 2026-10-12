@@ -11,6 +11,7 @@ export interface CashflowImportMovement {
   income?: number
   expense?: number
   amount: number
+  balanceAfter?: number
   bankSequence?: number
   skipReason?: string
 }
@@ -45,6 +46,7 @@ const revolutImportDefinition: CashflowImportDefinition = {
       const startedDate = row[revolutColumns.startedDate]?.trim()
       const completedDate = row[revolutColumns.completedDate]?.trim()
       const amount = parseAmount(row[revolutColumns.amount])
+      const balanceAfter = parseAmount(row["Balance"])
       const state = row[revolutColumns.state]?.trim()
 
       if (!completedDate || amount == null) {
@@ -78,6 +80,7 @@ const revolutImportDefinition: CashflowImportDefinition = {
         matchDates: compactDates([completedDate, startedDate]),
         concept: getRevolutConcept(row),
         amount,
+        balanceAfter,
         income: amount > 0 ? amount : undefined,
         expense: amount < 0 ? Math.abs(amount) : undefined,
       }
